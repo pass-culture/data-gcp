@@ -2,7 +2,8 @@
 
 Reads a vector's prompts from GCS, loads its encoder, embeds each prompt, and
 writes ``item_id, content_hash, embedding`` -- plus the provenance columns
-``mlflow_run_id``, ``embedding_model`` and ``embedding_date`` -- back to GCS
+``mlflow_run_id``, ``embedding_model``, ``embedding_date`` and
+``embedding_ts`` -- back to GCS
 for loading into BigQuery. Over-length prompts (silently truncated by the
 encoder) are flagged and summarized at the end of the run, which also logs
 this vector's config and counts to the shared DAG-run MLflow run.
@@ -24,6 +25,7 @@ from src.config import CONFIGS_PATH, load_vector_config
 from src.constants import (
     EMBEDDING_DATE_COLUMN,
     EMBEDDING_MODEL_COLUMN,
+    EMBEDDING_TS_COLUMN,
     MLFLOW_RUN_ID_COLUMN,
     ROWS_PER_CHUNK,
 )
@@ -54,7 +56,8 @@ def main(
 ) -> None:
     vector = load_vector_config(config_file_name)
     run_id = read_run_id()
-    embedding_date = datetime.now(timezone.utc).date()
+    embedding_ts = datetime.now(timezone.utc)
+    embedding_date = embedding_ts.date()
     gpu_count = _gpu_count()
     logger.info(f"Embedding vector '{vector.name}' on {gpu_count} GPU(s)")
 
@@ -82,6 +85,7 @@ def main(
             out[MLFLOW_RUN_ID_COLUMN] = run_id
             out[EMBEDDING_MODEL_COLUMN] = vector.encoder_name
             out[EMBEDDING_DATE_COLUMN] = embedding_date
+            out[EMBEDDING_TS_COLUMN] = embedding_ts
             output_path = f"{output_parquets_folder_path}/embeddings_{i}.parquet"
             write_embeddings_parquet(out, output_path)
             wrote_any = True
@@ -102,6 +106,7 @@ def main(
                 MLFLOW_RUN_ID_COLUMN,
                 EMBEDDING_MODEL_COLUMN,
                 EMBEDDING_DATE_COLUMN,
+                EMBEDDING_TS_COLUMN,
             ]
         )
         output_path = f"{output_parquets_folder_path}/embeddings_0.parquet"
@@ -112,14 +117,19 @@ def main(
 
     tracker.log_summary()
     config_path = str(CONFIGS_PATH / f"{config_file_name}.yaml")
-    log_vector_to_run(
-        run_id,
-        vector,
-        config_path,
-        total_embedded,
-        tracker.max_tokens,
-        tracker.long_item_ids,
-    )
+    # Best-effort: the embeddings are already written, so an MLflow/IAP error
+    # must not fail the task (a retry would re-embed the whole vector).
+    try:
+        log_vector_to_run(
+            run_id,
+            vector,
+            config_path,
+            total_embedded,
+            tracker.max_tokens,
+            tracker.long_item_ids,
+        )
+    except Exception:
+        logger.exception("MLflow logging failed; embeddings were written anyway")
     logger.info("✅ Embedding complete")
 
 

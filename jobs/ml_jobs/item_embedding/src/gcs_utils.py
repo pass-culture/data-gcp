@@ -15,6 +15,7 @@ from loguru import logger
 from src.constants import (
     EMBEDDING_DATE_COLUMN,
     EMBEDDING_MODEL_COLUMN,
+    EMBEDDING_TS_COLUMN,
     MLFLOW_RUN_ID_COLUMN,
     ROWS_PER_CHUNK,
 )
@@ -126,8 +127,9 @@ def write_parquet(df: pd.DataFrame, gcs_path: str) -> None:
 def _embeddings_schema() -> pa.Schema:
     """Explicit Arrow schema for an embeddings chunk: string ids, an
     ``embedding`` ``list<float>`` field, and the provenance columns
-    (``mlflow_run_id``, ``embedding_model``, ``embedding_date``) that flow into
-    BigQuery.
+    (``mlflow_run_id``, ``embedding_model``, ``embedding_date``, ``embedding_ts``)
+    that flow into BigQuery. ``embedding_ts`` (UTC) orders several embeddings of
+    the same item loaded on the same day.
     """
     return pa.schema(
         [
@@ -137,6 +139,7 @@ def _embeddings_schema() -> pa.Schema:
             pa.field(MLFLOW_RUN_ID_COLUMN, pa.string()),
             pa.field(EMBEDDING_MODEL_COLUMN, pa.string()),
             pa.field(EMBEDDING_DATE_COLUMN, pa.date32()),
+            pa.field(EMBEDDING_TS_COLUMN, pa.timestamp("us", tz="UTC")),
         ]
     )
 
@@ -149,8 +152,8 @@ def write_embeddings_parquet(df: pd.DataFrame, gcs_path: str) -> None:
 
     Args:
         df: item_id, content_hash, embedding (list[float] per row), plus the
-            provenance columns mlflow_run_id, embedding_model and
-            embedding_date.
+            provenance columns mlflow_run_id, embedding_model,
+            embedding_date and embedding_ts.
         gcs_path: Destination parquet path (local or ``gs://...``).
     """
     table = pa.Table.from_pandas(df, schema=_embeddings_schema(), preserve_index=False)

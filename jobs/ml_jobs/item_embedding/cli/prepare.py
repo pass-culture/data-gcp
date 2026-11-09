@@ -13,6 +13,8 @@ Run from the job root:
         --output-parquets-folder-path gs://.../movies_metadata/prompts
 """
 
+from itertools import chain
+
 import pandas as pd
 import typer
 from loguru import logger
@@ -42,36 +44,39 @@ def main(
     required = ["item_id", "content_hash", *vector.features]
     logger.info(f"Preparing prompts for vector '{vector.name}'")
 
-    wrote_any = False
+    chunk_iter = iter_parquet_chunks(
+        input_parquets_folder_path, rows_per_chunk, required_columns=required
+    )
+    # Only "no input files" is tolerated: peek the first chunk inside the try so
+    # a FileNotFoundError raised mid-stream is NOT swallowed (partial output).
     try:
-        for i, chunk in enumerate(
-            iter_parquet_chunks(
-                input_parquets_folder_path, rows_per_chunk, required_columns=required
-            )
-        ):
-            preprocessed = apply_preprocessors(chunk[required], vector.preprocessors)
-
-            prompts = preprocessed[["item_id", "content_hash"]].copy()
-            prompts["prompt"] = build_prompts(preprocessed, vector)
-
-            # Drop items with no metadata to embed (empty prompt) so no empty
-            # prompt ever reaches the encoder.
-            kept = prompts[prompts["prompt"] != ""].reset_index(drop=True)
-            dropped = len(prompts) - len(kept)
-            if dropped:
-                logger.warning(
-                    f"Chunk {i}: dropped {dropped} item(s) with empty prompt"
-                )
-
-            output_path = f"{output_parquets_folder_path}/prompts_{i}.parquet"
-            write_parquet(kept, output_path)
-            wrote_any = True
-            logger.info(f"Wrote {len(kept)} prompts to {output_path}")
+        first_chunk = next(chunk_iter, None)
     except FileNotFoundError:
         # export_input's own `WHERE to_embed` matched zero rows this run, so
         # BigQuery's EXPORT DATA wrote no files at all under this vector's
         # input/ prefix -- nothing to prepare, not a real error.
         logger.info(f"No input files found at {input_parquets_folder_path}")
+        first_chunk = None
+    chunks = chain([first_chunk], chunk_iter) if first_chunk is not None else iter(())
+
+    wrote_any = False
+    for i, chunk in enumerate(chunks):
+        preprocessed = apply_preprocessors(chunk[required], vector.preprocessors)
+
+        prompts = preprocessed[["item_id", "content_hash"]].copy()
+        prompts["prompt"] = build_prompts(preprocessed, vector)
+
+        # Drop items with no metadata to embed (empty prompt) so no empty
+        # prompt ever reaches the encoder.
+        kept = prompts[prompts["prompt"] != ""].reset_index(drop=True)
+        dropped = len(prompts) - len(kept)
+        if dropped:
+            logger.warning(f"Chunk {i}: dropped {dropped} item(s) with empty prompt")
+
+        output_path = f"{output_parquets_folder_path}/prompts_{i}.parquet"
+        write_parquet(kept, output_path)
+        wrote_any = True
+        logger.info(f"Wrote {len(kept)} prompts to {output_path}")
 
     if not wrote_any:
         # Nothing to embed this run (zero input rows, or zero input files as

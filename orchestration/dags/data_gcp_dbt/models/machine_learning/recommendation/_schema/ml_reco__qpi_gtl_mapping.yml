@@ -12,16 +12,7 @@ models:
         description: "{{ doc('column__qpi_backend_name') }}"
         data_tests:
           - not_null
-      - name: gtl_label
-        description: "{{ doc('column__qpi_gtl_label') }}"
-      - name: gtl_type
-        description: "{{ doc('column__gtl_type') }}"
-        data_tests:
-          - accepted_values:
-              values: ["BOOK", "MUSIC"]
-      - name: gtl_label_matched
-        description: "{{ doc('column__qpi_gtl_label_matched') }}"
-      - name: matched_level
-        description: "{{ doc('column__qpi_matched_gtl_level') }}"
       - name: gtl_id
         description: "{{ doc('column__titelive_gtl_id') }}"
+        data_tests:
+          - not_null

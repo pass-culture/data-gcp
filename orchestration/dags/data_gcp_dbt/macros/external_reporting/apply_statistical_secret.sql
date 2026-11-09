@@ -37,11 +37,13 @@
               a row for this KPI (except NAT). Territories with past rows get no zero
               row, so that cumulative / stock KPIs are never reset to 0;
             - with flow_attribute, every territory gets a row for every month of
-              the national series of a KPI, so that national_* is there whatever
-              the month a report reads: 0 for flow KPIs and for territories that
-              never had the KPI, NULL with is_missing_month = true for a month
-              missing from the series of a stock KPI (an average or share
-              without activity is not 0);
+              the series of a KPI (the national series, or the months of the
+              territory level for a KPI not published at NAT), so that a report
+              finds a row whatever the month it reads: 0 for flow KPIs and for
+              territories that never had the KPI, NULL with is_missing_month =
+              true for a month missing from the series of a stock KPI (an
+              average or share without activity is not 0). The zero row at the
+              last complete month above is then not added;
             - national_numerator, national_denominator and national_kpi hold the NAT
               value of the same month and KPI, so that a report filtered on a
               territory still shows the national figures;
@@ -55,7 +57,8 @@
             - an average or share whose denominator counts 1 to min_individuals - 1
               people (low_count_denominator_kpis) on any of the last 12 months is
               NULL on every month (is_low_count), as it would disclose individual
-              values and the series would not be reliable;
+              values and the series would not be reliable. Older months with such
+              a denominator are NULL on their own (is_low_count);
             - flow KPIs (flow_attribute = 'flow') get a zero row for every month of
               their national series where the territory has no row, so that the
               national_* columns summed over the months of any territory give the
@@ -142,46 +145,72 @@
         where territory_levels.dimension_name != 'NAT' and kpi_list.kpi_name is null
     ),
 
+    {% if flow_attribute %}
+        -- months each territory level reports a KPI: the national series when
+        -- the KPI is published at NAT, else the months of the level itself
+        series as (
+            select
+                kpi_list.dimension_name,
+                source.kpi_name,
+                source.partition_month,
+                any_value(source.updated_at) as updated_at
+                {% for column in zero_row_columns.keys() %}
+                    , any_value(source.{{ column }}) as {{ column }}
+                {% endfor %}
+                {% for attribute in kpi_attributes %}
+                    , any_value(source.{{ attribute }}) as {{ attribute }}
+                {% endfor %}
+            from {{ kpis_cte }} as source
+            inner join
+                kpi_list
+                on source.kpi_name = kpi_list.kpi_name
+                and kpi_list.dimension_name != 'NAT'
+            where
+                source.dimension_name = 'NAT'
+                or (
+                    source.dimension_name = kpi_list.dimension_name
+                    and source.kpi_name
+                    not in (select kpi_name from kpi_list where dimension_name = 'NAT')
+                )
+            group by kpi_list.dimension_name, source.kpi_name, source.partition_month
+        ),
+    {% endif %}
+
     filled_kpis as (
         select *, false as is_national_only, false as is_missing_month
         from {{ kpis_cte }}
-        union all
-        select
-            {{ last_month }} as partition_month,
-            timestamp('{{ ts() }}') as updated_at,
-            territories.dimension_name,
-            territories.dimension_value,
-            kpi_list.kpi_name,
-            0 as numerator,
-            0 as denominator,
-            0 as kpi
-            {% for column, expression in zero_row_columns.items() %}
-                , {{ expression }} as {{ column }}
-            {% endfor %}
-            {% for attribute in kpi_attributes %}
-                , kpi_list.{{ attribute }}
-            {% endfor %},
-            kpi_list.is_secret_applicable,
-            false as is_national_only,
-            false as is_missing_month
-        from territories
-        inner join kpi_list on territories.dimension_name = kpi_list.dimension_name
-        left join
-            existing_kpis
-            on territories.dimension_name = existing_kpis.dimension_name
-            and territories.dimension_value = existing_kpis.dimension_value
-            and kpi_list.kpi_name = existing_kpis.kpi_name
-        where
-            existing_kpis.kpi_name is null
-            -- national KPIs always exist, and are checked month over month
-            and territories.dimension_name != 'NAT'
-            {% if flow_attribute %}
-                -- KPIs with a national series get a row every month below
-                and kpi_list.{{ flow_attribute }} != 'flow'
-                and kpi_list.kpi_name
-                not in (select kpi_name from kpi_list where dimension_name = 'NAT')
-            {% endif %}
-        {% if flow_attribute %}
+        {% if not flow_attribute %}
+            union all
+            select
+                {{ last_month }} as partition_month,
+                timestamp('{{ ts() }}') as updated_at,
+                territories.dimension_name,
+                territories.dimension_value,
+                kpi_list.kpi_name,
+                0 as numerator,
+                0 as denominator,
+                0 as kpi
+                {% for column, expression in zero_row_columns.items() %}
+                    , {{ expression }} as {{ column }}
+                {% endfor %}
+                {% for attribute in kpi_attributes %}
+                    , kpi_list.{{ attribute }}
+                {% endfor %},
+                kpi_list.is_secret_applicable,
+                false as is_national_only,
+                false as is_missing_month
+            from territories
+            inner join kpi_list on territories.dimension_name = kpi_list.dimension_name
+            left join
+                existing_kpis
+                on territories.dimension_name = existing_kpis.dimension_name
+                and territories.dimension_value = existing_kpis.dimension_value
+                and kpi_list.kpi_name = existing_kpis.kpi_name
+            where
+                existing_kpis.kpi_name is null
+                -- national KPIs always exist, and are checked month over month
+                and territories.dimension_name != 'NAT'
+        {% else %}
             union all
             select
                 national.partition_month,
@@ -198,21 +227,19 @@
                     ) as {{ column }}
                     {% if not loop.last %},{% endif %}
                 {% endfor %}
-                {% for column in zero_row_columns.keys() %}
-                    , national.{{ column }}
+                {% for column in zero_row_columns.keys() %}, national.{{ column }}
                 {% endfor %}
-                {% for attribute in kpi_attributes %}
-                    , national.{{ attribute }}
+                {% for attribute in kpi_attributes %}, national.{{ attribute }}
                 {% endfor %},
                 kpi_list.is_secret_applicable,
                 false as is_national_only,
                 kpi_list.{{ flow_attribute }} != 'flow'
                 and ever.kpi_name is not null as is_missing_month
-            from {{ kpis_cte }} as national
+            from series as national
             inner join
                 kpi_list
                 on national.kpi_name = kpi_list.kpi_name
-                and kpi_list.dimension_name != 'NAT'
+                and national.dimension_name = kpi_list.dimension_name
             inner join
                 territories on kpi_list.dimension_name = territories.dimension_name
             left join
@@ -226,7 +253,7 @@
                 on territories.dimension_name = ever.dimension_name
                 and territories.dimension_value = ever.dimension_value
                 and national.kpi_name = ever.kpi_name
-            where national.dimension_name = 'NAT' and existing.kpi_name is null
+            where existing.kpi_name is null
         {% endif %}
         union all
         select
@@ -429,7 +456,16 @@
         select
             filled_kpis.*,
             filled_kpis.dimension_name != 'NAT'
-            and low_count_kpis.kpi_name is not null as is_low_count,
+            and (
+                low_count_kpis.kpi_name is not null
+                {% for prefix in low_count_denominator_kpis %}
+                    or (
+                        starts_with(filled_kpis.kpi_name, '{{ prefix }}')
+                        and filled_kpis.denominator
+                        between 1 and {{ min_individuals - 1 }}
+                    )
+                {% endfor %}
+            ) as is_low_count,
             filled_kpis.is_secret_applicable
             and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
             secret_territories.secret_detail as territory_secret_detail,

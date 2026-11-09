@@ -11,6 +11,7 @@ from src.common.constants import (
 from src.linkage.constants import (
     ACTION_KEY,
     ARTIST_DESCRIPTION_KEY,
+    ARTIST_NAME_SORTED_TO_MATCH_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     ARTIST_WIKI_ID_KEY,
@@ -24,6 +25,8 @@ from src.linkage.constants import (
     Comment,
 )
 from src.linkage.preprocessing_utils import (
+    add_order_insensitive_name_key,
+    build_order_insensitive_name_key,
     extract_artist_name,
     prepare_artist_names_for_matching,
 )
@@ -78,7 +81,7 @@ def match_artist_on_offer_names(
             by=[
                 OFFER_CATEGORY_ID_KEY,
                 ARTIST_TYPE_KEY,
-                ARTIST_NAME_TO_MATCH_KEY,
+                ARTIST_NAME_SORTED_TO_MATCH_KEY,
                 N_PRODUCTS_LINKED_COLUMN,
             ],
             ascending=False,
@@ -87,7 +90,7 @@ def match_artist_on_offer_names(
             subset=[
                 OFFER_CATEGORY_ID_KEY,
                 ARTIST_TYPE_KEY,
-                ARTIST_NAME_TO_MATCH_KEY,
+                ARTIST_NAME_SORTED_TO_MATCH_KEY,
             ],
             keep="first",
         )
@@ -98,11 +101,14 @@ def match_artist_on_offer_names(
     )
 
     # Match artists with products to link on preproc offer_names
+    # (word-order-insensitive: "verdon john" matches "john verdon")
     logger.info("Matching products on preprocessed offer names...")
     preproc_matched_df = preproc_products_to_link_df.merge(
-        preproc_filtered_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),
+        preproc_filtered_artist_alias_df.drop(
+            columns=[ARTIST_NAME_KEY, ARTIST_NAME_TO_MATCH_KEY]
+        ),
         how="left",
-        on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
+        on=[ARTIST_NAME_SORTED_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
     )
     preproc_linked_products_df = preproc_matched_df.loc[lambda df: df.artist_id.notna()]
     preproc_unlinked_products_df = (
@@ -181,11 +187,14 @@ def create_artists_tables(
                 }
             )
             .drop_duplicates(),
-            preproc_unlinked_products_df.merge(
-                exploded_artist_alias_df,
+            preproc_unlinked_products_df.pipe(add_order_insensitive_name_key)
+            .merge(
+                exploded_artist_alias_df.pipe(add_order_insensitive_name_key).drop(
+                    columns=[ARTIST_NAME_TO_MATCH_KEY]
+                ),
                 how="left",
                 on=[
-                    ARTIST_NAME_TO_MATCH_KEY,
+                    ARTIST_NAME_SORTED_TO_MATCH_KEY,
                     ARTIST_TYPE_KEY,
                     OFFER_CATEGORY_ID_KEY,
                 ],
@@ -276,7 +285,9 @@ def perform_wikidata_category_matching(
         pd.DataFrame: DataFrame containing all artist clusters after category matching,
             including unmatched clusters (with NaN wikidata_id).
     """
-    # 1. Preprocess to use wikidata matching functions
+    # 1. Preprocess to use wikidata matching functions.
+    # The join key `alias` is word-order-insensitive (sorted tokens) on both
+    # sides, so that "Grafton Sue" matches the Wikidata alias "Sue Grafton".
     wiki_df = (
         wiki_df.rename(
             columns={
@@ -285,12 +296,19 @@ def perform_wikidata_category_matching(
         )
         .assign(
             alias_name_to_match=lambda df: df.raw_alias.apply(extract_artist_name),
-            alias=lambda df: df.alias_name_to_match,
         )
         .loc[lambda df: (df.alias_name_to_match != "") & df.alias_name_to_match.notna()]
+        .assign(
+            alias=lambda df: df.alias_name_to_match.map(
+                build_order_insensitive_name_key
+            ),
+        )
+        .loc[lambda df: df.alias.notna()]
     )
     new_artist_clusters_df = new_artist_clusters_df.assign(
-        alias=lambda df: df[ARTIST_NAME_TO_MATCH_KEY]
+        alias=lambda df: df[ARTIST_NAME_TO_MATCH_KEY].map(
+            build_order_insensitive_name_key
+        )
     )
     matched_namesakes_df = (
         match_namesakes_per_category(new_artist_clusters_df, wiki_df)

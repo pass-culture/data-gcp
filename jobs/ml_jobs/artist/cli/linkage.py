@@ -20,6 +20,7 @@ from src.common.gcp import get_secret
 from src.common.mlflow import connect_remote_mlflow, get_mlflow_experiment
 from src.linkage.constants import (
     ACTION_KEY,
+    ARTIST_NAME_SORTED_TO_MATCH_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     COMMENT_KEY,
@@ -288,14 +289,20 @@ def link_new_products(
         )
     )
 
-    # 4. Create new artist clusters by offer_category and artist type
+    # 4. Create new artist clusters by offer_category and artist type.
+    # Clusters are built on the word-order-insensitive key so that
+    # "Grafton Sue" and "Sue Grafton" end up in the same new artist.
     new_artist_clusters_df = (
         preproc_unlinked_products_df.groupby(
-            [OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_TO_MATCH_KEY]
+            [OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY]
         )
         .agg(
             **{
                 ARTIST_ID_KEY: (ARTIST_NAME_KEY, lambda x: str(uuid.uuid4())),
+                ARTIST_NAME_TO_MATCH_KEY: (
+                    ARTIST_NAME_TO_MATCH_KEY,
+                    lambda x: x.mode().sort_values().iloc[0],
+                ),
             },
             artist_name_set=(ARTIST_NAME_KEY, lambda x: set(x.unique())),
             artist_name_count=(ARTIST_NAME_KEY, "count"),

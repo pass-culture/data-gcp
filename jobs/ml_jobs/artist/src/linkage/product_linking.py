@@ -7,6 +7,7 @@ from src.common.constants import (
 )
 from src.linkage.constants import (
     ACTION_KEY,
+    ARTIST_NAME_SORTED_TO_MATCH_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     COMMENT_KEY,
@@ -50,14 +51,16 @@ def get_products_to_remove_and_link_df(
     Side Effects:
         Logs information about the number of products to remove and link, along with merge statistics
     """
-    MERGE_COLUMNS = [PRODUCT_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_TO_MATCH_KEY]
+    # Join on the word-order-insensitive key so that an existing link to
+    # "John Verdon" is kept when the product now lists "Verdon John".
+    MERGE_COLUMNS = [PRODUCT_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY]
 
     preproc_products_df = products_df.pipe(prepare_artist_names_for_matching)
     preproc_artists_df = (
         artist_df.loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY]]
         .drop_duplicates()
         .pipe(prepare_artist_names_for_matching)
-        .loc[:, [ARTIST_ID_KEY, ARTIST_NAME_TO_MATCH_KEY]]
+        .loc[:, [ARTIST_ID_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY]]
         .drop_duplicates()
     )
 
@@ -102,7 +105,7 @@ def get_products_to_remove_and_link_df(
             MERGE_COLUMNS,
         ]
         .merge(preproc_products_df, how="left", on=MERGE_COLUMNS)
-        .drop(columns=[ARTIST_NAME_TO_MATCH_KEY])
+        .drop(columns=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY])
         .drop_duplicates()
         .reset_index(drop=True)
     )

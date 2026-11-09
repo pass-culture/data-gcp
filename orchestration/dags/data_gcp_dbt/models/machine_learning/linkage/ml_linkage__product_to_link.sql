@@ -17,42 +17,34 @@ with
             unnest(
                 [
                     struct("1" as role_id, "scriptwriter" as artist_type),
-                    struct("2" as role_id, "illustrator" as artist_type),
-                    struct("3" as role_id, "colorist" as artist_type),
+                    struct("2" as role_id, "comic_artist" as artist_type),
                     struct("4" as role_id, "illustrator" as artist_type),
                     struct("5" as role_id, "thesis_director" as artist_type),
                     struct("8" as role_id, "volume_editor" as artist_type),
                     struct("9" as role_id, "photographer" as artist_type),
                     struct("12" as role_id, "narrator" as artist_type),
-                    struct("13" as role_id, "contributor" as artist_type),
                     struct("14" as role_id, "adapter" as artist_type),
                     struct("16" as role_id, "preface_author" as artist_type),
                     struct("17" as role_id, "afterword_author" as artist_type),
                     struct("18" as role_id, "foreword_author" as artist_type),
                     struct("19" as role_id, "translator" as artist_type),
-                    struct("20" as role_id, "commentator" as artist_type),
-                    struct("21" as role_id, "annotator" as artist_type),
                     struct("23" as role_id, "editorial_coordinator" as artist_type),
-                    struct("24" as role_id, "inker" as artist_type),
-                    struct("26" as role_id, "translator" as artist_type),
-                    struct("28" as role_id, "prologue_author" as artist_type),
-                    struct("29" as role_id, "epilogue_author" as artist_type),
+                    struct("26" as role_id, "revised_translator" as artist_type),
                     struct("30" as role_id, "author" as artist_type),
+                    struct("31" as role_id, "co_author" as artist_type),
                     struct("32" as role_id, "introduction_author" as artist_type),
-                    struct("33" as role_id, "librettist" as artist_type),
                     struct("34" as role_id, "original_author" as artist_type),
-                    struct("36" as role_id, "librettist" as artist_type),
+                    struct("35" as role_id, "cartographer" as artist_type),
                     struct("37" as role_id, "main_subject" as artist_type),
                     struct("38" as role_id, "collection_director" as artist_type),
-                    struct("39" as role_id, "posthumous_coauthor" as artist_type),
-                    struct("40" as role_id, "creator" as artist_type),
-                    struct("41" as role_id, "paper_engineer" as artist_type)
+                    struct("39" as role_id, "posthumous_completer" as artist_type),
+                    struct("40" as role_id, "creator" as artist_type)
                 ]
             )
     ),
 
     titelive_book_contributors as (
-        select distinct
+        select
             product.id as offer_product_id,
             titelive_role_mapping.artist_type,
             lower(trim(json_value(contributor, "$.name"))) as artist_name

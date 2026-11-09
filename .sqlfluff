@@ -25,6 +25,10 @@ project_dir = ./orchestration/dags/data_gcp_dbt
 profiles_dir = ./orchestration/dags/data_gcp_dbt
 profile = data_gcp_dbt
 target = stg
+; Parallelise the BigQuery dataset listing done at startup (I/O bound, not CPU bound).
+threads = 8
+; Dedicated partial-parse cache so regular dbt runs don't invalidate it (and vice versa).
+target_path = target/sqlfluff
 
 [sqlfluff:templater:dbt:context]
 ENV_SHORT_NAME = stg

@@ -21,9 +21,12 @@
         )
     )
 }}
-{{
-    merge_embedding_select(
-        source_relation=source("ml_preproc", "item_embedding__movies_metadata"),
-        embedding_column="movies_metadata_embedding",
-    )
-}}
+
+select
+    item_id,
+    content_hash,
+    embedding as movies_metadata_embedding,
+    mlflow_run_id,
+    embedding_model,
+    embedding_date
+from {{ source("ml_preproc", "item_embedding__movies_metadata") }}

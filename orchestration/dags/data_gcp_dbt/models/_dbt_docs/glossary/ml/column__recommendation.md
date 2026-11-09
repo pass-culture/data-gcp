@@ -17,6 +17,8 @@
 {% docs column__reco_example_venue_latitude %} Latitude of the example venue for the item. {% enddocs %}
 {% docs column__reco_booking_release_trend %} Trend of booking releases for a given item. {% enddocs %}
 {% docs column__reco_booking_creation_trend %} Trend of booking creations for a given item. {% enddocs %}
-{% docs column__qpi_category %} QPI (Quiz de Préférences Initial) domain the UX name belongs to, either `LIVRE` or `MUSIQUE`. {% enddocs %}
 {% docs column__qpi_ux_name %} Name of the UX category shown to users in the QPI onboarding flow (for example, "Mangas ou BD"). {% enddocs %}
-{% docs column__qpi_gtl_labels %} Array of Titelive GTL level-1 labels (`gtl_label_level_1`) grouped under the corresponding `ux_name`. Empty for the "Aucun" rows. {% enddocs %}
+{% docs column__qpi_backend_name %} Backend identifier ("Nom BDD") associated to the UX category (for example, "MANGAS"). Values ending in "_AUCUN" (`LIVRES_AUCUN`, `MUSIQUES_AUCUN`) correspond to the "Aucun" rows. {% enddocs %}
+{% docs column__qpi_gtl_label %} Titelive GTL label (at any level, 1 to 4) grouped under the corresponding `ux_name`, as declared in the static QPI mapping. Null for the "Aucun" rows. {% enddocs %}
+{% docs column__qpi_gtl_label_matched %} Titelive GTL label actually resolved in `int_applicative__titelive_gtl` for `gtl_label`. Null when `gtl_label` could not be matched. {% enddocs %}
+{% docs column__qpi_matched_gtl_level %} GTL hierarchy level (1 to 4) at which `gtl_label` was matched in `int_applicative__titelive_gtl`. Null when `gtl_label` could not be resolved. {% enddocs %}

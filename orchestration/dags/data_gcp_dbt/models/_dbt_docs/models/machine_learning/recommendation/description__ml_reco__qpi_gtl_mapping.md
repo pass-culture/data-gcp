@@ -7,6 +7,6 @@ description: Description of the `ml_reco__qpi_gtl_mapping` table.
 
 # Table: QPI GTL Mapping
 
-The `ml_reco__qpi_gtl_mapping` table is a static reference table mapping the UX category names shown in the QPI (Quiz de Préférences Initial) onboarding flow to the underlying Titelive GTL level-1 labels (`gtl_label_level_1` in `int_applicative__titelive_gtl`), for both the LIVRE and MUSIQUE domains. Each UX name can group several GTL labels, exposed as an array.
+The `ml_reco__qpi_gtl_mapping` table maps the UX category names shown in the QPI (Quiz de Préférences Initial) onboarding flow, along with their backend identifier (`ux_code`, e.g. "MANGAS"), to the underlying Titelive GTL labels. Each row corresponds to one `(ux_name, gtl_label)` pair, enriched with the GTL type (`gtl_type`), the matched label (`gtl_label_matched`), the GTL hierarchy level at which it was matched (`matched_level`, 1 to 4) and the resolved `gtl_id` from `int_applicative__titelive_gtl`, since a `gtl_label` can originate from any GTL level.
 
 {% enddocs %}

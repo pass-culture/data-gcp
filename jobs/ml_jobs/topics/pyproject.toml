@@ -39,7 +39,10 @@ reduction = [
 clustering = [
     "hdbscan>=0.8.44",
 ]
-labelling = []
+labelling = [
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+]
 gpu = [
     "cuml-cu13>=26.10.0 ; sys_platform == 'linux'",
 ]

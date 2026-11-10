@@ -2647,6 +2647,10 @@ clustering = [
 gpu = [
     { name = "cuml-cu13", marker = "sys_platform == 'linux'" },
 ]
+labelling = [
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
 reduction = [
     { name = "umap-learn" },
 ]
@@ -2681,6 +2685,8 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.14.3" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff", specifier = ">=0.4.5" },
+    { name = "scikit-learn", marker = "extra == 'labelling'", specifier = ">=1.9.1" },
+    { name = "scipy", marker = "extra == 'labelling'", specifier = ">=1.18.1" },
     { name = "spacy", marker = "extra == 'vocabulary'", specifier = "~=3.8" },
     { name = "typer", specifier = ">=0.24.0" },
     { name = "umap-learn", marker = "extra == 'reduction'", specifier = ">=0.6.0" },

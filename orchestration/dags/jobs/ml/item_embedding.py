@@ -34,7 +34,6 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from google.api_core.exceptions import NotFound
 from pydantic import BaseModel, model_validator
 
 from jobs.crons import SCHEDULE_DICT
@@ -90,7 +89,7 @@ AVAILABLE_VECTORS = [
     ),
     VectorPipeline(
         name="all_items_offer_names",
-        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_offer_names_to_embed",
+        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",  # uses the same input as all_items_metadata
         output_table=f"{BIGQUERY_TMP_DATASET}.all_items_offer_names_tmp",
     ),
 ]
@@ -118,8 +117,13 @@ DEFAULT_ARGS = {
 def _step_command(
     module: str, vector_name: str, input_subfolder: str, output_subfolder: str
 ) -> str:
-    """Build an SSH command for one pipeline step of one vector, reading
-    ``input_subfolder`` and writing ``output_subfolder`` under its GCS prefix.
+    """Build an SSH command for one pipeline step (preprocess/build_prompts/
+    embed) of one vector, reading ``input_subfolder`` and writing
+    ``output_subfolder`` under that vector's GCS prefix.
+
+    Only vectors kept by the plan reach this step -- the per-vector
+    ``check_in_plan`` ShortCircuit skips a dropped vector's whole subchain -- so
+    no in-command guard is needed.
     """
     base = f"gs://{ML_BUCKET_TEMP}/{GCS_FOLDER_PATH}/{vector_name}"
     return (
@@ -159,8 +163,14 @@ def _export_input_query(vector: VectorPipeline) -> str:
 
 
 def _plan_vectors_to_embed(**context) -> list[str]:
-    """Coarse cost gate: skip booting the VM when no selected vector has
-    anything to embed. NOT the per-vector check -- see ``_export_found_rows``.
+    """Resolve, once and upstream of the per-vector fan-out, which vectors this
+    run should actually process: those that are *selected* and have rows to
+    embed in their own input table. embed_all forces every selected vector.
+
+    A single batched query (one ``EXISTS`` probe per selected table, UNION ALL'd)
+    replaces per-vector count queries. Backing a ShortCircuitOperator, the
+    returned list is both the plan (read back by each vector's check via XCom)
+    and the run-level gate -- an empty list is falsy, so the whole run skips.
     """
     params = context["params"]
     selected = [v for v in AVAILABLE_VECTORS if v.name in params["vectors"]]
@@ -177,42 +187,28 @@ def _plan_vectors_to_embed(**context) -> list[str]:
     return [row[0] for row in bq_hook.get_records(query)]
 
 
-def _vector_selected(vector_name: str, **context) -> bool:
-    """ShortCircuit gate: run this vector only if it's in the ``vectors`` param."""
-    return vector_name in context["params"]["vectors"]
-
-
-def _export_found_rows(input_table: str, **context) -> bool:
-    """ShortCircuit gate: skip prepare/embed/load when there's nothing left to
-    embed, checked live right as this vector's GPU slot frees up (see wiring).
-    """
-    if context["params"]["embed_all"]:
-        return True  # export_input pulled the whole table regardless
-    bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-    query = f"SELECT 1 FROM `{GCP_PROJECT_ID}.{input_table}` WHERE to_embed LIMIT 1"
-    return bool(bq_hook.get_records(query))
+def _vector_in_plan(vector_name: str, **context) -> bool:
+    """ShortCircuit gate: run this vector only if the upstream plan kept it."""
+    plan = context["ti"].xcom_pull(task_ids="plan_vectors_to_embed") or []
+    return vector_name in plan
 
 
 def _send_slack_notif_success(**context) -> None:
-    # A skipped vector never ran load, so its output table may not exist --
-    # query per vector, not batched, so a missing table can't fail the rest.
-    selected = [v for v in AVAILABLE_VECTORS if v.name in context["params"]["vectors"]]
-    if not selected:
+    plan = context["ti"].xcom_pull(task_ids="plan_vectors_to_embed") or []
+    if not plan:
         summary = "Aucun vecteur embeddé."
     else:
+        vectors_by_name = {v.name: v for v in AVAILABLE_VECTORS}
         ts_nodash = context["ts_nodash"]
         bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-        lines = []
-        for v in selected:
-            table = _run_output_table(v.output_table, ts_nodash)
-            try:
-                count = bq_hook.get_records(
-                    f"SELECT COUNT(*) FROM `{GCP_PROJECT_ID}.{table}`"
-                )[0][0]
-            except NotFound:
-                count = 0
-            lines.append(f"• *{v.name}*: {count} items")
-        summary = "\n".join(lines)
+        query = "\nUNION ALL\n".join(
+            f"(SELECT '{name}' AS vector, COUNT(*) AS nb_rows "
+            f"FROM `{GCP_PROJECT_ID}."
+            f"{_run_output_table(vectors_by_name[name].output_table, ts_nodash)}`)"
+            for name in plan
+        )
+        counts = dict(bq_hook.get_records(query))
+        summary = "\n".join(f"• *{name}*: {counts.get(name, 0)} items" for name in plan)
     block = create_item_embedding_slack_block(summary, ENV_SHORT_NAME)
     SlackHook(SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN).send_message(None, block)
 
@@ -333,7 +329,10 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start")
 
-    # Coarse cost gate only (see _plan_vectors_to_embed docstring).
+    # Resolve once which vectors will actually run (selected + non-empty). The
+    # returned list is both the plan (read back by each vector's check) and the
+    # gate: an empty list is falsy, so this ShortCircuit skips the whole run
+    # (including the VM) when there's nothing to embed.
     plan_vectors = ShortCircuitOperator(
         task_id="plan_vectors_to_embed",
         python_callable=_plan_vectors_to_embed,
@@ -388,9 +387,9 @@ with DAG(
 
     for vector in AVAILABLE_VECTORS:
         with TaskGroup(group_id=vector.name):
-            check_selected = ShortCircuitOperator(
-                task_id=f"check_vector_selected_{vector.name}",
-                python_callable=_vector_selected,
+            check_in_plan = ShortCircuitOperator(
+                task_id=f"check_in_plan_{vector.name}",
+                python_callable=_vector_in_plan,
                 op_kwargs={"vector_name": vector.name},
                 # Skip only this vector's own subchain, not the following vectors.
                 ignore_downstream_trigger_rules=False,
@@ -405,15 +404,9 @@ with DAG(
                         "useLegacySql": False,
                     }
                 },
-            )
-
-            check_found_rows = ShortCircuitOperator(
-                task_id=f"check_export_found_rows_{vector.name}",
-                python_callable=_export_found_rows,
-                op_kwargs={"input_table": vector.input_table},
-                # Default all_success: a genuine export_input failure must
-                # still cascade here, not be masked as "nothing to embed".
-                ignore_downstream_trigger_rules=False,
+                # Run even if the previous vector's embed was skipped or failed --
+                # one vector's outcome shouldn't block the next from being attempted.
+                trigger_rule="all_done",
             )
 
             prepare = SSHGCEOperator(
@@ -455,22 +448,17 @@ with DAG(
                 extra_config={"parquetOptions": {"enableListInference": True}},
             )
 
-            check_selected >> export_input >> check_found_rows
+            check_in_plan >> export_input
+            [export_input, start_mlflow_run] >> prepare >> embed >> load
 
-            if previous_embed is not None:
-                # Barrier turning the previous vector's any-outcome into a
-                # guaranteed success, so it can't fail/skip check_found_rows.
-                wait_for_gpu_slot = EmptyOperator(
-                    task_id=f"wait_for_gpu_slot_{vector.name}",
-                    trigger_rule="all_done",
-                )
-                previous_embed >> wait_for_gpu_slot >> check_found_rows
+        # Every vector's plan check only needs the VM up, so all of them fan out
+        # in parallel as soon as it starts.
+        gce_instance_start >> check_in_plan
 
-            [check_found_rows, start_mlflow_run] >> prepare >> embed >> load
-
-        # export_input is a pure BigQuery job (no VM/GPU), so it fires for all
-        # vectors in parallel; only prepare/embed stay GPU-serialized below.
-        install_dependencies >> check_selected
+        # The actual GPU work stays sequential on the shared VM: each vector's
+        # export waits for the previous vector's embed to free the GPU.
+        if previous_embed is not None:
+            previous_embed >> export_input
 
         previous_embed = embed
         load_tasks.append(load)

@@ -72,3 +72,31 @@ def test_write_latest_pointer_uploads_run_id(monkeypatch: pytest.MonkeyPatch) ->
     gcs.write_latest_pointer(split_level=1, corpus_id="01000000", run_id="abc123")
 
     blob.upload_from_string.assert_called_once_with("abc123")
+
+
+def test_save_model_uploads_pickled_bytes(monkeypatch: pytest.MonkeyPatch) -> None:
+    import pickle
+
+    blob = MagicMock()
+    client = MagicMock()
+    client.bucket.return_value.blob.return_value = blob
+    monkeypatch.setattr(gcs.storage, "Client", lambda: client)
+
+    gcs.save_model({"a": 1}, "gs://bucket-name/models/model.pkl")
+
+    client.bucket.assert_called_once_with("bucket-name")
+    client.bucket.return_value.blob.assert_called_once_with("models/model.pkl")
+    (uploaded_bytes,), _ = blob.upload_from_string.call_args
+    assert pickle.loads(uploaded_bytes) == {"a": 1}
+
+
+def test_load_model_unpickles_downloaded_bytes(monkeypatch: pytest.MonkeyPatch) -> None:
+    import pickle
+
+    blob = MagicMock()
+    blob.download_as_bytes.return_value = pickle.dumps({"a": 1})
+    client = MagicMock()
+    client.bucket.return_value.blob.return_value = blob
+    monkeypatch.setattr(gcs.storage, "Client", lambda: client)
+
+    assert gcs.load_model("gs://bucket-name/models/model.pkl") == {"a": 1}

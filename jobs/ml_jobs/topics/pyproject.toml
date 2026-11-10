@@ -33,9 +33,14 @@ vocabulary = [
 ]
 # Declared empty (not yet implemented) so the planned domain split is
 # documented up front; filled in when each domain is built.
-reduction = []
+reduction = [
+    "umap-learn>=0.6.0",
+]
 clustering = []
 labelling = []
+gpu = [
+    "cuml-cu13>=26.10.0 ; sys_platform == 'linux'",
+]
 
 [dependency-groups]
 dev = [

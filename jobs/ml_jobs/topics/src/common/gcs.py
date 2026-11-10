@@ -3,6 +3,9 @@ plus the "latest" pointer that marks which model version is in use (sections
 7.2/7.3).
 """
 
+import pickle
+from typing import Any
+
 from google.cloud import storage
 
 from src.common.constants import ENV_SHORT_NAME, ML_BUCKET, ML_BUCKET_TEMP
@@ -59,3 +62,18 @@ def write_latest_pointer(split_level: int, corpus_id: str, run_id: str) -> None:
         latest_pointer_path(split_level, corpus_id)
     )
     storage.Client().bucket(bucket_name).blob(blob_path).upload_from_string(run_id)
+
+
+def save_model(obj: Any, gcs_path: str) -> None:
+    """Pickle ``obj`` (a fitted UMAP/HDBSCAN model) to a GCS blob."""
+    bucket_name, blob_path = _split_gcs_path(gcs_path)
+    storage.Client().bucket(bucket_name).blob(blob_path).upload_from_string(
+        pickle.dumps(obj)
+    )
+
+
+def load_model(gcs_path: str) -> Any:
+    """Unpickle a model written by :func:`save_model`."""
+    bucket_name, blob_path = _split_gcs_path(gcs_path)
+    data = storage.Client().bucket(bucket_name).blob(blob_path).download_as_bytes()
+    return pickle.loads(data)

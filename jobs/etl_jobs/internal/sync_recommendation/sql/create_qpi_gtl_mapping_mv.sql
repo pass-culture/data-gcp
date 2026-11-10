@@ -1,10 +1,10 @@
 create or replace function get_qpi_gtl_mapping_{{ ts_nodash }} ()
-returns table(backend_name varchar, gtl_id varchar, gtl_type varchar)
+returns table(ux_name varchar, backend_name varchar, gtl_label varchar)
 as $body$
 BEGIN
     RETURN QUERY
     SELECT
-        qpi_gtl_mapping.ux_name::varchar as gtl_type,
+        qpi_gtl_mapping.ux_name::varchar as ux_name,
         qpi_gtl_mapping.backend_name::varchar as backend_name,
         qpi_gtl_mapping.gtl_label::varchar as gtl_label
     FROM public.qpi_gtl_mapping qpi_gtl_mapping;
@@ -21,10 +21,9 @@ SELECT * FROM get_qpi_gtl_mapping_{{ ts_nodash  }}()
 WITH NO DATA;
 
 -- Create indexes
--- One row per (backend_name, gtl_id): a backend_name can map to several
--- gtl_ids (one per matched GTL label).
+-- One row per (backend_name)
 CREATE UNIQUE INDEX idx_qpi_gtl_mapping_mv_{{ ts_nodash }}
-    ON public.qpi_gtl_mapping_mv_tmp USING btree (backend_name, gtl_id);
+    ON public.qpi_gtl_mapping_mv_tmp USING btree (backend_name);
 
 -- Refresh state
 refresh materialized view qpi_gtl_mapping_mv_tmp

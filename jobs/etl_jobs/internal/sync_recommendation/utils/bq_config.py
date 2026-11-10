@@ -35,8 +35,7 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
         "columns": {
             "ux_name": "character varying",
             "backend_name": "character varying",
-            "gtl_id": "character varying",
-            "gtl_type": "character varying",
+            "gtl_label": "character varying",
         },
         "bigquery_table_name": "qpi_gtl_mapping",
         "cloud_sql_table_name": "qpi_gtl_mapping",

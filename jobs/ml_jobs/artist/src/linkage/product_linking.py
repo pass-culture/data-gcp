@@ -4,6 +4,7 @@ from loguru import logger
 from src.common.constants import (
     ARTIST_ID_KEY,
     ARTIST_NAME_KEY,
+    WIKIDATA_ID_KEY,
 )
 from src.linkage.constants import (
     ACTION_KEY,
@@ -14,9 +15,10 @@ from src.linkage.constants import (
     OFFER_CATEGORY_ID_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
-    ProductToLinkStatus,
 )
 from src.linkage.preprocessing_utils import prepare_artist_names_for_matching
+
+RAW_ALIAS_KEY = "raw_alias"
 
 ALIAS_MERGE_COLUMNS = [
     ARTIST_ID_KEY,
@@ -26,22 +28,67 @@ ALIAS_MERGE_COLUMNS = [
 ]
 
 
+def _build_artist_name_keys_df(
+    artist_df: pd.DataFrame,
+    wiki_df: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Build every (artist_id, order-insensitive name key) an artist is known by.
+
+    Keys come from the artist canonical name and, for artists having a
+    wikidata_id, from all their Wikidata aliases. This prevents dropping a
+    valid link when the canonical name was replaced by the Wikidata label
+    (e.g. "Fiodor Dostoïevski") while the product lists another spelling
+    (e.g. "Fedor Dostoïevski").
+    """
+    name_frames = [artist_df.loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY]]]
+    if (
+        wiki_df is not None
+        and WIKIDATA_ID_KEY in artist_df.columns
+        and {WIKIDATA_ID_KEY, RAW_ALIAS_KEY}.issubset(wiki_df.columns)
+    ):
+        name_frames.append(
+            artist_df.loc[
+                lambda df: df[WIKIDATA_ID_KEY].notna(), [ARTIST_ID_KEY, WIKIDATA_ID_KEY]
+            ]
+            .merge(
+                wiki_df.loc[:, [WIKIDATA_ID_KEY, RAW_ALIAS_KEY]].drop_duplicates(),
+                how="inner",
+                on=WIKIDATA_ID_KEY,
+            )
+            .rename(columns={RAW_ALIAS_KEY: ARTIST_NAME_KEY})
+            .loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY]]
+        )
+
+    return (
+        pd.concat(name_frames, ignore_index=True)
+        .drop_duplicates()
+        .pipe(prepare_artist_names_for_matching)
+        .loc[:, [ARTIST_ID_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY]]
+        .drop_duplicates()
+    )
+
+
 def get_products_to_remove_and_link_df(
     products_df: pd.DataFrame,
     product_artist_link_df: pd.DataFrame,
     artist_df: pd.DataFrame,
+    wiki_df: pd.DataFrame | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Identify products that need to be removed from artist links and products that need to be linked.
     This function compares current products (and their normalized artist names) against existing
-    product-artist links (enriched with the linked artist's normalized name from artist_df) to
-    determine which links are no longer valid (should be removed) and which product-artist pairs
-    need to be linked to artists.
+    product-artist links (enriched with every normalized name the linked artist is known by:
+    its canonical name and, if provided, its Wikidata aliases) to determine which links are no
+    longer valid (should be removed) and which product-artist pairs need to be linked to artists.
     Args:
         products_df (pd.DataFrame): DataFrame containing current products with artist names
         product_artist_link_df (pd.DataFrame): DataFrame containing existing product-artist links
             with product ID, artist type, and artist ID
-        artist_df (pd.DataFrame): DataFrame containing existing artists with artist ID and artist name
+        artist_df (pd.DataFrame): DataFrame containing existing artists with artist ID, artist name
+            and optionally wikidata_id
+        wiki_df (pd.DataFrame | None): Wikidata dump with wikidata_id and raw_alias columns. When
+            provided, a link is kept if the product artist name matches any Wikidata alias of the
+            linked artist.
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: A tuple containing:
             - products_to_remove_df: DataFrame with product-artist links that no longer match
@@ -49,75 +96,57 @@ def get_products_to_remove_and_link_df(
             - products_to_link_df: DataFrame with new or updated product-artist rows that need
               to be linked to artists
     Side Effects:
-        Logs information about the number of products to remove and link, along with merge statistics
+        Logs information about the number of products to remove and link
     """
     # Join on the word-order-insensitive key so that an existing link to
     # "John Verdon" is kept when the product now lists "Verdon John".
     MERGE_COLUMNS = [PRODUCT_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY]
 
     preproc_products_df = products_df.pipe(prepare_artist_names_for_matching)
-    preproc_artists_df = (
-        artist_df.loc[:, [ARTIST_ID_KEY, ARTIST_NAME_KEY]]
-        .drop_duplicates()
-        .pipe(prepare_artist_names_for_matching)
-        .loc[:, [ARTIST_ID_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY]]
-        .drop_duplicates()
-    )
+    artist_name_keys_df = _build_artist_name_keys_df(artist_df, wiki_df)
 
     actual_product_ids = (
         preproc_products_df.loc[:, MERGE_COLUMNS]
         .drop_duplicates()
         .reset_index(drop=True)
     )
-    linked_product_ids = (
+    linked_products = (
         product_artist_link_df.loc[:, PRODUCTS_KEYS]
         .drop_duplicates()
-        .merge(preproc_artists_df, how="left", on=ARTIST_ID_KEY)
         .reset_index(drop=True)
     )
-    merged_df = actual_product_ids.merge(
-        linked_product_ids,
-        how="outer",
-        left_on=MERGE_COLUMNS,
-        right_on=MERGE_COLUMNS,
-        indicator=True,
-    ).assign(
-        _merge=lambda df: df["_merge"].cat.rename_categories(
-            {
-                "left_only": ProductToLinkStatus.not_matched_with_artists_key,
-                "right_only": ProductToLinkStatus.removed_products_key,
-                "both": ProductToLinkStatus.matched_with_artists_key,
-            }
-        )
+    # An artist can have several name keys: a link is valid if any of them matches.
+    matched_df = actual_product_ids.merge(
+        linked_products.merge(artist_name_keys_df, how="inner", on=ARTIST_ID_KEY),
+        how="inner",
+        on=MERGE_COLUMNS,
     )
+    matched_links_df = matched_df.loc[:, PRODUCTS_KEYS].drop_duplicates()
+    matched_product_ids = matched_df.loc[:, MERGE_COLUMNS].drop_duplicates()
 
     products_to_remove_df = (
-        merged_df.loc[
-            lambda df: df._merge == ProductToLinkStatus.removed_products_key,
-            PRODUCTS_KEYS,
-        ]
+        linked_products.merge(
+            matched_links_df, how="left", on=PRODUCTS_KEYS, indicator=True
+        )
+        .loc[lambda df: df["_merge"] == "left_only", PRODUCTS_KEYS]
         .drop_duplicates()
         .reset_index(drop=True)
     )
     products_to_link_df = (
-        merged_df.loc[
-            lambda df: df._merge == ProductToLinkStatus.not_matched_with_artists_key,
-            MERGE_COLUMNS,
-        ]
+        actual_product_ids.merge(
+            matched_product_ids, how="left", on=MERGE_COLUMNS, indicator=True
+        )
+        .loc[lambda df: df["_merge"] == "left_only", MERGE_COLUMNS]
         .merge(preproc_products_df, how="left", on=MERGE_COLUMNS)
         .drop(columns=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY])
         .drop_duplicates()
         .reset_index(drop=True)
     )
 
-    merge_stats_df = merged_df._merge.value_counts().reset_index()
-
     logger.info(
         f"Products to remove: {len(products_to_remove_df)}, "
-        f"Products to link: {len(products_to_link_df)}",
-        extra={
-            "merge_stats": merge_stats_df.to_dict(orient="records"),
-        },
+        f"Products to link: {len(products_to_link_df)}, "
+        f"Links kept: {len(matched_links_df)}"
     )
 
     return products_to_remove_df, products_to_link_df

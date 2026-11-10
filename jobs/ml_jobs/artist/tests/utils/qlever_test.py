@@ -81,6 +81,37 @@ class TestQleverRetry:
             fetch_wikidata_qlever_csv("SELECT ...", dtype={})
         assert mock_post.call_count == 4
 
+    def test_fetch_csv_retries_truncated_export_then_succeeds(self):
+        """QLever returns 200 with a partial CSV when the export times out
+        mid-stream; it must be retried, not parsed as a complete result."""
+        truncated = _mock_response(
+            200,
+            "wikidata_id\nQ1\nQ2\n !!!!>># An error has occurred while exporting "
+            "the query result. [...] The error message was:\nOperation timed out.\n",
+        )
+        responses = [truncated, _mock_response(200, "wikidata_id\nQ1\nQ2\nQ3\n")]
+        with patch(
+            "src.extraction.qlever.requests.post", side_effect=responses
+        ) as mock_post:
+            df = fetch_wikidata_qlever_csv("SELECT ...", dtype={})
+        assert mock_post.call_count == 2
+        assert list(df["wikidata_id"]) == ["Q1", "Q2", "Q3"]
+
+    def test_fetch_csv_raises_on_persistently_truncated_export(self):
+        truncated = _mock_response(
+            200,
+            "wikidata_id\nQ1\n !!!!>># An error has occurred while exporting "
+            "the query result.\nOperation timed out.\n",
+        )
+        with (
+            patch(
+                "src.extraction.qlever.requests.post", return_value=truncated
+            ) as mock_post,
+            pytest.raises(requests.RequestException, match="Operation timed out"),
+        ):
+            fetch_wikidata_qlever_csv("SELECT ...", dtype={})
+        assert mock_post.call_count == 4
+
     def test_fetch_csv_recovers_from_a_sustained_rate_limit_burst(self):
         """Regression for failure_log.txt: QLever's nginx front-end can 429 a
         burst of requests for several attempts in a row before recovering. The old 3-attempt policy

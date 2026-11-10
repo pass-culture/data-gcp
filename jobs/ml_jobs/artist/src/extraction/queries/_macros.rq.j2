@@ -5,8 +5,10 @@
 #}
 
 {# Entity-type + "has at least one filterable ID property" filter, shared by
-   every template (extract_artists.rq.j2, extract_artist_ids.rq.j2). #}
-{% macro entity_filter(entity_types, id_properties) -%}
+   every template (extract_artists.rq.j2, extract_artist_ids.rq.j2). `shard`,
+   when set, keeps only Q-ids ending with that digit: 10 disjoint, balanced
+   slices, each small enough for QLever to export before timing out. #}
+{% macro entity_filter(entity_types, id_properties, shard=none) -%}
 {% set clauses = [] %}
 {% for p in id_properties if p.filter %}
 {% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
@@ -14,6 +16,9 @@
 ?wikidata_id wdt:P31 ?type .
       VALUES ?type { {{ entity_types | join(' ') }} }
       { {{ clauses | join('\n        UNION ') }} }
+{% if shard is not none %}
+      FILTER(STRENDS(STR(?wikidata_id), "{{ shard }}"))
+{% endif %}
 {%- endmacro %}
 
 {# `matching_score` = count of bound ID properties. Emits the bare summed
@@ -68,13 +73,15 @@ OPTIONAL {
    in its own subquery so QLever doesn't compute a cross-product against
    sibling multi-valued fields before GROUP_CONCAT collapses it back down (see
    queries/README.md for the QLever 429/500 incident this avoids). `scope` is
-   the pre-rendered entity_filter(), restated per field. #}
-{% macro multi_valued_literal(scope, predicate, lang, var, out_var) -%}
+   the pre-rendered entity_filter(), restated per field. `langs` is a list of
+   language tags to keep: Wikidata stores most language-agnostic aliases under
+   "mul" rather than per language. #}
+{% macro multi_valued_literal(scope, predicate, langs, var, out_var) -%}
 OPTIONAL {
   SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?{{ var }}; separator="|") AS ?{{ out_var }}) WHERE {
     {{ scope }}
     ?wikidata_id {{ predicate }} ?{{ var }} .
-    FILTER(LANG(?{{ var }}) = "{{ lang }}")
+    FILTER(LANG(?{{ var }}) IN ("{{ langs | join('", "') }}"))
   } GROUP BY ?wikidata_id
 }
 {%- endmacro %}

@@ -19,6 +19,11 @@ from tenacity import (
 
 from src.extraction.constants import QLEVER_ENDPOINT, QLEVER_HEADERS
 
+# QLever streams results, so a mid-export failure (typically "Operation timed
+# out") still returns HTTP 200: the error is appended after this marker to the
+# partial CSV body.
+QLEVER_EXPORT_ERROR_MARKER = "An error has occurred while exporting the query result"
+
 
 def _log_retry_attempt(retry_state) -> None:
     logger.warning(
@@ -68,4 +73,11 @@ def fetch_wikidata_qlever_csv(
             response=response,
         )
     response.encoding = "utf-8"
+    error_start = response.text.find(QLEVER_EXPORT_ERROR_MARKER)
+    if error_start != -1:
+        # No `response=`: a truncated export is retryable (see _is_retryable).
+        raise requests.RequestException(
+            f"Truncated result from {QLEVER_ENDPOINT}: "
+            f"{response.text[error_start:].strip()[-200:]}"
+        )
     return pd.read_csv(StringIO(response.text), dtype=dtype)

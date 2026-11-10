@@ -113,49 +113,7 @@ with
                 ]
             )
         left join unnest(gtl_labels) as gtl_label
-    ),
-
-    gtl as (
-        select
-            gtl_id,
-            gtl_type,
-            gtl_label_level_1,
-            gtl_label_level_2,
-            gtl_label_level_3,
-            gtl_label_level_4
-        from {{ ref("int_applicative__titelive_gtl") }}
     )
 
-select distinct
-    qpi_mapping.ux_name,
-    qpi_mapping.backend_name,
-    qpi_mapping.gtl_label,
-    gtl.gtl_id,
-    gtl.gtl_type,
-    case
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_1
-        then gtl.gtl_label_level_1
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_2
-        then gtl.gtl_label_level_2
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_3
-        then gtl.gtl_label_level_3
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_4
-        then gtl.gtl_label_level_4
-    end as gtl_label_matched,
-    case
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_1
-        then 1
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_2
-        then 2
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_3
-        then 3
-        when qpi_mapping.gtl_label = gtl.gtl_label_level_4
-        then 4
-    end as matched_level
+select distinct qpi_mapping.ux_name, qpi_mapping.backend_name, qpi_mapping.gtl_label
 from qpi_mapping
-left join
-    gtl
-    on (qpi_mapping.gtl_label = gtl.gtl_label_level_1)
-    or (qpi_mapping.gtl_label = gtl.gtl_label_level_2)
-    or (qpi_mapping.gtl_label = gtl.gtl_label_level_3)
-    or qpi_mapping.gtl_label = gtl.gtl_label_level_4

@@ -4,9 +4,9 @@ as $body$
 BEGIN
     RETURN QUERY
     SELECT
+        qpi_gtl_mapping.ux_name::varchar as gtl_type,
         qpi_gtl_mapping.backend_name::varchar as backend_name,
-        qpi_gtl_mapping.gtl_id::varchar as gtl_id,
-        qpi_gtl_mapping.gtl_type::varchar as gtl_type
+        qpi_gtl_mapping.gtl_label::varchar as gtl_label
     FROM public.qpi_gtl_mapping qpi_gtl_mapping;
 END;
 $body$

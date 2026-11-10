@@ -58,7 +58,9 @@
               people (low_count_denominator_kpis) on any of the last 12 months is
               NULL on every month (is_low_count), as it would disclose individual
               values and the series would not be reliable. Older months with such
-              a denominator are NULL on their own (is_low_count);
+              a denominator are NULL on their own (is_low_count). A month whose
+              denominator counts nobody is NULL too (is_empty_denominator, not
+              published), as an average or share of nobody is not 0;
             - flow KPIs (flow_attribute = 'flow') get a zero row for every month of
               their national series where the territory has no row, so that the
               national_* columns summed over the months of any territory give the
@@ -466,6 +468,17 @@
                     )
                 {% endfor %}
             ) as is_low_count,
+            {% if low_count_denominator_kpis %}
+                filled_kpis.dimension_name != 'NAT'
+                and filled_kpis.denominator = 0
+                and (
+                    {% for prefix in low_count_denominator_kpis %}
+                        {% if not loop.first %}or {% endif %}
+                        starts_with(filled_kpis.kpi_name, '{{ prefix }}')
+                    {% endfor %}
+                )
+            {% else %} false
+            {% endif %} as is_empty_denominator,
             filled_kpis.is_secret_applicable
             and coalesce(secret_territories.is_secret_stat, false) as is_secret_stat,
             secret_territories.secret_detail as territory_secret_detail,
@@ -526,6 +539,7 @@
             is_missing_month,
             is_secret_stat,
             is_low_count,
+            is_empty_denominator,
             territory_secret_detail,
             label,
             intitule
@@ -536,7 +550,8 @@
             flagged_kpis.is_secret_stat
             or flagged_kpis.is_low_count
             or flagged_kpis.is_national_only
-            or flagged_kpis.is_missing_month,
+            or flagged_kpis.is_missing_month
+            or flagged_kpis.is_empty_denominator,
             null,
             coalesce(flagged_kpis.numerator, 0)
         ) as numerator,
@@ -544,7 +559,8 @@
             flagged_kpis.is_secret_stat
             or flagged_kpis.is_low_count
             or flagged_kpis.is_national_only
-            or flagged_kpis.is_missing_month,
+            or flagged_kpis.is_missing_month
+            or flagged_kpis.is_empty_denominator,
             null,
             coalesce(flagged_kpis.denominator, 0)
         ) as denominator,
@@ -552,7 +568,8 @@
             flagged_kpis.is_secret_stat
             or flagged_kpis.is_low_count
             or flagged_kpis.is_national_only
-            or flagged_kpis.is_missing_month,
+            or flagged_kpis.is_missing_month
+            or flagged_kpis.is_empty_denominator,
             null,
             coalesce(flagged_kpis.kpi, 0)
         ) as kpi,
@@ -570,7 +587,10 @@
         case
             when flagged_kpis.is_secret_stat or flagged_kpis.is_low_count
             then 'Données non disponibles (secret statistique)'
-            when flagged_kpis.is_national_only or flagged_kpis.is_missing_month
+            when
+                flagged_kpis.is_national_only
+                or flagged_kpis.is_missing_month
+                or flagged_kpis.is_empty_denominator
             then 'Données non disponibles'
         end as secret_reason,
         -- internal: the rule behind the mask, not to be published
@@ -584,6 +604,8 @@
             then 'KPI publié au national uniquement'
             when flagged_kpis.is_missing_month
             then 'Mois absent de la série du territoire'
+            when flagged_kpis.is_empty_denominator
+            then 'Aucun bénéficiaire derrière cette moyenne ou part'
         end as secret_detail,
         date_diff(
             {{ external_reporting_last_month() }}, flagged_kpis.partition_month, month

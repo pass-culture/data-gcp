@@ -13,13 +13,17 @@ BigQuery. Run from the job root, e.g.:
 """
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import polars as pl
 import typer
 from loguru import logger
 
-from src.common.config import apply_overrides, load_config
+from src.common.config import CONFIGS_PATH, apply_overrides, load_config
+from src.common.constants import MLFLOW_RUN_ID_COLUMN
+from src.common.mlflow import log_config_to_run
+from src.common.run import read_run_id
 from src.vocabulary.cleaning import build_boilerplate_pattern, clean_descriptions
 from src.vocabulary.cleaning import (
     find_boilerplate_segments as _find_boilerplate_segments,
@@ -30,6 +34,8 @@ from src.vocabulary.delta import (
     select_delta,
 )
 from src.vocabulary.filtering import filter_documents
+from src.vocabulary.lemmatization import lemmatize_documents
+from src.vocabulary.pruning import build_document, build_stop_words, prune_lemmas
 
 app = typer.Typer(help="Vocabulary modelling: cleaning, lemmatization, registry.")
 
@@ -148,6 +154,73 @@ def select_delta_command(
     logger.info(
         f"Selected {delta.height} items to (re)process "
         f"({n_deleted} deleted) -> {output_file_path}"
+    )
+
+
+@app.command()
+def process(
+    input_file_path: str = typer.Option(..., help="Delta parquet from select-delta."),
+    output_file_path: str = typer.Option(
+        ..., help="Processed documents, ready for update-registry."
+    ),
+    processing_version: str = typer.Option(..., help="This run's processing version."),
+    config_file_name: str = typer.Option("default"),
+    run_id: str | None = typer.Option(
+        None,
+        help="Pipeline run id for mlflow_run_id provenance. Defaults to the "
+        "shared run file written by `common start`.",
+    ),
+) -> None:
+    config = load_config(config_file_name)
+    resolved_run_id = run_id or read_run_id()
+
+    delta = pl.read_parquet(input_file_path).with_columns(
+        pl.lit(processing_version).alias("processing_version"),
+        pl.lit(datetime.now(UTC)).alias("processed_at"),
+        pl.lit(resolved_run_id).alias(MLFLOW_RUN_ID_COLUMN),
+    )
+    to_process = delta.filter(~pl.col("is_deleted"))
+    deleted = delta.filter(pl.col("is_deleted"))
+
+    stop_words = build_stop_words(
+        config.vocabulary.generic_stop_words, config.vocabulary.forbidden_words
+    )
+    lemma_pairs = lemmatize_documents(
+        to_process["cleaned_description"].to_list(),
+        spacy_model=config.vocabulary.spacy_model,
+        pos=set(config.vocabulary.pos),
+        enable_ner=config.vocabulary.ner,
+        chunk_texts=config.vocabulary.chunk_texts,
+    )
+    noun_lemmas = [prune_lemmas(nouns, stop_words) for nouns, _ in lemma_pairs]
+    verb_lemmas = [prune_lemmas(verbs, stop_words) for _, verbs in lemma_pairs]
+    documents = [
+        build_document(nouns, verbs)
+        for nouns, verbs in zip(noun_lemmas, verb_lemmas, strict=True)
+    ]
+    is_empty = [len(document) == 0 for document in documents]
+
+    processed = to_process.with_columns(
+        (pl.col("gtl_id").str.slice(0, 2) + "000000").alias("node_id"),
+        pl.Series("noun_lemmas", noun_lemmas, dtype=pl.List(pl.String)),
+        pl.Series("verb_lemmas", verb_lemmas, dtype=pl.List(pl.String)),
+        pl.Series("document", documents, dtype=pl.String),
+        pl.Series("is_empty", is_empty, dtype=pl.Boolean),
+    )
+
+    result = pl.concat([processed, deleted], how="diagonal_relaxed")
+    result.write_parquet(output_file_path)
+
+    log_config_to_run(
+        resolved_run_id,
+        "vocabulary",
+        config.vocabulary,
+        str(CONFIGS_PATH / f"{config_file_name}.yaml"),
+        metrics={"n_processed": processed.height, "n_deleted": deleted.height},
+    )
+    logger.info(
+        f"Processed {processed.height} items ({deleted.height} deleted) "
+        f"-> {output_file_path}"
     )
 
 

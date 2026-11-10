@@ -197,3 +197,53 @@ def test_select_delta_processing_version_bump_reprocesses_everything(
     assert result.exit_code == 0, result.output
     delta = pl.read_parquet(second_output)
     assert set(delta.filter(~pl.col("is_deleted"))["item_id"].to_list()) == {"1", "2"}
+
+
+def test_process_builds_documents_and_flags_empty_and_deleted(
+    tmp_path: pathlib.Path,
+) -> None:
+    delta = pl.DataFrame(
+        {
+            "item_id": ["1", "2", "3"],
+            "gtl_id": ["01010000", "01020000", "02000000"],
+            "cleaned_description": [
+                "Les chats aimaient jouer avec les enfants.",
+                "",
+                None,
+            ],
+            "is_deleted": [False, False, True],
+        }
+    )
+    input_path = tmp_path / "delta.parquet"
+    delta.write_parquet(input_path)
+    output_path = tmp_path / "processed.parquet"
+
+    result = runner.invoke(
+        vocabulary_cli.app,
+        [
+            "process",
+            "--input-file-path",
+            str(input_path),
+            "--output-file-path",
+            str(output_path),
+            "--processing-version",
+            "v1",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    processed = pl.read_parquet(output_path)
+
+    row1 = processed.filter(pl.col("item_id") == "1").row(0, named=True)
+    assert "chat" in row1["noun_lemmas"]
+    assert "enfant" in row1["noun_lemmas"]
+    assert row1["node_id"] == "01000000"
+    assert row1["is_empty"] is False
+    assert row1["processing_version"] == "v1"
+
+    row2 = processed.filter(pl.col("item_id") == "2").row(0, named=True)
+    assert row2["is_empty"] is True
+
+    row3 = processed.filter(pl.col("item_id") == "3").row(0, named=True)
+    assert row3["is_deleted"] is True
+    assert row3["processing_version"] == "v1"

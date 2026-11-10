@@ -17,6 +17,7 @@ DEFAULT_DETAIL_COLUMNS: List[str] = [
     "subcategory_id",
     "search_group_name",
     "gtl_id",
+    "gtl_l2",
     "gtl_l3",
     "gtl_l4",
     "total_offers",

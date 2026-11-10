@@ -36,7 +36,9 @@ vocabulary = [
 reduction = [
     "umap-learn>=0.6.0",
 ]
-clustering = []
+clustering = [
+    "hdbscan>=0.8.44",
+]
 labelling = []
 gpu = [
     "cuml-cu13>=26.10.0 ; sys_platform == 'linux'",

@@ -120,7 +120,7 @@ flowchart TD
         off0["build_semantic_space.py<br/>index offers <br/> non-synchro+product leftovers"]
         off0 --> off1["linkage_candidates.py<br/>retrieve neighbors <br/> offer ↔ offer"]
         off1 --> off2["link_items.py<br/>verify title <br/> Jaro-Winkler ≥ 0.95"]
-        off2 --> off3["assign_linked_ids.py<br/>graph → connected components <br/> → item_cluster_N"]
+        off2 --> off3["assign_linked_ids.py<br/>graph → connected components <br/> → item_cluster_o{min offer_id}"]
     end
 
     prod3 --> unify["3 · Unify→item_offer_mapping <br/> (build_mapping.sql)<br/>UNION of both tables <br/> normalized to  <br/>(item_id, offer_id)"]
@@ -142,10 +142,16 @@ Priority chain in `int_applicative__offer_item_id`: we prioritize linking an off
 | item_id | When | Creation | Stable? |
 |---|---|---|---|
 | `product-*` | The offer is attached to a canonical catalog product. | imported from backend canonical products | **Yes** — canonical id |
-| `item_cluster_*` | No product, but the ML job matched it to other offers. | Inferred — semantic + fuzzy + graph. | **No** — `item_cluster_*` has a positional index *|
+| `item_cluster_*` | No product, but the ML job matched it to other offers. | Inferred — semantic + fuzzy + graph. | **Mostly** — keyed on the cluster's oldest offer * |
 | `offer-*` | No product and no match — a singleton. | None — one offer, one item. | **Yes** — the offer id |
 
->  \* at each run, new item-cluster are created and are indexed incerementally. One offer can have an item-id='item-cluster-x' on last week's run, may have a new cluster "item_cluster_y" in this week's run. This is a known caveat and should be resolved soon.
+> \* Clusters are recomputed from scratch at every run, but their id is deterministic: `item_cluster_o<anchor>`, where the anchor is the smallest (oldest) offer_id in the cluster (see `assign_cluster_id` in `assign_linked_ids.py`). As a result:
+> - when new offers join a cluster, the id is kept (new offers have higher offer_ids);
+> - when two clusters merge, the older anchor's id wins;
+> - when a cluster splits, the part that holds the anchor keeps the id and the other part gets its own;
+> - the id changes only if the anchor offer leaves the cluster (e.g. it gets linked to a `product-*`, or is no longer a candidate).
+>
+> The `o` marker keeps these ids distinct from the legacy positional ids `item_cluster_<N>`, which were renumbered at every run.
 
 ### Thresholds & parameters
 

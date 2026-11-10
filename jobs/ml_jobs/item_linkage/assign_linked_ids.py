@@ -3,10 +3,42 @@ import pandas as pd
 import typer
 from loguru import logger
 
+from constants import CLUSTER_ID_PREFIX, OFFER_ID_PREFIX
 from utils.common import read_parquet_files_from_gcs_directory
 from utils.gcs_utils import upload_parquet
 
 app = typer.Typer()
+
+
+def _anchor_sort_key(item_id: str) -> tuple[int, int, str]:
+    """Order item ids by numeric offer_id (oldest first).
+
+    Numeric "offer-<n>" ids always sort before any other id, and are compared as
+    integers ("offer-9" < "offer-10"). Unexpected ids fall back to string order so
+    the result stays deterministic instead of failing.
+    """
+    raw_id = str(item_id).removeprefix(OFFER_ID_PREFIX)
+    if raw_id.isdecimal():
+        return (0, int(raw_id), "")
+    return (1, 0, str(item_id))
+
+
+def assign_cluster_id(component: set[str]) -> str:
+    """Return a deterministic cluster id anchored on the cluster's oldest offer.
+
+    The id only depends on the smallest offer_id of the cluster, so it is kept
+    across runs when newer offers join, the older anchor wins when clusters merge,
+    and the part holding the anchor keeps it when a cluster splits.
+    """
+    anchor = min(component, key=_anchor_sort_key)
+    cluster_id = f"{CLUSTER_ID_PREFIX}{str(anchor).removeprefix(OFFER_ID_PREFIX)}"
+    if _anchor_sort_key(anchor)[0] != 0:
+        # Upstream SQL always yields "offer-<n>" ids: reaching this means the input
+        # contract changed, and fallback ids may collide (e.g. "offer-abc" / "abc").
+        logger.warning(
+            f"Cluster without numeric offer id, anchored on {anchor!r} -> {cluster_id}"
+        )
+    return cluster_id
 
 
 def build_graph_and_assign_ids(linked_offers: pd.DataFrame) -> pd.DataFrame:
@@ -14,13 +46,11 @@ def build_graph_and_assign_ids(linked_offers: pd.DataFrame) -> pd.DataFrame:
     edges = linked_offers[["item_id_synchro", "item_id_candidate"]].values.tolist()
     G.add_edges_from(edges)
 
-    connected_components = list(nx.connected_components(G))
-
     offer_id_mapping = {}
-    for idx, component in enumerate(connected_components):
-        new_offer_id = f"item_cluster_{idx}"
+    for component in nx.connected_components(G):
+        cluster_id = assign_cluster_id(component)
         for offer_id in component:
-            offer_id_mapping[offer_id] = new_offer_id
+            offer_id_mapping[offer_id] = cluster_id
 
     linked_offers["new_item_id"] = linked_offers["item_id_synchro"].map(
         offer_id_mapping

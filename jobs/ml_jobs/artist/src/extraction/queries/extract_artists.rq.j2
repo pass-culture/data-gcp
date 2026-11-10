@@ -4,7 +4,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX schema: <http://schema.org/>
 {% import "_macros.rq.j2" as m %}
-{% set scope = m.entity_filter(entity_types, id_properties) %}
+{% set scope = m.entity_filter(entity_types, id_properties, shard) %}
 
 SELECT
   ?wikidata_id

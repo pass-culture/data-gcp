@@ -18,7 +18,15 @@ It isn't a template itself and is never passed to `render_query`.
 
 ## Templates
 
-One query per target, sent to QLever in a single request.
+One query per target. Targets with `sharded=True` in `QUERY_CONFIGS` (music,
+book, movie) are sent as 10 requests instead of one: `entity_filter()` takes a
+`shard` digit and keeps only Q-ids ending with it
+(`FILTER(STRENDS(STR(?wikidata_id), "<d>"))`), and `extract_query`
+concatenates the 10 results. QLever streams its results and gives up on a
+response that takes too long to send ("Operation timed out"), which these full
+queries hit. The last digit splits entities into disjoint, roughly equal
+slices, with no pagination state. Because every subquery reuses
+`entity_filter()`, each of them shrinks too, not just the final join.
 
 - **`extract_artists.rq.j2`** — the shared template for `music`, `book`, and
   `movie`. Parameterized by `entity_types`, `id_properties`, and `base_mode`:

@@ -5,8 +5,10 @@
 #}
 
 {# Entity-type + "has at least one filterable ID property" filter, shared by
-   every template (extract_artists.rq.j2, extract_artist_ids.rq.j2). #}
-{% macro entity_filter(entity_types, id_properties) -%}
+   every template (extract_artists.rq.j2, extract_artist_ids.rq.j2). `shard`,
+   when set, keeps only Q-ids ending with that digit: 10 disjoint, balanced
+   slices, each small enough for QLever to export before timing out. #}
+{% macro entity_filter(entity_types, id_properties, shard=none) -%}
 {% set clauses = [] %}
 {% for p in id_properties if p.filter %}
 {% set _ = clauses.append('{ ?wikidata_id ' ~ p.property ~ ' [] . }') %}
@@ -14,6 +16,9 @@
 ?wikidata_id wdt:P31 ?type .
       VALUES ?type { {{ entity_types | join(' ') }} }
       { {{ clauses | join('\n        UNION ') }} }
+{% if shard is not none %}
+      FILTER(STRENDS(STR(?wikidata_id), "{{ shard }}"))
+{% endif %}
 {%- endmacro %}
 
 {# `matching_score` = count of bound ID properties. Emits the bare summed

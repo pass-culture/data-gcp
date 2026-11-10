@@ -24,6 +24,7 @@ from src.extraction.constants import (
 )
 
 TEMPLATE_DIR = Path(__file__).resolve().parent / "queries"
+SHARDS = [str(digit) for digit in range(10)]
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,10 @@ class QueryConfig:
     raising, and `merge` skips it instead of hard-failing the whole merge. Used by
     `music_ids`, whose own query can legitimately return nothing (see
     `merge_data`'s pre-merge step in src/extraction/wikidata_merge.py).
+
+    `sharded`, when true, splits the query into SHARDS (one per last digit of the
+    Q-id) fetched one after another and concatenated, so that no single QLever
+    response runs past the server's export timeout.
     """
 
     template: str
@@ -50,6 +55,7 @@ class QueryConfig:
     id_properties: list[IdProperty] = field(default_factory=list)
     base_mode: Literal["scored", "grouped"] = "scored"
     optional: bool = False
+    sharded: bool = False
 
     @property
     def id_column_dtypes(self) -> dict[str, type]:
@@ -67,6 +73,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         entity_types=MUSIC_ENTITY_TYPES,
         id_properties=MUSIC_ID_PROPERTIES,
         base_mode="grouped",
+        sharded=True,
     ),
     MUSIC_IDS_KEY: QueryConfig(
         template="extract_artist_ids.rq.j2",
@@ -78,11 +85,13 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
         template="extract_artists.rq.j2",
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=BOOK_ID_PROPERTIES,
+        sharded=True,
     ),
     "movie": QueryConfig(
         template="extract_artists.rq.j2",
         entity_types=PERSON_ENTITY_TYPES,
         id_properties=MOVIE_ID_PROPERTIES,
+        sharded=True,
     ),
     # IDs only, on purpose: wdt:P2671 matches ~2.9M people, far too many to fetch
     # labels/aliases for, and downstream only uses the boolean `gkg` flag
@@ -110,11 +119,12 @@ _jinja_env = Environment(
 )
 
 
-def render_query(query_name: str) -> str:
+def render_query(query_name: str, shard: str | None = None) -> str:
     config = QUERY_CONFIGS[query_name]
     rendered_template = _jinja_env.get_template(config.template)
     return rendered_template.render(
         entity_types=config.entity_types,
         id_properties=config.id_properties,
         base_mode=config.base_mode,
+        shard=shard,
     )

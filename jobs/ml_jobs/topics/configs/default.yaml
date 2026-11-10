@@ -1,0 +1,71 @@
+language: fr
+split_level: 1 # 0 = one corpus, 1..4 = GTL depth (section 4.4)
+min_corpus_items: 1000 # smaller corpora are not modelled
+corpora: all # or an explicit list of corpus ids
+
+vocabulary:
+  min_description_chars: 50 # after boilerplate removal
+  boilerplate:
+    min_segment_chars: 40
+    min_share: 0.0003 # 0.03 % of distinct descriptions
+    max_texts: 200000 # random subset used to find segments
+    seed: 0
+  spacy_model: fr_core_news_sm
+  pos: [NOUN, VERB]
+  chunk_texts: 500 # texts per worker task
+  ner: false # next iteration
+  generic_stop_words:
+    [
+      aller,
+      avoir,
+      croire,
+      devoir,
+      dire,
+      donner,
+      falloir,
+      faire,
+      laisser,
+      mettre,
+      partir,
+      passer,
+      pouvoir,
+      prendre,
+      rendre,
+      savoir,
+      sembler,
+      tenir,
+      trouver,
+      venir,
+      voir,
+      vouloir,
+      chose,
+      fois,
+      an,
+    ]
+  forbidden_words: [m, m., mm., mme, dr, dr., t., bnf, bnf., pp., cf., etc.]
+
+reduction:
+  dim: 256 # first values of the 768-d embedding, then L2
+  n_neighbors: 15
+  n_components: 5
+  min_dist: 0.0
+  metric: cosine
+  seed: 42
+
+clustering:
+  min_cluster_size: auto # clamp(n_items // 100, 50, 150)
+  min_samples: 5
+  max_cluster_share: 0.2 # max_cluster_size = int(0.2 * n_items)
+  metric: euclidean
+  cpu_fallback_jobs: 32
+  uuid_match_jaccard: 0.5
+
+labelling:
+  min_df: 15 # documents of the corpus containing the word
+  max_features: 50000
+  ngram_max: 1 # unigrams only
+  reduce_frequent_words: true
+  top_n_words: 100
+  label_words: 4
+  reassign_outliers: false
+  min_shared_words: 4

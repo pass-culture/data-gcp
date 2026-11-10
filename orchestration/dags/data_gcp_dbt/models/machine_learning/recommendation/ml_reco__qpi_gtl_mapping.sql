@@ -1,19 +1,13 @@
--- Mapping between the QPI ("Quiz de Préférences Initial") UX category names
--- shown to users and the true GTL identifiers they correspond to, resolved
--- from int_applicative__titelive_gtl. Each gtl_label used in the static
--- mapping below can come from any GTL level (1 to 4). A gtl_label matches
--- a given level only when that level's column equals the label AND the
--- next level down is null, i.e. the row is the exact GTL node for that
--- label and not one of its descendants (descendants inherit the same
--- ancestor label in their own level columns, e.g. gtl_id 01010000 has
--- gtl_label_level_2 = "Romans & Nouvelles" and gtl_label_level_3 null,
--- while its child gtl_id 01010100 has the same gtl_label_level_2 value but
--- a non-null gtl_label_level_3, so it must be excluded).
--- backend_name is the backend ("Nom BDD") identifier associated to each UX
--- name. All qpi_mapping rows are kept even without a match, for debugging:
--- "Aucun" rows (LIVRES_AUCUN, MUSIQUES_AUCUN) carry an empty gtl_labels
--- array and never match, and any gtl_label that fails to resolve to a
--- gtl_id surfaces with null gtl_id/gtl_type/gtl_label_matched/matched_level.
+-- Static mapping between the QPI ("Quiz de Préférences Initial") UX category
+-- names shown to users during onboarding and the raw Titelive GTL labels they
+-- correspond to. backend_name is the backend ("Nom BDD") identifier associated
+-- to each UX name (ux_name and backend_name are 1:1). A backend_name can map
+-- to several gtl_labels (e.g. "CULTURE" covers 4 labels), so this table has
+-- one row per (ux_name, backend_name, gtl_label) tuple.
+-- "Aucun" rows (LIVRES_AUCUN, MUSIQUES_AUCUN) carry an empty gtl_labels array,
+-- so they surface as a single row with gtl_label null after the unnest below.
+-- Downstream, recommendation_v2 resolves backend_name -> gtl_label via
+-- qpi_gtl_mapping_mv to filter Vertex AI retrieval candidates on gtl_l2.
 with
     qpi_mapping as (
         select ux_name, backend_name, gtl_label

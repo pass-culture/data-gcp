@@ -21,9 +21,10 @@ SELECT * FROM get_qpi_gtl_mapping_{{ ts_nodash  }}()
 WITH NO DATA;
 
 -- Create indexes
--- One row per (backend_name)
+-- One row per (backend_name, gtl_label): a backend_name can map to several
+-- gtl_labels (e.g. "CULTURE" covers 4 labels), so backend_name alone is not unique.
 CREATE UNIQUE INDEX idx_qpi_gtl_mapping_mv_{{ ts_nodash }}
-    ON public.qpi_gtl_mapping_mv_tmp USING btree (backend_name);
+    ON public.qpi_gtl_mapping_mv_tmp USING btree (backend_name, gtl_label);
 
 -- Refresh state
 refresh materialized view qpi_gtl_mapping_mv_tmp

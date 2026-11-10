@@ -19,3 +19,4 @@
 {% docs column__reco_booking_creation_trend %} Trend of booking creations for a given item. {% enddocs %}
 {% docs column__qpi_ux_name %} Name of the UX category shown to users in the QPI onboarding flow (for example, "Mangas ou BD"). {% enddocs %}
 {% docs column__qpi_backend_name %} Backend identifier ("Nom BDD") associated to the UX category (for example, "MANGAS"). {% enddocs %}
+{% docs column__qpi_gtl_label %} Raw Titelive GTL label (any level, 1 to 4) associated to the QPI backend_name (for example, "Sports"). Null for the "Aucun" placeholder categories. {% enddocs %}

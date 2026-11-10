@@ -12,7 +12,5 @@ models:
         description: "{{ doc('column__qpi_backend_name') }}"
         data_tests:
           - not_null
-      - name: gtl_id
-        description: "{{ doc('column__titelive_gtl_id') }}"
-        data_tests:
-          - not_null
+      - name: gtl_label
+        description: "{{ doc('column__qpi_gtl_label') }}"

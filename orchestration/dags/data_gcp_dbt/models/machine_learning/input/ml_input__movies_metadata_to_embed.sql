@@ -126,10 +126,13 @@ select
     base.image,
     base.offer_creation_date,
     base.content_hash,
-    base.to_embed,
+    {{ to_embed_condition("base", "past") }} as to_embed,
     base.author_concat
 from {{ ref("ml_input__all_items_metadata_to_embed") }} as base
 left join product_metadata as prod on base.item_id = prod.item_id
+left join
+    {{ ref("ml_semantic_embedding__movies_metadata") }} as past
+    on base.item_id = past.item_id
 where
     starts_with(base.item_id, 'product')
     and (

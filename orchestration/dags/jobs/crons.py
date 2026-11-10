@@ -101,6 +101,8 @@ SCHEDULE_DICT = {
         "stg": "0 12 * * *",  # every day at 12:00 PM
         "dev": "0 12 * * 1",  # every Monday at 12:00 PM
     },
+    "topics": "0 5 * * *",  # every day at 5:00 AM (incremental by default;
+    # trigger manually with full_refit=True for the weekly refit)
 }
 
 

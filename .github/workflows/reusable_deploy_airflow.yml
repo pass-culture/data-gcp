@@ -208,6 +208,9 @@ jobs:
           echo "Deploying common config to EU bucket..."
           gsutil -m rsync -d -r dags/common "gs://${bucket}/dags/common"
 
+          echo "Deploying shared root-level job modules (e.g. crons.py) to EU bucket..."
+          gsutil -m cp dags/jobs/*.py "gs://${bucket}/dags/jobs/"
+
           echo "Resolving migrated DAG files..."
           migrated_paths="$(uv run python ../.github/workflows/scripts/migrated_dags.py --jobs-dir dags/jobs)"
 

@@ -68,13 +68,15 @@ OPTIONAL {
    in its own subquery so QLever doesn't compute a cross-product against
    sibling multi-valued fields before GROUP_CONCAT collapses it back down (see
    queries/README.md for the QLever 429/500 incident this avoids). `scope` is
-   the pre-rendered entity_filter(), restated per field. #}
-{% macro multi_valued_literal(scope, predicate, lang, var, out_var) -%}
+   the pre-rendered entity_filter(), restated per field. `langs` is a list of
+   language tags to keep: Wikidata stores most language-agnostic aliases under
+   "mul" rather than per language. #}
+{% macro multi_valued_literal(scope, predicate, langs, var, out_var) -%}
 OPTIONAL {
   SELECT ?wikidata_id (GROUP_CONCAT(DISTINCT ?{{ var }}; separator="|") AS ?{{ out_var }}) WHERE {
     {{ scope }}
     ?wikidata_id {{ predicate }} ?{{ var }} .
-    FILTER(LANG(?{{ var }}) = "{{ lang }}")
+    FILTER(LANG(?{{ var }}) IN ("{{ langs | join('", "') }}"))
   } GROUP BY ?wikidata_id
 }
 {%- endmacro %}

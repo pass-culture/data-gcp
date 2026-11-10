@@ -6,6 +6,7 @@ these go through the ``google.cloud.bigquery`` client directly.
 """
 
 import io
+import uuid
 
 import polars as pl
 from google.cloud import bigquery
@@ -63,3 +64,56 @@ def write_dataframe(
         )
     job.result()
     logger.info(f"Wrote {data.height} rows to {destination} ({write_disposition})")
+
+
+def merge_upsert(
+    data: pl.DataFrame,
+    dataset: str,
+    table: str,
+    key_columns: list[str],
+    schema: list[bigquery.SchemaField],
+) -> None:
+    """Upsert ``data`` into ``{dataset}.{table}``, matched on ``key_columns``:
+    existing rows are replaced, new ones inserted.
+
+    BigQuery has no "load with merge", so this loads ``data`` into a
+    temporary staging table first, then runs one ``MERGE`` statement; the
+    staging table is dropped afterward. Creates the destination table (from
+    ``schema``) first if it doesn't exist yet, so a first incremental run
+    ahead of any full refit still works.
+    """
+    client = bigquery.Client(project=GCP_PROJECT_ID)
+    destination = f"{GCP_PROJECT_ID}.{dataset}.{table}"
+    staging_table = f"{table}__staging_{uuid.uuid4().hex[:8]}"
+    staging_destination = f"{GCP_PROJECT_ID}.{dataset}.{staging_table}"
+
+    client.create_table(bigquery.Table(destination, schema=schema), exists_ok=True)
+    write_dataframe(
+        data,
+        dataset,
+        staging_table,
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        schema=schema,
+    )
+
+    columns = [field.name for field in schema]
+    match_condition = " AND ".join(f"T.{col} = S.{col}" for col in key_columns)
+    update_clause = ", ".join(
+        f"{col} = S.{col}" for col in columns if col not in key_columns
+    )
+    insert_columns = ", ".join(columns)
+    insert_values = ", ".join(f"S.{col}" for col in columns)
+    merge_sql = f"""
+        MERGE `{destination}` T
+        USING `{staging_destination}` S
+        ON {match_condition}
+        WHEN MATCHED THEN UPDATE SET {update_clause}
+        WHEN NOT MATCHED THEN INSERT ({insert_columns}) VALUES ({insert_values})
+    """
+
+    try:
+        client.query(merge_sql).result()
+    finally:
+        client.delete_table(staging_destination, not_found_ok=True)
+
+    logger.info(f"Upserted {data.height} rows into {destination} (key: {key_columns})")

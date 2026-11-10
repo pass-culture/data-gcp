@@ -1,7 +1,10 @@
 import json
 import pathlib
+from unittest.mock import MagicMock
 
 import polars as pl
+import pytest
+from google.api_core.exceptions import NotFound
 from typer.testing import CliRunner
 
 from cli import vocabulary as vocabulary_cli
@@ -247,3 +250,54 @@ def test_process_builds_documents_and_flags_empty_and_deleted(
     row3 = processed.filter(pl.col("item_id") == "3").row(0, named=True)
     assert row3["is_deleted"] is True
     assert row3["processing_version"] == "v1"
+
+
+def test_update_registry_upserts_documents_and_recomputes_vocabulary(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    delta = pl.DataFrame(
+        {
+            "item_id": ["1"],
+            "gtl_id": ["01000000"],
+            "noun_lemmas": [["roman"]],
+            "verb_lemmas": [[]],
+            "is_deleted": [False],
+            "is_empty": [False],
+        }
+    )
+    input_path = tmp_path / "processed.parquet"
+    delta.write_parquet(input_path)
+
+    merge_upsert_mock = MagicMock()
+    monkeypatch.setattr(vocabulary_cli, "merge_upsert", merge_upsert_mock)
+
+    current_documents = pl.DataFrame(
+        {
+            "item_id": ["1"],
+            "gtl_id": ["01000000"],
+            "noun_lemmas": [["roman"]],
+            "verb_lemmas": [[]],
+        }
+    )
+    read_dataframe_mock = MagicMock(
+        side_effect=[current_documents, NotFound("no vocabulary table yet")]
+    )
+    monkeypatch.setattr(vocabulary_cli, "read_dataframe", read_dataframe_mock)
+
+    write_dataframe_mock = MagicMock()
+    monkeypatch.setattr(vocabulary_cli, "write_dataframe", write_dataframe_mock)
+
+    log_config_mock = MagicMock()
+    monkeypatch.setattr(vocabulary_cli, "log_config_to_run", log_config_mock)
+
+    result = runner.invoke(
+        vocabulary_cli.app,
+        ["update-registry", "--input-file-path", str(input_path)],
+    )
+
+    assert result.exit_code == 0, result.output
+    merge_upsert_mock.assert_called_once()
+    write_dataframe_mock.assert_called_once()
+    written_vocabulary = write_dataframe_mock.call_args[0][0]
+    assert "roman" in written_vocabulary["term"].to_list()
+    log_config_mock.assert_called_once()

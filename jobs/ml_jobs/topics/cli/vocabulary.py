@@ -18,12 +18,20 @@ from pathlib import Path
 
 import polars as pl
 import typer
+from google.api_core.exceptions import NotFound
+from google.cloud import bigquery
 from loguru import logger
 
+from src.common.bigquery import merge_upsert, read_dataframe, write_dataframe
 from src.common.config import CONFIGS_PATH, apply_overrides, load_config
-from src.common.constants import MLFLOW_RUN_ID_COLUMN
+from src.common.constants import (
+    BIGQUERY_ML_FEATURES_DATASET,
+    GCP_PROJECT_ID,
+    MLFLOW_RUN_ID_COLUMN,
+)
 from src.common.mlflow import log_config_to_run
 from src.common.run import read_run_id
+from src.common.schemas import TOPIC_ITEM_DOCUMENT_SCHEMA, TOPIC_VOCABULARY_SCHEMA
 from src.vocabulary.cleaning import build_boilerplate_pattern, clean_descriptions
 from src.vocabulary.cleaning import (
     find_boilerplate_segments as _find_boilerplate_segments,
@@ -36,6 +44,7 @@ from src.vocabulary.delta import (
 from src.vocabulary.filtering import filter_documents
 from src.vocabulary.lemmatization import lemmatize_documents
 from src.vocabulary.pruning import build_document, build_stop_words, prune_lemmas
+from src.vocabulary.registry import update_vocabulary
 
 app = typer.Typer(help="Vocabulary modelling: cleaning, lemmatization, registry.")
 
@@ -221,6 +230,87 @@ def process(
     logger.info(
         f"Processed {processed.height} items ({deleted.height} deleted) "
         f"-> {output_file_path}"
+    )
+
+
+@app.command("update-registry")
+def update_registry(
+    input_file_path: str = typer.Option(
+        ..., help="Processed documents parquet from `process`."
+    ),
+    config_file_name: str = typer.Option("default"),
+    run_id: str | None = typer.Option(
+        None,
+        help="Pipeline run id for MLflow logging. Defaults to the shared run file.",
+    ),
+) -> None:
+    """Upsert this run's documents into topic_item_document, then recompute
+    topic_vocabulary from the full current table (not just this run's
+    delta).
+    """
+    config = load_config(config_file_name)
+    resolved_run_id = run_id or read_run_id()
+
+    delta = pl.read_parquet(input_file_path)
+    merge_upsert(
+        delta,
+        BIGQUERY_ML_FEATURES_DATASET,
+        "topic_item_document",
+        key_columns=["item_id"],
+        schema=TOPIC_ITEM_DOCUMENT_SCHEMA,
+    )
+
+    try:
+        current_documents = read_dataframe(
+            "select item_id, gtl_id, noun_lemmas, verb_lemmas from "
+            f"`{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.topic_item_document` "
+            "where not is_deleted and not is_empty"
+        )
+    except NotFound:
+        current_documents = pl.DataFrame(
+            schema={
+                "item_id": pl.String,
+                "gtl_id": pl.String,
+                "noun_lemmas": pl.List(pl.String),
+                "verb_lemmas": pl.List(pl.String),
+            }
+        )
+
+    try:
+        existing_vocabulary = read_dataframe(
+            "select * from "
+            f"`{GCP_PROJECT_ID}.{BIGQUERY_ML_FEATURES_DATASET}.topic_vocabulary`"
+        )
+    except NotFound:
+        existing_vocabulary = None
+
+    stop_words = build_stop_words(
+        config.vocabulary.generic_stop_words, config.vocabulary.forbidden_words
+    )
+    vocabulary = update_vocabulary(
+        current_documents, stop_words, existing_vocabulary, now=datetime.now(UTC)
+    )
+    write_dataframe(
+        vocabulary,
+        BIGQUERY_ML_FEATURES_DATASET,
+        "topic_vocabulary",
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        schema=TOPIC_VOCABULARY_SCHEMA,
+    )
+
+    log_config_to_run(
+        resolved_run_id,
+        "vocabulary",
+        config.vocabulary,
+        str(CONFIGS_PATH / f"{config_file_name}.yaml"),
+        metrics={
+            "n_documents": current_documents.height,
+            "n_terms": vocabulary.height,
+        },
+    )
+    logger.info(
+        f"Updated registry: {vocabulary.height} terms from "
+        f"{current_documents.height} documents."
     )
 
 

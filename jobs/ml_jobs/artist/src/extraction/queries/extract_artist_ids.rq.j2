@@ -18,7 +18,7 @@ WHERE {
       (MIN(?{{ p.var }}_raw) AS ?{{ p.var }})
 {% endfor %}
     WHERE {
-      {{ m.entity_filter(entity_types, id_properties) }}
+      {{ m.entity_filter(entity_types, id_properties, shard) }}
 
 {% for p in id_properties %}
       OPTIONAL { ?wikidata_id {{ p.property }} ?{{ p.var }}_raw . }

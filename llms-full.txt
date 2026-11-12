@@ -1139,6 +1139,298 @@ ORDER BY partition_month
 - `venue_region_code` is NULL for the overseas collectivities; `venue_region_name` is filled.
 - Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory/index.md).
 
+## Tops
+
+Monthly top 50 offers and cultural venues by used booking revenue, at national, regional and departmental levels.
+
+**Data protection**: Only the first 50 entities of each ranking are exported; amounts are published per offer and per venue, as in the external reporting tops. Not part of the vidoc lot 1 export to the ministry. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
+| KPI                                                                                                                              | Definition                                                                      | Source table(s)                | Tracking |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------ | -------- |
+| [Top offers](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_offer_ranking/index.md)                             | Top 50 items by used booking revenue                                            | `exp_vidoc_top_offer`          | Monthly  |
+| [Top offers by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_offer_category_ranking/index.md)        | Top 50 items by used booking revenue within each offer category                 | `exp_vidoc_top_offer_category` | Monthly  |
+| [Top offers in labelled venues](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_offer_labelled_ranking/index.md) | Top 50 items by used booking revenue in venues with a Ministry of Culture label | `exp_vidoc_top_offer_labelled` | Monthly  |
+| [Top venues](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_venue_ranking/index.md)                             | Top 50 venues by used booking revenue                                           | `exp_vidoc_top_venue`          | Monthly  |
+| [Top labelled venues](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_venue_labelled_ranking/index.md)           | Top 50 venues with a Ministry of Culture label by used booking revenue          | `exp_vidoc_top_venue_labelled` | Monthly  |
+
+## Top offer rankings by category and geographic level
+
+### Definition
+
+Top 50 items ranked by used booking amount (`total_booking_amount`) **within each offer category**, per month across national (`NAT`), regional, and departmental perimeters. The `JEU` category is excluded.
+
+Item metadata (`offer_name`, `offer_category_id`, `offer_subcategory_id`) are unified to the monthly most-booked version, guaranteeing a single consolidated row per item. Ties are resolved deterministically using `item_id ASC`.
+
+### Source table
+
+[exp_vidoc\_\_top_offer_category](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer_category/index.md)
+
+### Calculation
+
+Filter by month, geographic level, area name and category:
+
+```
+SELECT
+    partition_month,
+    geo_level,
+    geo_value,
+    offer_category_id,
+    offer_rank,
+    item_id,
+    offer_name,
+    total_booking_amount,
+    total_booking_quantity
+FROM `top_offer_category`
+WHERE partition_month = '2026-10-01'
+  AND geo_level = 'department'
+  AND geo_value = 'Gironde'
+  AND offer_category_id = 'LIVRE'
+ORDER BY offer_rank ASC
+```
+
+### Available dimensions
+
+| Dimension        | Column                  | Description                                                 |
+| ---------------- | ----------------------- | ----------------------------------------------------------- |
+| Partition Month  | `partition_month`       | Truncated month of used bookings (`YYYY-MM-01`)             |
+| Geographic Level | `geo_level`             | Resolution scope: `national`, `region`, or `department`     |
+| Geographic Value | `geo_value`             | Name of the entity (`NAT`, region name, or department name) |
+| Category         | `offer_category_id`     | Offer category the ranking is computed in                   |
+| Rank             | `offer_rank`            | Position from 1 to 50 within the category                   |
+| Item             | `item_id`, `offer_name` | Offer (grouped by item) and its monthly most-booked name    |
+| Subcategory      | `offer_subcategory_id`  | Offer subcategory                                           |
+
+### Temporal tracking
+
+**Monthly.** Calculated on used bookings (`booking_is_used = TRUE`) aggregated by `booking_used_date` month.
+
+### Data protection
+
+Items ranked beyond 50 in their category are not exported.
+
+## Top offer rankings for labelled partner venues
+
+### Definition
+
+Identifies the top 50 items generating the most used booking revenue (`total_booking_amount`) in venues tagged with partner labels and designations from the French Ministry of Culture (`venue_tag_category_label = 'Comptage partenaire label et appellation du MC'`).
+
+Revenues and quantities are restricted to eligible venues, while item attributes (`offer_name`, `offer_category_id`, `offer_subcategory_id`) are mapped from the item's monthly canonical version.
+
+Ties in revenue are broken deterministically using `item_id ASC`.
+
+### Source table
+
+[exp_vidoc\_\_top_offer_labelled](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer_labelled/index.md)
+
+### Calculation
+
+Query the top offers for a given label and geographic area.
+
+```
+SELECT
+    partition_month,
+    geo_level,
+    geo_value,
+    venue_tag_name,
+    offer_rank,
+    item_id,
+    offer_name,
+    offer_category_id,
+    offer_subcategory_id,
+    total_booking_amount,
+    total_booking_quantity
+FROM `top_offer_labelled`
+WHERE partition_month = '2026-10-01'
+  AND geo_level = 'national'
+  AND geo_value = 'NAT'
+  AND venue_tag_name = 'Librairie indépendante de référence'
+ORDER BY offer_rank ASC
+```
+
+### Available dimensions
+
+| Dimension        | Column                 | Description                                                      |
+| ---------------- | ---------------------- | ---------------------------------------------------------------- |
+| Partition Month  | `partition_month`      | Truncated month of used bookings (`YYYY-MM-01`)                  |
+| Geographic Level | `geo_level`            | Resolution scope: `national`, `region`, or `department`          |
+| Geographic Value | `geo_value`            | Name/code of the entity (`NAT`, region name, or department name) |
+| Venue Tag        | `venue_tag_name`       | Ministry of Culture partner designation/label                    |
+| Rank             | `offer_rank`           | Position from 1 to 50 within the tag partition                   |
+| Item ID          | `item_id`              | Canonical item identifier                                        |
+| Offer Name       | `offer_name`           | Canonical title (most-booked variant across the month)           |
+| Category         | `offer_category_id`    | Canonical macro-category identifier                              |
+| Subcategory      | `offer_subcategory_id` | Canonical subcategory identifier                                 |
+
+### Temporal tracking
+
+**Monthly.** Calculated on used bookings (`booking_is_used = TRUE`) aggregated by `booking_used_date` month.
+
+### Data protection
+
+Restricted to partners with verified ministry labels. Truncated at rank 50.
+
+## Top offer rankings by geographic level
+
+### Definition
+
+Top 50 items ranked by used booking amount (`total_booking_amount`) per month across national (`NAT`), regional, and departmental perimeters.
+
+Item metadata (`offer_name`, `offer_category_id`, `offer_subcategory_id`) are unified to the monthly most-booked version, guaranteeing a single consolidated row per item. Ties are resolved deterministically using `item_id ASC`.
+
+### Source table
+
+[exp_vidoc\_\_top_offer](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer/index.md)
+
+### Calculation
+
+Filter by month, geographic level, and area name:
+
+```
+SELECT
+    partition_month,
+    geo_level,
+    geo_value,
+    offer_rank,
+    item_id,
+    offer_name,
+    offer_category_id,
+    total_booking_amount,
+    total_booking_quantity
+FROM `top_offer`
+WHERE partition_month = '2026-10-01'
+  AND geo_level = 'region'
+  AND geo_value = 'Auvergne-Rhône-Alpes'
+ORDER BY offer_rank ASC
+```
+
+### Available dimensions
+
+| Dimension        | Column                                      | Description                                                 |
+| ---------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| Partition Month  | `partition_month`                           | Truncated month of used bookings (`YYYY-MM-01`)             |
+| Geographic Level | `geo_level`                                 | Resolution scope: `national`, `region`, or `department`     |
+| Geographic Value | `geo_value`                                 | Name of the entity (`NAT`, region name, or department name) |
+| Rank             | `offer_rank`                                | Position from 1 to 50 based on total booking revenue        |
+| Item             | `item_id`, `offer_name`                     | Offer (grouped by item) and its monthly most-booked name    |
+| Category         | `offer_category_id`, `offer_subcategory_id` | Offer category and subcategory                              |
+
+### Temporal tracking
+
+**Monthly.** Calculated on used bookings (`booking_is_used = TRUE`) aggregated by `booking_used_date` month.
+
+### Data protection
+
+Items ranked beyond 50 are not exported.
+
+## Top labelled venue rankings by geographical level
+
+### Definition
+
+Identifies the top 50 partner cultural venues holding Ministry of Culture labels/designations (`Comptage partenaire label et appellation du MC`), ranked by used booking revenue per month across national, regional, and departmental scopes.
+
+Ties in revenue are broken deterministically using `venue_id ASC`.
+
+### Source table
+
+[exp_vidoc\_\_top_venue_labelled](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_venue_labelled/index.md)
+
+### Calculation
+
+Query the top venues for a specific label and territory.
+
+```
+SELECT
+    partition_month,
+    geo_level,
+    geo_value,
+    venue_tag_name,
+    venue_rank,
+    venue_id,
+    venue_name,
+    offerer_name,
+    total_booking_amount
+FROM `top_venue_labelled`
+WHERE partition_month = '2026-10-01'
+  AND geo_level = 'national'
+  AND geo_value = 'NAT'
+  AND venue_tag_name = 'Scène nationale'
+ORDER BY venue_rank ASC
+```
+
+### Available dimensions
+
+| Dimension        | Column            | Description                                                      |
+| ---------------- | ----------------- | ---------------------------------------------------------------- |
+| Partition Month  | `partition_month` | Truncated month of used bookings (`YYYY-MM-01`)                  |
+| Geographic Level | `geo_level`       | Resolution scope: `national`, `region`, or `department`          |
+| Geographic Value | `geo_value`       | Name/code of the entity (`NAT`, region name, or department name) |
+| Venue Tag        | `venue_tag_name`  | Ministry of Culture designation/label name                       |
+| Rank             | `venue_rank`      | Position from 1 to 50 within the tag partition                   |
+| Venue ID         | `venue_id`        | Unique venue identifier                                          |
+| Venue Name       | `venue_name`      | Commercial venue name                                            |
+| Offerer Name     | `offerer_name`    | Legal entity or managing structure name                          |
+
+### Temporal tracking
+
+**Monthly.** Calculated on used bookings (`booking_is_used = TRUE`) aggregated by `booking_used_date` month.
+
+### Data protection
+
+Restricted to partners with verified ministry labels. Venues ranked beyond 50 are not exported.
+
+## Top venue rankings by geographical level
+
+### Definition
+
+Identifies the top 50 partner cultural venues generating the most used booking revenue (`total_booking_amount`) per month across national, regional, and departmental scopes.
+
+Ties in revenue are broken deterministically using `venue_id ASC`.
+
+### Source table
+
+[exp_vidoc\_\_top_venue](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_venue/index.md)
+
+### Calculation
+
+Query the top venues for a specific department and month.
+
+```
+SELECT
+    partition_month,
+    geo_level,
+    geo_value,
+    venue_rank,
+    venue_id,
+    venue_name,
+    offerer_name,
+    total_booking_amount
+FROM `top_venue`
+WHERE partition_month = '2026-10-01'
+  AND geo_level = 'department'
+  AND geo_value = 'Gironde'
+ORDER BY venue_rank ASC
+```
+
+### Available dimensions
+
+| Dimension        | Column            | Description                                                      |
+| ---------------- | ----------------- | ---------------------------------------------------------------- |
+| Partition Month  | `partition_month` | Truncated month of used bookings (`YYYY-MM-01`)                  |
+| Geographic Level | `geo_level`       | Resolution scope: `national`, `region`, or `department`          |
+| Geographic Value | `geo_value`       | Name/code of the entity (`NAT`, region name, or department name) |
+| Rank             | `venue_rank`      | Position from 1 to 50 based on total booking revenue             |
+| Venue ID         | `venue_id`        | Unique venue identifier                                          |
+| Venue Name       | `venue_name`      | Commercial venue name                                            |
+| Offerer Name     | `offerer_name`    | Legal entity or managing structure name                          |
+
+### Temporal tracking
+
+**Monthly.** Calculated on used bookings (`booking_is_used = TRUE`) aggregated by `booking_used_date` month.
+
+### Data protection
+
+Venues ranked beyond 50 are not exported.
+
 ## Usage
 
 Use of the individual credit by young people: amounts granted and spent at expiration, and bookings by territory of residence and category.
@@ -2466,6 +2758,111 @@ Monthly random sample of pass Culture cultural venues exported to Qualtrics for 
 - Excludes venues whose manager has already answered a survey
 
 Destination: `raw_{env}.qualtrics_exported_venue_account` (monthly partition, audit) Qualtrics mailing list: "[Import] Indicateur de réputation Acteur Culturel"
+
+The `exp_vidoc__top_offer` model provides the monthly ranking of the top 50 booked offers (items) at national, regional, and departmental levels. It is designed to be exported to the Ministry for Vidoc visualization.
+
+## Table Description
+
+Each row represents an item included in the top 50 most booked items for a given month and geographic area.
+
+**Grain**: `partition_month`, `geo_level`, `geo_value`, `offer_rank`.
+
+Item attributes (`offer_name`, `offer_category_id`, `offer_subcategory_id`) are consolidated to the canonical monthly version to avoid multi-vendor duplication.
+
+| name                   | data_type | description                                                                                                                                                                                                                                                                         |
+| ---------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month        | DATE      | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                             |
+| geo_level              | STRING    | Geographic scale used to compute the ranking ('national', 'region', or 'department').                                                                                                                                                                                               |
+| geo_value              | STRING    | Name or identifier of the geographic area corresponding to the aggregation level ('NAT', region name, or department name).                                                                                                                                                          |
+| item_id                | STRING    | Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id.                                                                                                                             |
+| offer_category_id      | STRING    | Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category. |
+| offer_subcategory_id   | STRING    | Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. Each subcategory belongs to exactly one offer category (offer_category_id).                                                                                          |
+| offer_name             | STRING    | Name of the offer as it appears in the application.                                                                                                                                                                                                                                 |
+| total_booking_amount   | FLOAT64   | Total amount generated by the bookings.                                                                                                                                                                                                                                             |
+| total_booking_quantity | INT64     | Total quantity of items booked.                                                                                                                                                                                                                                                     |
+| offer_rank             | INT64     | Rank position of the offer based on total booking revenue generated over the period, in descending order (from 1 to 50).                                                                                                                                                            |
+
+The `exp_vidoc__top_offer_category` model provides monthly rankings of the top 50 booked offers within each offer category (excluding `JEU`) at national, regional, and departmental levels. It is designed to be exported to the Ministry for Vidoc visualization.
+
+## Table Description
+
+Each row represents an item included in the top 50 most booked items within a given category, month, and geographic area.
+
+**Grain**: `partition_month`, `geo_level`, `geo_value`, `offer_category_id`, `offer_rank`.
+
+| name                   | data_type | description                                                                                                                                                                                                                                                                         |
+| ---------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month        | DATE      | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                             |
+| geo_level              | STRING    | Geographic scale used to compute the ranking ('national', 'region', or 'department').                                                                                                                                                                                               |
+| geo_value              | STRING    | Name or identifier of the geographic area corresponding to the aggregation level ('NAT', region name, or department name).                                                                                                                                                          |
+| item_id                | STRING    | Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id.                                                                                                                             |
+| offer_category_id      | STRING    | Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category. |
+| offer_subcategory_id   | STRING    | Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. Each subcategory belongs to exactly one offer category (offer_category_id).                                                                                          |
+| offer_name             | STRING    | Name of the offer as it appears in the application.                                                                                                                                                                                                                                 |
+| total_booking_amount   | FLOAT64   | Total amount generated by the bookings.                                                                                                                                                                                                                                             |
+| total_booking_quantity | INT64     | Total quantity of items booked.                                                                                                                                                                                                                                                     |
+| offer_rank             | INT64     | Rank position of the offer based on total booking revenue generated over the period, in descending order (from 1 to 50).                                                                                                                                                            |
+
+The `exp_vidoc__top_offer_labelled` model provides the monthly ranking of the top 50 booked offers within venues holding Ministry of Culture labels/designations at national, regional, and departmental levels. It is designed to be exported to the Ministry for Vidoc visualization.
+
+## Table Description
+
+Each row represents an item included in the top 50 most booked items for a given venue designation, month, and geographic area.
+
+**Grain**: `partition_month`, `geo_level`, `geo_value`, `venue_tag_name`, `offer_rank`.
+
+| name                   | data_type | description                                                                                                                                                                                                                                                                         |
+| ---------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month        | DATE      | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                             |
+| geo_level              | STRING    | Geographic scale used to compute the ranking ('national', 'region', or 'department').                                                                                                                                                                                               |
+| geo_value              | STRING    | Name or identifier of the geographic area corresponding to the aggregation level ('NAT', region name, or department name).                                                                                                                                                          |
+| item_id                | STRING    | Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id.                                                                                                                             |
+| offer_category_id      | STRING    | Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category. |
+| offer_subcategory_id   | STRING    | Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. Each subcategory belongs to exactly one offer category (offer_category_id).                                                                                          |
+| offer_name             | STRING    | Name of the offer as it appears in the application.                                                                                                                                                                                                                                 |
+| venue_tag_name         | STRING    | The name of the venue tag.                                                                                                                                                                                                                                                          |
+| total_booking_amount   | FLOAT64   | Total amount generated by the bookings.                                                                                                                                                                                                                                             |
+| total_booking_quantity | INT64     | Total quantity of items booked.                                                                                                                                                                                                                                                     |
+| offer_rank             | INT64     | Rank position of the offer based on total booking revenue generated over the period, in descending order (from 1 to 50).                                                                                                                                                            |
+
+The `exp_vidoc__top_venue` model provides the monthly ranking of the top 50 partner cultural venues based on booking revenue at national, regional, and departmental levels. It is designed to be exported to the Ministry for Vidoc visualization.
+
+## Table Description
+
+Each row represents a venue included in the top 50 venues by used booking amount for a given month and geographic area.
+
+**Grain**: `partition_month`, `geo_level`, `geo_value`, `venue_rank`.
+
+| name                 | data_type | description                                                                                                                |
+| -------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| partition_month      | DATE      | Indicates the first day of the month the KPI refers to.                                                                    |
+| geo_level            | STRING    | Geographic scale used to compute the ranking ('national', 'region', or 'department').                                      |
+| geo_value            | STRING    | Name or identifier of the geographic area corresponding to the aggregation level ('NAT', region name, or department name). |
+| venue_id             | STRING    | Unique identifier for the venue.                                                                                           |
+| venue_name           | STRING    | Name of the venue.                                                                                                         |
+| offerer_name         | STRING    | Name of the offerer.                                                                                                       |
+| total_booking_amount | FLOAT64   | Total amount generated by the bookings.                                                                                    |
+| venue_rank           | INT64     | Rank position of the venue based on total booking revenue generated over the period, in descending order (from 1 to 50).   |
+
+The `exp_vidoc__top_venue_labelled` model provides the monthly ranking of the top 50 partner cultural venues holding Ministry of Culture labels/designations at national, regional, and departmental levels. It is designed to be exported to the Ministry for Vidoc visualization.
+
+## Table Description
+
+Each row represents a venue included in the top 50 venues within a partner label/designation for a given month and geographic area.
+
+**Grain**: `partition_month`, `geo_level`, `geo_value`, `venue_tag_name`, `venue_rank`.
+
+| name                 | data_type | description                                                                                                                |
+| -------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| partition_month      | DATE      | Indicates the first day of the month the KPI refers to.                                                                    |
+| geo_level            | STRING    | Geographic scale used to compute the ranking ('national', 'region', or 'department').                                      |
+| geo_value            | STRING    | Name or identifier of the geographic area corresponding to the aggregation level ('NAT', region name, or department name). |
+| venue_id             | STRING    | Unique identifier for the venue.                                                                                           |
+| venue_name           | STRING    | Name of the venue.                                                                                                         |
+| offerer_name         | STRING    | Name of the offerer.                                                                                                       |
+| venue_tag_name       | STRING    | The name of the venue tag.                                                                                                 |
+| total_booking_amount | FLOAT64   | Total amount generated by the bookings.                                                                                    |
+| venue_rank           | INT64     | Rank position of the venue based on total booking revenue generated over the period, in descending order (from 1 to 50).   |
 
 The `exp_vidoc_beneficiary` model provides aggregated key indicators related to pass Culture beneficary. It is designed to be exported to ministry for vidoc visualisation.
 

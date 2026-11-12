@@ -6,5 +6,5 @@ select
     {{ data_gouv_geo_columns() }},
     milestone_age,
     total_beneficiaries_last_12_months
-from {{ ref("exp_vidoc__beneficiary_coverage") }}
+from {{ ref("exp_base__beneficiary_coverage") }}
 where {{ data_gouv_closed_month_filter("partition_month") }}

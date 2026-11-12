@@ -14,8 +14,13 @@
     metrics_beneficiary. Beneficiary counts are blurred with the cell key
     method (see statistical_confidentiality doc): every count carries the cell
     key of the beneficiaries it counts (the key of a union of cells is the sum
-    of their keys modulo 256), and is perturbed below NAT so that no published
-    count lies between 1 and 4.
+    of their keys modulo 256), and is perturbed so that no published count lies
+    between 1 and 4.
+
+    The measures of base_measures are not perturbed here: at NAT, REG and DEP they
+    are sums of the perturbed cells of exp_base__beneficiary, so that they match
+    the vidoc and data.gouv.fr exports. Other measures (breakdowns of the active
+    beneficiaries) and the EPCI and COM levels are perturbed here.
 
     measures: name -> (count, cell key) summed over metrics_beneficiary rows.
 #}
@@ -37,6 +42,17 @@
         "if(macro_density_label = 'rural', cell_key_actual_beneficiaries, 0)",
     ],
 } %}
+{#
+    base_measures: measure -> expression on exp_base__beneficiary (perturbed cells),
+    summed at the base_dimensions levels.
+#}
+{% set base_measures = {
+    "total_beneficiaries": "total_beneficiaries",
+    "actual_beneficiaries": "total_actual_beneficiaries",
+    "qpv": "if(is_in_qpv, total_actual_beneficiaries, 0)",
+    "rural": "if(macro_density_label = 'rural', total_actual_beneficiaries, 0)",
+} %}
+{% set base_dimensions = ["NAT", "REG", "DEP"] %}
 {% for breakdown in get_actual_beneficiary_breakdowns() %}
     {% do measures.update(
         {
@@ -89,7 +105,7 @@
 ] %}
 
 with
-    aggregated as (
+    aggregated_metrics as (
         {% for dim in dimensions %}
             {% if not loop.first %}
                 union all
@@ -114,6 +130,44 @@ with
         {% endfor %}
     ),
 
+    aggregated_base as (
+        {% for dim in dimensions if dim.name in base_dimensions %}
+            {% if not loop.first %}
+                union all
+            {% endif %}
+            select
+                partition_month,
+                '{{ dim.name }}' as dimension_name,
+                {{ dim.value_expr }} as dimension_value,
+                {% for measure, expr in base_measures.items() %}
+                    sum({{ expr }}) as {{ measure }}_base
+                    {% if not loop.last %},{% endif %}
+                {% endfor %}
+            from {{ ref("exp_base__beneficiary") }}
+            where
+                {{ dim.value_expr }} is not null
+                {% if is_incremental() %}
+                    and partition_month
+                    = date_trunc(date_sub(date("{{ ds() }}"), interval 1 month), month)
+                {% endif %}
+            group by partition_month, dimension_name, dimension_value
+        {% endfor %}
+    ),
+
+    aggregated as (
+        select
+            aggregated_metrics.*,
+            {% for measure in base_measures %}
+                aggregated_base.{{ measure }}_base{% if not loop.last %},{% endif %}
+            {% endfor %}
+        from aggregated_metrics
+        left join
+            aggregated_base
+            on aggregated_metrics.partition_month = aggregated_base.partition_month
+            and aggregated_metrics.dimension_name = aggregated_base.dimension_name
+            and aggregated_metrics.dimension_value = aggregated_base.dimension_value
+    ),
+
     unified_metrics as (
         select
             aggregated.partition_month,
@@ -132,7 +186,15 @@ with
                             {{ kpi_measures[0] }}_cell_key as numerator_cell_key,
                             {% if kpi_measures[1] %} {{ kpi_measures[1] }}_cell_key
                             {% else %} cast(null as int64)
-                            {% endif %} as denominator_cell_key
+                            {% endif %} as denominator_cell_key,
+                            {% if kpi_measures[0] in base_measures %}
+                                {{ kpi_measures[0] }}_base
+                            {% else %} cast(null as int64)
+                            {% endif %} as numerator_base,
+                            {% if kpi_measures[1] in base_measures %}
+                                {{ kpi_measures[1] }}_base
+                            {% else %} cast(null as int64)
+                            {% endif %} as denominator_base
                         )
                         {% if not loop.last %},{% endif %}
                     {% endfor %}
@@ -147,21 +209,24 @@ with
             unified_metrics.dimension_name,
             unified_metrics.dimension_value,
             unified_metrics.kpi_name,
-            if(
-                unified_metrics.dimension_name = 'NAT',
-                unified_metrics.numerator,
+            -- base measures are already perturbed: sums of exp_base__beneficiary cells
+            coalesce(
+                unified_metrics.numerator_base,
                 greatest(
                     unified_metrics.numerator + coalesce(pt_num.perturbation, 0), 0
                 )
             ) as numerator,
-            if(
-                unified_metrics.dimension_name = 'NAT'
-                or unified_metrics.denominator_cell_key is null,
-                unified_metrics.denominator,
-                greatest(
-                    unified_metrics.denominator + coalesce(pt_den.perturbation, 0), 0
-                )
-            ) as denominator,
+            case
+                when unified_metrics.denominator_cell_key is null
+                then unified_metrics.denominator
+                when unified_metrics.denominator_base is not null
+                then unified_metrics.denominator_base
+                else
+                    greatest(
+                        unified_metrics.denominator + coalesce(pt_den.perturbation, 0),
+                        0
+                    )
+            end as denominator,
             unified_metrics.denominator_cell_key is not null as is_share
         from unified_metrics
         left join

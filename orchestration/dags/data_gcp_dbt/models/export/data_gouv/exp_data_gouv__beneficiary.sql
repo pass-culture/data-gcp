@@ -9,5 +9,5 @@ select
     micro_density_label,
     total_beneficiaries,
     total_actual_beneficiaries
-from {{ ref("exp_vidoc__beneficiary") }}
+from {{ ref("exp_base__beneficiary") }}
 where {{ data_gouv_closed_month_filter("partition_month") }}

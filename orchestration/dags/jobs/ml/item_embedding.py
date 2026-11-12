@@ -36,7 +36,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -54,51 +54,34 @@ SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN = SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN_DICT["stg"
 
 
 class VectorPipeline(BaseModel):
-    name: str  # embedding vector name
-    input_table: str  # dataset.table (dbt input model)
-    output_table: str  # dataset.table, truncated by each run (dbt source)
-    merged_table: str  # dataset.table where dbt merges output_table
-    input_dbt_model: str = ""  # derived from input_table in __post_init
+    """One embedding vector. Its tables follow the dbt naming convention
+    (``<dataset>__<table>`` model → ``<dataset>_<env>.<table>``):
+    ``ml_input__<name>_to_embed`` → embedded into ``output_table`` (a dbt
+    source) → merged by ``ml_semantic_embedding__<name>``.
+    """
 
-    @model_validator(mode="after")
-    def _set_input_dbt_model(self) -> "VectorPipeline":
-        """Derive the dbt model name from input_table: the env-suffixed dataset
-        (e.g. ``ml_input_{ENV_SHORT_NAME}``) loses its suffix and is joined to
-        the table name with ``__``, matching dbt's model naming convention
-        (e.g. ``ml_input__all_items_metadata_to_embed``).
-        """
-        dataset, table = self.input_table.split(".")
-        self.input_dbt_model = f"{dataset.removesuffix(f'_{ENV_SHORT_NAME}')}__{table}"
-        return self
+    name: str
+
+    @property
+    def input_table(self) -> str:
+        return f"{BIGQUERY_ML_INPUT_DATASET}.{self.name}_to_embed"
+
+    @property
+    def output_table(self) -> str:
+        return f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_{self.name}"
+
+    @property
+    def merged_table(self) -> str:
+        return f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.{self.name}"
 
 
-# List of all the vectors this DAG can run. Add a vector by creating its dbt input model + a
-# configs/<name>.yaml in the item_embeddings job + an entry here (all keyed by ``name``).
+# List of all the vectors this DAG can run. Add a vector by creating its dbt input
+# and merge models + a configs/<name>.yaml in the item_embedding job + an entry here.
 AVAILABLE_VECTORS = [
-    VectorPipeline(
-        name="all_items_metadata",
-        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_metadata_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_all_items_metadata",
-        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.all_items_metadata",
-    ),
-    VectorPipeline(
-        name="movies_metadata",
-        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.movies_metadata_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_movies_metadata",
-        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.movies_metadata",
-    ),
-    VectorPipeline(
-        name="books_metadata",
-        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.books_metadata_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_books_metadata",
-        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.books_metadata",
-    ),
-    VectorPipeline(
-        name="all_items_offer_names",
-        input_table=f"{BIGQUERY_ML_INPUT_DATASET}.all_items_offer_names_to_embed",
-        output_table=f"{BIGQUERY_ML_PREPROCESSING_DATASET}.item_embedding_all_items_offer_names",
-        merged_table=f"{BIGQUERY_ML_SEMANTIC_EMBEDDING_DATASET}.all_items_offer_names",
-    ),
+    VectorPipeline(name="all_items_metadata"),
+    VectorPipeline(name="movies_metadata"),
+    VectorPipeline(name="books_metadata"),
+    VectorPipeline(name="all_items_offer_names"),
 ]
 VECTOR_NAMES = [vector.name for vector in AVAILABLE_VECTORS]
 
@@ -198,7 +181,7 @@ def _plan_vectors_to_embed(**context) -> list[str]:
         if v.name not in params["vectors"]:
             continue
         if not params["embed_all"] and _merge_pending(bq_hook, v):
-            logging.info(f"Skipping {v.name}: its last load is not merged by dbt yet")
+            logging.info("Skipping %s: its last load is not merged by dbt yet", v.name)
             continue
         selected.append(v)
     if params["embed_all"]:
@@ -218,26 +201,24 @@ def _vector_planned(vector_name: str, ti) -> bool:
     return vector_name in ti.xcom_pull(task_ids="plan_vectors_to_embed")
 
 
-def _send_slack_notif_success(ti, **context) -> None:
-    selected = [v for v in AVAILABLE_VECTORS if v.name in context["params"]["vectors"]]
-    if not selected:
-        summary = "Aucun vecteur embeddé."
-    else:
-        planned = ti.xcom_pull(task_ids="plan_vectors_to_embed")
-        bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
-        lines = []
-        for v in selected:
-            if v.name not in planned:
-                lines.append(
-                    f"• *{v.name}*: ignoré (rien à embedder ou merge dbt en attente)"
-                )
-                continue
-            count = bq_hook.get_records(
-                f"SELECT COUNT(*) FROM `{GCP_PROJECT_ID}.{v.output_table}`"
-            )[0][0]
-            lines.append(f"• *{v.name}*: {count} items")
-        summary = "\n".join(lines)
-    block = create_item_embedding_slack_block(summary, ENV_SHORT_NAME)
+def _send_slack_notif_success(ti, params) -> None:
+    """Only reached when the plan kept at least one vector (else the run skips)."""
+    planned = ti.xcom_pull(task_ids="plan_vectors_to_embed")
+    bq_hook = BigQueryHook(location=GCP_REGION, use_legacy_sql=False)
+    lines = []
+    for v in AVAILABLE_VECTORS:
+        if v.name not in params["vectors"]:
+            continue
+        if v.name not in planned:
+            lines.append(
+                f"• *{v.name}*: ignoré (rien à embedder ou merge dbt en attente)"
+            )
+            continue
+        count = bq_hook.get_records(
+            f"SELECT COUNT(*) FROM `{GCP_PROJECT_ID}.{v.output_table}`"
+        )[0][0]
+        lines.append(f"• *{v.name}*: {count} items")
+    block = create_item_embedding_slack_block("\n".join(lines), ENV_SHORT_NAME)
     SlackHook(SLACK_ALERT_CHANNEL_WEBHOOK_TOKEN).send_message(None, block)
 
 

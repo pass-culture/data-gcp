@@ -323,9 +323,13 @@ sources:
       - name: two_tower_item_embedding_history
         description: Partitionned table containing the history of the two tower item emebddings
       - name: item_embedding_all_items_metadata
+        description: Last item_embedding DAG load of the all_items_metadata vector (truncated each run)
       - name: item_embedding_movies_metadata
+        description: Last item_embedding DAG load of the movies_metadata vector (truncated each run)
       - name: item_embedding_books_metadata
+        description: Last item_embedding DAG load of the books_metadata vector (truncated each run)
       - name: item_embedding_all_items_offer_names
+        description: Last item_embedding DAG load of the all_items_offer_names vector (truncated each run)
   - name: ml_feat
     schema: ml_feat_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"

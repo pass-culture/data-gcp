@@ -30,8 +30,28 @@ SELECT
     offer_category_id,
     total_booking_amount,
     total_booking_quantity
-FROM `exp_vidoc__top_offer`
+FROM `top_offer`
 WHERE partition_month = '2026-10-01'
   AND geo_level = 'region'
   AND geo_value = 'Auvergne-Rhône-Alpes'
 ORDER BY offer_rank ASC
+```
+
+### Available dimensions
+
+| Dimension | Column | Description |
+|-----------|--------|-------------|
+| Partition Month | `partition_month` | Truncated month of used bookings (`YYYY-MM-01`) |
+| Geographic Level | `geo_level` | Resolution scope: `national`, `region`, or `department` |
+| Geographic Value | `geo_value` | Name of the entity (`NAT`, region name, or department name) |
+| Rank | `offer_rank` | Position from 1 to 50 based on total booking revenue |
+| Item | `item_id`, `offer_name` | Offer (grouped by item) and its monthly most-booked name |
+| Category | `offer_category_id`, `offer_subcategory_id` | Offer category and subcategory |
+
+### Temporal tracking
+
+**Monthly.** Calculated on used bookings (`booking_is_used = TRUE`) aggregated by `booking_used_date` month.
+
+### Data protection
+
+Items ranked beyond 50 are not exported.

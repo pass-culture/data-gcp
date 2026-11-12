@@ -34,7 +34,7 @@ SELECT
     offer_subcategory_id,
     total_booking_amount,
     total_booking_quantity
-FROM `exp_vidoc__top_offer_labelled`
+FROM `top_offer_labelled`
 WHERE partition_month = '2026-10-01'
   AND geo_level = 'national'
   AND geo_value = 'NAT'

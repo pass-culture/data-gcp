@@ -30,7 +30,7 @@ SELECT
     venue_name,
     offerer_name,
     total_booking_amount
-FROM `exp_vidoc__top_venue_labelled`
+FROM `top_venue_labelled`
 WHERE partition_month = '2026-10-01'
   AND geo_level = 'national'
   AND geo_value = 'NAT'

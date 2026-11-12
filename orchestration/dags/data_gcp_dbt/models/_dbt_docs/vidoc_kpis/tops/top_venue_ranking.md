@@ -29,7 +29,7 @@ SELECT
     venue_name,
     offerer_name,
     total_booking_amount
-FROM `exp_vidoc__top_venue`
+FROM `top_venue`
 WHERE partition_month = '2026-10-01'
   AND geo_level = 'department'
   AND geo_value = 'Gironde'

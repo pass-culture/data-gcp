@@ -8,6 +8,9 @@ features:
   - offer_description
 encoder_name: "google/embeddinggemma-300m"
 prompt_name: "document"
+preprocessors:
+  offer_name: "normalize_whitespace"
+  offer_description: "clean_description"
 labels:
   offer_name: "titre de l'offre"
   category_id: "catégorie"

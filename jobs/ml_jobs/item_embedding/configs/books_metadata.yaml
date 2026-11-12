@@ -11,6 +11,7 @@ preprocessors:
   offer_description: "clean_description"
 # Literal block (|-) so each line is rendered independently
 prompt_template: |-
-  Ce livre est intitulé "{offer_name}" par {author_concat}.
+  Ce livre est intitulé "{offer_name}".
+  Écrit par {author_concat}.
   Genres: {gtl_concat}.
   Résumé: {offer_description}.

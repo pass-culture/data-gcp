@@ -3,3 +3,5 @@ features:
   - offer_name
 encoder_name: "google/embeddinggemma-300m"
 prompt_name: "document"
+preprocessors:
+  offer_name: "normalize_whitespace"

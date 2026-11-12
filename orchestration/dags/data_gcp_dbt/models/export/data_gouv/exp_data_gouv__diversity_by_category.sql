@@ -1,4 +1,4 @@
--- data.gouv.fr copy of the vidoc lot 1 diversity by category export, closed months
+-- data.gouv.fr diversity by category, from the perturbed base, closed months
 -- only. The denominator is total_expired_deposit_beneficiaries of
 -- exp_data_gouv__diversity (same month and cell)
 select

@@ -5,26 +5,26 @@ description: pass Culture datasets published as open data on data.gouv.fr, their
 
 ## data.gouv.fr exports
 
-pass Culture publishes the vidoc lot 1 indicators as open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`. The published figures are **the same** as the ones displayed in the ministry's vidoc tool: the `exp_data_gouv__*` and `exp_vidoc__*` models both read the same perturbed base, `exp_base__*` (see [A single perturbed base](../references/statistical_confidentiality.md#a-single-perturbed-base-for-every-export)), and the external reporting national, regional and departmental figures are sums of the same cells.
+pass Culture publishes open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`: indicators on the young beneficiaries of the individual part of the pass Culture (outside school time), by month and territory of residence. The collective part (school time) is not covered.
 
 Only pass Culture data is published. The INSEE population estimates used as the coverage rate denominator are not republished; their computation is public in [metrics_population__coverage](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population).
 
 ### Resources
 
-| Resource (CSV) | dbt model | Perturbed base | KPI |
+| Resource (CSV) | Content | dbt model | KPIs |
 |---|---|---|---|
-| `beneficiary` | [exp_data_gouv__beneficiary](../models/export/data_gouv/description__exp_data_gouv__beneficiary.md) | `exp_base__beneficiary` | [Ever-credited](../vidoc_kpis/beneficiaries/ever_credited_beneficiaries.md) and [active](../vidoc_kpis/beneficiaries/active_beneficiaries.md) beneficiaries |
-| `beneficiary_coverage` | [exp_data_gouv__beneficiary_coverage](../models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage.md) | `exp_base__beneficiary_coverage` | [Coverage rate](../vidoc_kpis/beneficiaries/beneficiary_coverage_rate.md) numerator |
-| `diversity` | [exp_data_gouv__diversity](../models/export/data_gouv/description__exp_data_gouv__diversity.md) | `exp_base__diversity` | [Diversity rate (3+ categories)](../vidoc_kpis/diversity/diversity_3plus_categories.md) |
-| `diversity_by_category` | [exp_data_gouv__diversity_by_category](../models/export/data_gouv/description__exp_data_gouv__diversity_by_category.md) | `exp_base__diversity_by_category` | [Booking share by category](../vidoc_kpis/diversity/booking_share_by_category.md) |
+| `beneficiary` | Monthly stock of beneficiaries and active beneficiaries, by department, age, QPV and density | [exp_data_gouv__beneficiary](../models/export/data_gouv/description__exp_data_gouv__beneficiary.md) | [Ever-credited](../kpis/beneficiaries/ever_credited_beneficiaries.md) and [active](../kpis/beneficiaries/active_beneficiaries.md) beneficiaries |
+| `beneficiary_coverage` | Beneficiaries who reached an age (16 to 19) over the last 12 months, by department | [exp_data_gouv__beneficiary_coverage](../models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage.md) | [Coverage rate](../kpis/beneficiaries/beneficiary_coverage_rate.md) numerator |
+| `diversity` | Beneficiaries whose credit expired in the month, and those who booked in 3+ categories | [exp_data_gouv__diversity](../models/export/data_gouv/description__exp_data_gouv__diversity.md) | [Diversity rate (3+ categories)](../kpis/diversity/diversity_3plus_categories.md) |
+| `diversity_by_category` | Same population, by offer category booked | [exp_data_gouv__diversity_by_category](../models/export/data_gouv/description__exp_data_gouv__diversity_by_category.md) | [Booking share by category](../kpis/diversity/booking_share_by_category.md) |
 
-### Differences with the vidoc exports
+Every model reads the perturbed base `exp_base__*` (see [A single perturbed base](../references/statistical_confidentiality.md#a-single-perturbed-base-for-every-export)), so the published figures are the ones pass Culture uses in all its reporting.
 
-Same cells as the vidoc exports, with:
+### Format
 
-- **Columns**: only the lot 1 columns (amounts, spent share buckets and 1+/2+/4+/5+ counts of `exp_vidoc__diversity` are not published).
 - **Months**: closed months only; the current month is excluded.
 - **Geography**: INSEE COG codes as strings, so that data.gouv.fr detects them (`region_code` zero-padded, e.g. `01` for Guadeloupe). Codes are empty for non-localised beneficiaries (label `non localisé` kept so that totals stay complete) and `region_code` is empty for overseas collectivities (975, 978, 986, 987, 988).
+- **CSV**: UTF-8, comma separator, ISO dates (first day of the month), lowercase booleans; an empty cell means "unknown", never zero.
 
 ### Data protection
 

@@ -175,7 +175,7 @@ RESOURCES = {
         "bénéficiaires actuels (crédit encore disponible), par territoire de "
         "résidence, âge, QPV et densité. Une ligne par mois et combinaison de "
         "dimensions.",
-        "kpi_doc": "vidoc_kpis/beneficiaries/",
+        "kpi_doc": "kpis/beneficiaries/",
         "fields": [
             month_field(
                 "partition_month",
@@ -226,7 +226,7 @@ RESOURCES = {
         "population de cet âge estimée par l'INSEE sur la même période et le même "
         "territoire, il donne la part des jeunes ayant bénéficié du pass Culture. "
         "La population INSEE n'est pas republiée ici ; le code de calcul est public.",
-        "kpi_doc": "vidoc_kpis/beneficiaries/beneficiary_coverage_rate/",
+        "kpi_doc": "kpis/beneficiaries/beneficiary_coverage_rate/",
         "fields": [
             month_field(
                 "partition_month",
@@ -239,7 +239,7 @@ RESOURCES = {
                 "title": "Âge atteint",
                 "description": "Âge (en années révolues) atteint par les jeunes au "
                 "cours de la fenêtre de 12 mois. Un âge atteint de N ans correspond "
-                "à la couverture « N-1+ » de VIDOC : 19 ans correspond à la "
+                "au taux de couverture « N-1+ » : 19 ans correspond au taux de "
                 "couverture 18+, c'est-à-dire aux jeunes ayant bénéficié du pass "
                 "Culture avant leurs 19 ans.",
                 "type": "integer",
@@ -265,7 +265,7 @@ RESOURCES = {
         "deux colonnes donne la part de bénéficiaires ayant diversifié leurs "
         "pratiques. Seuls les bénéficiaires dont le dernier crédit est un crédit "
         "17-18 ans sont pris en compte.",
-        "kpi_doc": "vidoc_kpis/diversity/diversity_3plus_categories/",
+        "kpi_doc": "kpis/diversity/diversity_3plus_categories/",
         "fields": [
             month_field(
                 "deposit_expiration_month",
@@ -306,7 +306,7 @@ RESOURCES = {
         "pour le même mois et la même ligne (mêmes territoire, QPV et densité). Un "
         "même bénéficiaire pouvant réserver dans plusieurs catégories, la somme des "
         "parts dépasse 100 %.",
-        "kpi_doc": "vidoc_kpis/diversity/booking_share_by_category/",
+        "kpi_doc": "kpis/diversity/booking_share_by_category/",
         "fields": [
             month_field(
                 "deposit_expiration_month",

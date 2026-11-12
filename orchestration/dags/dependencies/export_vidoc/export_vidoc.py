@@ -4,7 +4,7 @@ from common.config import ENV_SHORT_NAME
 
 S3_SECRET_NAME = f"dbt_export_s3_config_snum_{ENV_SHORT_NAME}"
 
-# Columns of the lot 1 vidoc KPIs (see _dbt_docs/vidoc_kpis): only these are
+# Columns of the lot 1 vidoc KPIs (see _dbt_docs/kpis): only these are
 # exported, so that new columns can be added to the exp_vidoc__* models without
 # being sent to the S3 bucket.
 VIDOC_MODELS = {

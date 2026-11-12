@@ -1,4 +1,4 @@
--- data.gouv.fr copy of the vidoc lot 1 diversity export: only the 3+ categories
+-- data.gouv.fr diversity, from the perturbed base: only the 3+ categories
 -- indicator and its denominator (no amounts), closed months only
 select
     deposit_expiration_month,

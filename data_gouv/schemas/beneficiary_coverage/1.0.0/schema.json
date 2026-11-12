@@ -27,7 +27,7 @@
     },
     {
       "title": "Définition de l'indicateur (documentation, en anglais)",
-      "path": "https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate/"
+      "path": "https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/beneficiary_coverage_rate/"
     },
     {
       "title": "Méthode de protection statistique (en anglais)",
@@ -94,7 +94,7 @@
     {
       "name": "milestone_age",
       "title": "Âge atteint",
-      "description": "Âge (en années révolues) atteint par les jeunes au cours de la fenêtre de 12 mois. Un âge atteint de N ans correspond à la couverture « N-1+ » de VIDOC : 19 ans correspond à la couverture 18+, c'est-à-dire aux jeunes ayant bénéficié du pass Culture avant leurs 19 ans.",
+      "description": "Âge (en années révolues) atteint par les jeunes au cours de la fenêtre de 12 mois. Un âge atteint de N ans correspond au taux de couverture « N-1+ » : 19 ans correspond au taux de couverture 18+, c'est-à-dire aux jeunes ayant bénéficié du pass Culture avant leurs 19 ans.",
       "type": "integer",
       "example": "19",
       "constraints": {

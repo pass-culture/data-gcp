@@ -4,7 +4,7 @@
 
 Le pass Culture est un opérateur de l'État et un outil des politiques publiques d'éducation artistique et culturelle et de sensibilisation des jeunes à la diversité des domaines culturels. Ce jeu de données partage des indicateurs quantitatifs sur l'activité des jeunes bénéficiaires du **volet individuel** du pass Culture (hors temps scolaire), à l'échelle nationale, régionale et départementale.
 
-Ce sont les mêmes données que celles du tableau de bord VIDOC du ministère de la Culture (pages « Recours au pass Culture », « Bénéficiaires » et « Diversité des usages »). Le volet collectif (temps scolaire) n'est pas couvert.
+Le volet collectif (temps scolaire) n'est pas couvert.
 
 ## Ressources
 

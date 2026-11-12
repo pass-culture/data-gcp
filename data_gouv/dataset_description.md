@@ -35,7 +35,7 @@ Les fichiers sont au format CSV (UTF-8, séparateur virgule). Les dates sont au 
 
 Le pass Culture respecte le secret statistique : aucune donnée publiée ne doit permettre d'identifier un jeune ni de révéler le chiffre d'affaires d'un partenaire culturel.
 
-**Bénéficiaires** (ce jeu de données). Les effectifs sont protégés par la **méthode des clés de cellule** (Cell Key Method), recommandée par l'INSEE et Eurostat : les petits effectifs sont légèrement modifiés par une perturbation statistique, tandis que les grands effectifs et les totaux restent quasiment exacts.
+**Bénéficiaires** (ce jeu de données). Les effectifs sont protégés par la **méthode des clés aléatoires** (Cell Key Method), utilisée par l'INSEE et recommandée par Eurostat : un bruit est injecté dans toutes les cases à partir d'une clé aléatoire attachée à chaque individu. Les petits effectifs sont légèrement modifiés, tandis que les grands effectifs et les totaux restent quasiment exacts.
 
 - Une valeur publiée vaut toujours 0 ou au moins 5 : aucun effectif de 1 à 4 n'est publié.
 - Le bruit est au maximum de ±5 et de moyenne nulle : il se compense quand on additionne des lignes.

@@ -21,8 +21,8 @@ RAW_URL = (
 DOCS_URL = "https://pass-culture.github.io/data-gcp"
 
 PERTURBATION = (
-    "Effectif protégé par la méthode de perturbation des clés de cellule "
-    "(Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée "
+    "Effectif protégé par la méthode des clés aléatoires (Cell Key Method, "
+    "utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée "
     "vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au "
     "maximum). Additionner plusieurs lignes (département, région, trimestre, "
     "année) avant de calculer un taux : le bruit se compense à l'agrégation."

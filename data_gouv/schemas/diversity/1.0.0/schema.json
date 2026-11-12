@@ -144,7 +144,7 @@
     {
       "name": "total_expired_deposit_beneficiaries",
       "title": "Nombre de bénéficiaires dont le crédit a expiré",
-      "description": "Nombre de bénéficiaires dont le crédit a expiré dans le mois. Dénominateur des parts de ce jeu de données. Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "description": "Nombre de bénéficiaires dont le crédit a expiré dans le mois. Dénominateur des parts de ce jeu de données. Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
       "type": "integer",
       "example": "61317",
       "constraints": {
@@ -155,7 +155,7 @@
     {
       "name": "total_3plus_category_booked_beneficiaries",
       "title": "Nombre de bénéficiaires ayant réservé dans 3 catégories ou plus",
-      "description": "Parmi les bénéficiaires dont le crédit a expiré dans le mois, nombre de ceux ayant effectué des réservations validées dans au moins 3 catégories d'offres distinctes avant l'expiration (toutes les réservations faites avec leurs crédits de 15 à 20 ans). Jamais supérieur à total_expired_deposit_beneficiaries. Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "description": "Parmi les bénéficiaires dont le crédit a expiré dans le mois, nombre de ceux ayant effectué des réservations validées dans au moins 3 catégories d'offres distinctes avant l'expiration (toutes les réservations faites avec leurs crédits de 15 à 20 ans). Jamais supérieur à total_expired_deposit_beneficiaries. Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
       "type": "integer",
       "example": "33806",
       "constraints": {

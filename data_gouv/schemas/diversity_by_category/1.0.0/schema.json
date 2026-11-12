@@ -171,7 +171,7 @@
     {
       "name": "total_category_booked_beneficiaries",
       "title": "Nombre de bénéficiaires ayant réservé dans la catégorie",
-      "description": "Parmi les bénéficiaires dont le crédit a expiré dans le mois, nombre de ceux ayant effectué au moins une réservation validée dans la catégorie avant l'expiration. Jamais supérieur à total_expired_deposit_beneficiaries de la même ligne du jeu « diversity ». Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "description": "Parmi les bénéficiaires dont le crédit a expiré dans le mois, nombre de ceux ayant effectué au moins une réservation validée dans la catégorie avant l'expiration. Jamais supérieur à total_expired_deposit_beneficiaries de la même ligne du jeu « diversity ». Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
       "type": "integer",
       "example": "41000",
       "constraints": {

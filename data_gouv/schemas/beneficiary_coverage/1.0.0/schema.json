@@ -106,7 +106,7 @@
     {
       "name": "total_beneficiaries_last_12_months",
       "title": "Nombre de bénéficiaires ayant atteint l'âge sur 12 mois",
-      "description": "Nombre de bénéficiaires (jeunes ayant reçu au moins un crédit individuel) ayant atteint l'âge milestone_age au cours des 12 mois se terminant par partition_month. Chaque jeune n'atteint un âge qu'une fois et n'est donc compté qu'une fois. Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "description": "Nombre de bénéficiaires (jeunes ayant reçu au moins un crédit individuel) ayant atteint l'âge milestone_age au cours des 12 mois se terminant par partition_month. Chaque jeune n'atteint un âge qu'une fois et n'est donc compté qu'une fois. Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
       "type": "integer",
       "example": "737567",
       "constraints": {

@@ -87,6 +87,16 @@ def run(
                 "access_token": TOKEN,
                 "api_url": "cdn.contentful.com",
             },
+            "tst": {
+                "env": "testing",
+                "access_token": TOKEN,
+                "api_url": "cdn.contentful.com",
+            },
+            "prd": {
+                "env": "production",
+                "access_token": PREVIEW_TOKEN,
+                "api_url": "preview.contentful.com",
+            },
         }
         playlists_names = parse_playlist_names(playlists_names)
 

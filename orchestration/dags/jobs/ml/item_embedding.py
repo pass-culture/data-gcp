@@ -36,7 +36,6 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from google.api_core.exceptions import NotFound
 from pydantic import BaseModel, model_validator
 
 from jobs.crons import SCHEDULE_DICT
@@ -156,17 +155,23 @@ def _export_input_query(vector: VectorPipeline) -> str:
     """
 
 
+def _table_exists(bq_hook: BigQueryHook, table: str) -> bool:
+    dataset_id, table_id = table.split(".")
+    return bq_hook.table_exists(
+        dataset_id=dataset_id, table_id=table_id, project_id=GCP_PROJECT_ID
+    )
+
+
 def _merge_pending(bq_hook: BigQueryHook, vector: VectorPipeline) -> bool:
     """Whether dbt hasn't merged the vector's last load yet (its mlflow_run_id is
     absent from the merged table): running it would truncate that load away.
     A missing output table has no load to protect; a missing merged table
     (full-refresh procedure) counts as pending until dbt rebuilds it.
     """
-    dataset, table = vector.output_table.split(".")
-    if not bq_hook.table_exists(
-        dataset_id=dataset, table_id=table, project_id=GCP_PROJECT_ID
-    ):
+    if not _table_exists(bq_hook, vector.output_table):
         return False
+    if not _table_exists(bq_hook, vector.merged_table):
+        return True
     output = f"`{GCP_PROJECT_ID}.{vector.output_table}`"
     query = f"""
         SELECT
@@ -176,10 +181,7 @@ def _merge_pending(bq_hook: BigQueryHook, vector: VectorPipeline) -> bool:
             WHERE mlflow_run_id = (SELECT ANY_VALUE(mlflow_run_id) FROM {output})
           )
     """
-    try:
-        return bool(bq_hook.get_records(query)[0][0])
-    except NotFound:
-        return True
+    return bool(bq_hook.get_records(query)[0][0])
 
 
 def _plan_vectors_to_embed(**context) -> list[str]:

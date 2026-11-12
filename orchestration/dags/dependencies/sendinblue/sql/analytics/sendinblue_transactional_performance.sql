@@ -3,7 +3,8 @@
 -- *** Missing utm
 with
     sendinblue_transactional as (
-        select distinct * from `{{ bigquery_clean_dataset }}.sendinblue_transactional`
+        select distinct *
+        from `{{ bigquery_int_brevo_dataset }}.sendinblue_transactional`
     ),
 
     user_traffic as (

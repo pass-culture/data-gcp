@@ -62,49 +62,77 @@ nav:
   - Data Models:
       - Overview: dbt/overview.md
       - KPIs:
-        - Vidoc:
-          - dbt/vidoc_kpis/index.md
-          - Beneficiaries:
-            - dbt/vidoc_kpis/beneficiaries/index.md
-            - Ever-credited beneficiaries: dbt/vidoc_kpis/beneficiaries/ever_credited_beneficiaries.md
-            - Active beneficiaries: dbt/vidoc_kpis/beneficiaries/active_beneficiaries.md
-            - Beneficiary coverage rate: dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate.md
-          - Diversity:
-            - dbt/vidoc_kpis/diversity/index.md
-            - Diversity rate (3+ categories): dbt/vidoc_kpis/diversity/diversity_3plus_categories.md
-            - Diversity depth (1+ to 5+): dbt/vidoc_kpis/diversity/diversity_category_depth.md
-            - Booking share by category: dbt/vidoc_kpis/diversity/booking_share_by_category.md
-            - Distinct venues booked: dbt/vidoc_kpis/diversity/distinct_venues_booked.md
-          - Usage:
-            - dbt/vidoc_kpis/usage/index.md
-            - Amount granted, spent and spending rate: dbt/vidoc_kpis/usage/credit_amount_at_expiration.md
-            - Share of credit spent: dbt/vidoc_kpis/usage/credit_spent_share_distribution.md
-            - Bookings by category and beneficiary territory: dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory.md
-          - Cultural partners:
-            - dbt/vidoc_kpis/partners/index.md
-            - Active cultural partners by channel: dbt/vidoc_kpis/partners/active_cultural_partners.md
-            - Activated cultural partners: dbt/vidoc_kpis/partners/activated_cultural_partners.md
-            - Cultural partners by type: dbt/vidoc_kpis/partners/active_cultural_partners_by_type.md
-            - Bookings and tickets by venue territory: dbt/vidoc_kpis/partners/individual_bookings_venue_territory.md
-            - Booking revenue by venue territory: dbt/vidoc_kpis/partners/individual_revenue_venue_territory.md
-          - Collective (EAC):
-            - dbt/vidoc_kpis/collective/index.md
-            - Student EAC participation rate: dbt/vidoc_kpis/collective/student_eac_participation_rate.md
-            - Institution EAC participation rate: dbt/vidoc_kpis/collective/institution_eac_participation_rate.md
-            - EAC credit consumption rate: dbt/vidoc_kpis/collective/eac_credit_consumption_rate.md
-            - EAC collective bookings: dbt/vidoc_kpis/collective/eac_collective_bookings.md
-            - EAC bookings by educational domain: dbt/vidoc_kpis/collective/eac_bookings_by_domain.md
-            - EAC bookings by offer format: dbt/vidoc_kpis/collective/eac_bookings_by_format.md
-            - EAC bookable collective offers: dbt/vidoc_kpis/collective/eac_bookable_offers.md
-          - Tops:
-            - dbt/vidoc_kpis/tops/index.md
-            - Top offers: dbt/vidoc_kpis/tops/top_offer_ranking.md
-            - Top offers by category: dbt/vidoc_kpis/tops/top_offer_category_ranking.md
-            - Top offers in labelled venues: dbt/vidoc_kpis/tops/top_offer_labelled_ranking.md
-            - Top venues: dbt/vidoc_kpis/tops/top_venue_ranking.md
-            - Top labelled venues: dbt/vidoc_kpis/tops/top_venue_labelled_ranking.md
-        - data.gouv.fr exports: dbt/data_gouv/index.md
-        - Ministry exports:
+        - dbt/kpis/index.md
+        - Beneficiaries:
+          - dbt/kpis/beneficiaries/index.md
+          - Ever-credited beneficiaries: dbt/kpis/beneficiaries/ever_credited_beneficiaries.md
+          - Active beneficiaries: dbt/kpis/beneficiaries/active_beneficiaries.md
+          - Beneficiary coverage rate: dbt/kpis/beneficiaries/beneficiary_coverage_rate.md
+        - Diversity:
+          - dbt/kpis/diversity/index.md
+          - Diversity rate (3+ categories): dbt/kpis/diversity/diversity_3plus_categories.md
+          - Diversity depth (1+ to 5+): dbt/kpis/diversity/diversity_category_depth.md
+          - Booking share by category: dbt/kpis/diversity/booking_share_by_category.md
+          - Distinct venues booked: dbt/kpis/diversity/distinct_venues_booked.md
+        - Usage:
+          - dbt/kpis/usage/index.md
+          - Amount granted, spent and spending rate: dbt/kpis/usage/credit_amount_at_expiration.md
+          - Share of credit spent: dbt/kpis/usage/credit_spent_share_distribution.md
+          - Bookings by category and beneficiary territory: dbt/kpis/usage/individual_bookings_beneficiary_territory.md
+        - Cultural partners:
+          - dbt/kpis/partners/index.md
+          - Active cultural partners by channel: dbt/kpis/partners/active_cultural_partners.md
+          - Activated cultural partners: dbt/kpis/partners/activated_cultural_partners.md
+          - Cultural partners by type: dbt/kpis/partners/active_cultural_partners_by_type.md
+          - Bookings and tickets by venue territory: dbt/kpis/partners/individual_bookings_venue_territory.md
+          - Booking revenue by venue territory: dbt/kpis/partners/individual_revenue_venue_territory.md
+        - Collective (EAC):
+          - dbt/kpis/collective/index.md
+          - Student EAC participation rate: dbt/kpis/collective/student_eac_participation_rate.md
+          - Institution EAC participation rate: dbt/kpis/collective/institution_eac_participation_rate.md
+          - EAC credit consumption rate: dbt/kpis/collective/eac_credit_consumption_rate.md
+          - EAC collective bookings: dbt/kpis/collective/eac_collective_bookings.md
+          - EAC bookings by educational domain: dbt/kpis/collective/eac_bookings_by_domain.md
+          - EAC bookings by offer format: dbt/kpis/collective/eac_bookings_by_format.md
+          - EAC bookable collective offers: dbt/kpis/collective/eac_bookable_offers.md
+        - Tops:
+          - dbt/kpis/tops/index.md
+          - Top offers: dbt/kpis/tops/top_offer_ranking.md
+          - Top offers by category: dbt/kpis/tops/top_offer_category_ranking.md
+          - Top offers in labelled venues: dbt/kpis/tops/top_offer_labelled_ranking.md
+          - Top venues: dbt/kpis/tops/top_venue_ranking.md
+          - Top labelled venues: dbt/kpis/tops/top_venue_labelled_ranking.md
+      - Exports:
+        - data.gouv.fr:
+          - dbt/data_gouv/index.md
+          - beneficiary: dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary.md
+          - beneficiary_coverage: dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage.md
+          - diversity: dbt/models/export/data_gouv/description__exp_data_gouv__diversity.md
+          - diversity_by_category: dbt/models/export/data_gouv/description__exp_data_gouv__diversity_by_category.md
+        - VIDOC:
+          - dbt/vidoc/index.md
+          - beneficiary: dbt/models/export/vidoc/description__exp_vidoc_beneficiary.md
+          - beneficiary_coverage: dbt/models/export/vidoc/description__exp_vidoc_beneficiary__coverage.md
+          - population_coverage: dbt/models/export/vidoc/description__exp_vidoc_population__coverage.md
+          - diversity: dbt/models/export/vidoc/description__exp_vidoc_diversity.md
+          - diversity_by_category: dbt/models/export/vidoc/description__exp_vidoc_diversity__by_category.md
+          - booking_beneficiary: dbt/models/export/vidoc/description__exp_vidoc_booking_beneficiary.md
+          - cultural_partner: dbt/models/export/vidoc/description__exp_vidoc_cultural_partner.md
+          - cultural_partner_by_type: dbt/models/export/vidoc/description__exp_vidoc_cultural_partner__by_type.md
+          - booking_partner_finance_individual: dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual.md
+          - student_coverage: dbt/models/export/vidoc/description__exp_vidoc_student__coverage.md
+          - institution_activity: dbt/models/export/vidoc/description__exp_vidoc_institution__activity.md
+          - booking_collective: dbt/models/export/vidoc/description__exp_vidoc_booking_collective.md
+          - booking_collective_venue: dbt/models/export/vidoc/description__exp_vidoc_booking_collective_venue.md
+          - booking_collective_by_domain: dbt/models/export/vidoc/description__exp_vidoc_booking_collective_by_domain.md
+          - booking_collective_by_format: dbt/models/export/vidoc/description__exp_vidoc_booking_collective_by_format.md
+          - offer_collective_bookable: dbt/models/export/vidoc/description__exp_vidoc_offer_collective_bookable.md
+          - top_offer: dbt/models/export/vidoc/description__exp_vidoc__top_offer.md
+          - top_offer_category: dbt/models/export/vidoc/description__exp_vidoc__top_offer_category.md
+          - top_offer_labelled: dbt/models/export/vidoc/description__exp_vidoc__top_offer_labelled.md
+          - top_venue: dbt/models/export/vidoc/description__exp_vidoc__top_venue.md
+          - top_venue_labelled: dbt/models/export/vidoc/description__exp_vidoc__top_venue_labelled.md
+        - Ministry:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md
           - Bookings: dbt/ministry_kpis/booking.md
@@ -145,7 +173,8 @@ plugins:
           - project_structure_and_data_flow.md
         Data Models:
           - dbt/overview.md
-          - dbt/vidoc_kpis/**/*.md
+          - dbt/kpis/**/*.md
+          - dbt/vidoc/*.md
           - dbt/data_gouv/*.md
           - dbt/ministry_kpis/*.md
           - dbt/models/**/description*.md

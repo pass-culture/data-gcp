@@ -1,4 +1,4 @@
--- data.gouv.fr copy of the vidoc lot 1 beneficiary export: same perturbed counts,
+-- data.gouv.fr beneficiaries, from the perturbed base: same perturbed counts,
 -- closed months only, geographic codes formatted for data.gouv.fr
 select
     partition_month,

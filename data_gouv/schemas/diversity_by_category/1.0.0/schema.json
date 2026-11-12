@@ -27,7 +27,7 @@
     },
     {
       "title": "Définition de l'indicateur (documentation, en anglais)",
-      "path": "https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/"
+      "path": "https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/booking_share_by_category/"
     },
     {
       "title": "Méthode de protection statistique (en anglais)",

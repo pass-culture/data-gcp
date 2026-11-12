@@ -1,6 +1,6 @@
 # data.gouv.fr exports
 
-pass Culture open data published on [data.gouv.fr](https://www.data.gouv.fr): the vidoc lot 1 indicators (beneficiaries, coverage numerator, diversity at credit expiration). Technical documentation: [data.gouv.fr exports](https://pass-culture.github.io/data-gcp/dbt/data_gouv/).
+pass Culture open data published on [data.gouv.fr](https://www.data.gouv.fr): indicators on beneficiaries, coverage (numerator) and diversity at credit expiration. Technical documentation: [data.gouv.fr exports](https://pass-culture.github.io/data-gcp/dbt/data_gouv/).
 
 | Path | Content |
 |---|---|

@@ -1,4 +1,4 @@
--- data.gouv.fr copy of the vidoc lot 1 beneficiary coverage export (numerator of the
+-- data.gouv.fr beneficiary coverage, from the perturbed base (numerator of the
 -- coverage rate). The INSEE population denominator is not republished: it is
 -- public INSEE data, see the documentation for the computation code
 select

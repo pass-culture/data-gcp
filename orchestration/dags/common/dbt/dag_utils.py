@@ -621,8 +621,12 @@ def create_test_operator(model_data: dict, dag: DAG) -> PythonOperator:
     node_tags = model_data.get("tags", [])
     node_meta = model_data.get("meta", {})
 
+    # aliases are not unique across folders (e.g. exp_vidoc__diversity and
+    # exp_base__diversity): use the model name, like create_model_operator
+    is_applicative = "applicative" in model_data["alias"]
     test_op = PythonOperator(
-        task_id=model_data["alias"] + "_tests",
+        task_id=(model_data["alias"] if is_applicative else model_data["name"])
+        + "_tests",
         python_callable=partial(run_dbt_test, model_data["name"], node_tags),
         dag=dag,
         pool="dbt",

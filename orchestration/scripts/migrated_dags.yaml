@@ -34,9 +34,9 @@ dags_in_paris:
   import_batch:
     source_dataset: raw
     tables_to_copy: [batch_campaigns_stats, batch_transac] # incremental append/partitioned raw loads -> copy history
-  import_brevo_v2:
+  import_brevo:
     source_dataset: raw
-    tables_to_copy: [brevo_transactional] # incremental partitioned raw load -> copy history
+    tables_to_copy: [sendinblue_transactional, sendinblue_newsletters_histo, sendinblue_pro_newsletters_histo] # incremental partitioned raw loads -> copy history
   import_contentful:
     source_dataset: raw
     tables_to_copy: [contentful_entry, contentful_relationship, contentful_tag] # incremental partitioned raw loads -> copy history

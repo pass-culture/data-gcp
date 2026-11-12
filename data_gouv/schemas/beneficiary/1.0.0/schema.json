@@ -1,0 +1,178 @@
+{
+  "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
+  "name": "pass-culture-beneficiary",
+  "title": "Bénéficiaires du pass Culture par mois et territoire",
+  "description": "Stock mensuel de bénéficiaires du volet individuel du pass Culture (jeunes ayant reçu un crédit individuel), et parmi eux des bénéficiaires actuels (crédit encore disponible), par territoire de résidence, âge, QPV et densité. Une ligne par mois et combinaison de dimensions.",
+  "version": "1.0.0",
+  "path": "https://raw.githubusercontent.com/pass-culture/data-gcp/master/data_gouv/schemas/beneficiary/1.0.0/schema.json",
+  "homepage": "https://github.com/pass-culture/data-gcp/tree/master/data_gouv",
+  "countryCode": "FR",
+  "licenses": [
+    {
+      "name": "etalab-2.0",
+      "title": "Licence Ouverte / Open Licence version 2.0",
+      "path": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/"
+    }
+  ],
+  "contributors": [
+    {
+      "title": "pass Culture - Pôle données",
+      "role": "author"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Modèle dbt exp_data_gouv__beneficiary",
+      "path": "https://github.com/pass-culture/data-gcp/blob/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv/exp_data_gouv__beneficiary.sql"
+    },
+    {
+      "title": "Définition de l'indicateur (documentation, en anglais)",
+      "path": "https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/"
+    },
+    {
+      "title": "Méthode de protection statistique (en anglais)",
+      "path": "https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/"
+    }
+  ],
+  "missingValues": [
+    ""
+  ],
+  "fields": [
+    {
+      "name": "partition_month",
+      "title": "Mois",
+      "description": "Mois d'observation : le stock est mesuré à la fin de ce mois. Date au format AAAA-MM-JJ, toujours le premier jour du mois. Seuls les mois terminés sont publiés.",
+      "type": "date",
+      "format": "%Y-%m-%d",
+      "example": "2026-01-01",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "region_code",
+      "title": "Code région",
+      "description": "Code INSEE (Code officiel géographique) de la région de l'adresse déclarée par le bénéficiaire à l'inscription. Vide pour les collectivités d'outre-mer (975, 978, 986, 987, 988) et pour les bénéficiaires non localisés.",
+      "type": "string",
+      "example": "11",
+      "constraints": {
+        "required": false,
+        "pattern": "^[0-9]{2}$"
+      }
+    },
+    {
+      "name": "region_name",
+      "title": "Région",
+      "description": "Nom de la région. « non localisé » lorsque l'adresse n'a pas pu être rattachée à une commune ; nom de la collectivité ou « Collectivités d'outre-mer » pour les collectivités d'outre-mer.",
+      "type": "string",
+      "example": "Île-de-France",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "department_code",
+      "title": "Code département",
+      "description": "Code INSEE (Code officiel géographique) du département de l'adresse déclarée par le bénéficiaire à l'inscription (2A, 2B pour la Corse, 971 à 988 pour l'outre-mer). Vide pour les bénéficiaires non localisés.",
+      "type": "string",
+      "example": "75",
+      "constraints": {
+        "required": false,
+        "pattern": "^([0-9]{2}|2A|2B|9[78][0-9])$"
+      }
+    },
+    {
+      "name": "department_name",
+      "title": "Département",
+      "description": "Nom du département. « non localisé » lorsque l'adresse n'a pas pu être rattachée à une commune.",
+      "type": "string",
+      "example": "Paris",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "age_at_calculation",
+      "title": "Âge",
+      "description": "Âge révolu du bénéficiaire à la fin du mois d'observation. Un même jeune change donc de tranche d'âge au fil des mois. Vide si la date de naissance est inconnue. Quelques lignes présentent des âges hors 15-20 ans (dates de naissance déclarées incohérentes, ou bénéficiaires dont le crédit a expiré).",
+      "type": "integer",
+      "example": "18",
+      "constraints": {
+        "required": false,
+        "minimum": 0
+      }
+    },
+    {
+      "name": "is_in_qpv",
+      "title": "Résident en QPV",
+      "description": "Vrai si l'adresse déclarée par le bénéficiaire est située dans un quartier prioritaire de la politique de la ville (QPV). L'adresse peut différer du lieu de résidence effectif (domicile parental, études). Vide si l'adresse n'a pas pu être localisée.",
+      "type": "boolean",
+      "trueValues": [
+        "true"
+      ],
+      "falseValues": [
+        "false"
+      ],
+      "constraints": {
+        "required": false
+      }
+    },
+    {
+      "name": "macro_density_label",
+      "title": "Densité (2 niveaux)",
+      "description": "Densité de la commune de l'adresse déclarée selon la grille communale de densité de l'INSEE : « urbain » (niveaux 1 à 4), « rural » (niveaux 5 à 7), « non localisé » si l'adresse n'a pas pu être rattachée à une commune.",
+      "type": "string",
+      "example": "rural",
+      "constraints": {
+        "required": false,
+        "enum": [
+          "urbain",
+          "rural",
+          "non localisé"
+        ]
+      }
+    },
+    {
+      "name": "micro_density_label",
+      "title": "Densité (7 niveaux)",
+      "description": "Niveau de la grille communale de densité de l'INSEE (7 niveaux) de la commune de l'adresse déclarée, « non localisé » si l'adresse n'a pas pu être rattachée à une commune.",
+      "type": "string",
+      "example": "Bourgs ruraux",
+      "constraints": {
+        "required": false,
+        "enum": [
+          "Grands centres urbains",
+          "Centres urbains intermédiaires",
+          "Ceintures urbaines",
+          "Petites villes",
+          "Bourgs ruraux",
+          "Rural à habitat dispersé",
+          "Rural à habitat très dispersé",
+          "non localisé"
+        ]
+      }
+    },
+    {
+      "name": "total_beneficiaries",
+      "title": "Nombre de bénéficiaires",
+      "description": "Nombre de jeunes ayant reçu au moins un crédit individuel du pass Culture à la fin du mois, que ce crédit soit encore disponible, entièrement dépensé ou expiré, et qu'ils aient ou non réservé. Les comptes supprimés sortent du stock. Les jeunes de 15-16 ans bénéficiant uniquement des offres gratuites (depuis mars 2025) ne sont pas comptés. Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "type": "integer",
+      "example": "723065",
+      "constraints": {
+        "required": true,
+        "minimum": 0
+      }
+    },
+    {
+      "name": "total_actual_beneficiaries",
+      "title": "Nombre de bénéficiaires actuels",
+      "description": "Nombre de bénéficiaires dont le crédit n'est ni expiré ni entièrement dépensé à la fin du mois (crédit encore disponible et âge limite d'utilisation non atteint). Sous-ensemble de total_beneficiaries : il ne lui est jamais supérieur. Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "type": "integer",
+      "example": "684122",
+      "constraints": {
+        "required": true,
+        "minimum": 0
+      }
+    }
+  ]
+}

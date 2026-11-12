@@ -79,8 +79,24 @@ Practical consequences:
 - **Nested invariants can break on a single cell.** If cohort A ⊂ B, the raw counts satisfy `count(A) ≤ count(B)`, but after independent perturbation `count(A) + noise_A ≤ count(B) + noise_B` is not guaranteed on small cells.
 - **Ratio noise does not cancel.** A rate `count(A)/count(B)` gets independent noise on both sides, so per-cell ratios can be noticeably off on small cells.
 - **Aggregation is the fix.** Sum numerator and denominator each over many cells (national, regional, quarterly) before dividing — the `O(sqrt(N))` error on each sum becomes negligible relative to the sum.
-- **Nested counts are capped on export.** Where a published table pairs a sub-cohort with its parent cohort (`exp_vidoc__diversity`: N+ categories and spent share buckets ⊂ expired; `exp_vidoc__diversity_by_category`: category bookers ⊂ expired; `exp_vidoc__beneficiary`: active ⊂ ever credited), the perturbed sub-cohort count is capped at the perturbed parent count of the same cell, so shares never exceed 100% at any aggregation level. The cap only uses perturbed values, so it does not weaken confidentiality, but it adds a small downward bias on the capped counts (about -0.2% nationally, up to several % on small overseas departments).
+- **Nested counts are capped on export.** Where a published table pairs a sub-cohort with its parent cohort (`exp_base__diversity`: N+ categories and spent share buckets ⊂ expired; `exp_base__diversity_by_category`: category bookers ⊂ expired; `exp_base__beneficiary`: active ⊂ ever credited), the perturbed sub-cohort count is capped at the perturbed parent count of the same cell, so shares never exceed 100% at any aggregation level. The cap only uses perturbed values, so it does not weaken confidentiality, but it adds a small downward bias on the capped counts (about -0.2% nationally, up to several % on small overseas departments).
 - **Additive consistency is not guaranteed.** `perturb(total) ≠ Σ perturb(sub-totals)`. Don't expect published breakdowns to sum exactly to a published total.
+
+### A single perturbed base for every export
+
+Beneficiary counts are perturbed **once**, at their finest published grain, in the `exp_base__*` models (`models/export/export_base`): month x department x age x QPV x density for beneficiaries, month x department x milestone age for coverage, expiration month x department x QPV x density (x category) for diversity. Every tool then only **sums** these perturbed cells:
+
+| Tool | Reads |
+|---|---|
+| vidoc (`exp_vidoc__*`) | the base cells (`select *`) |
+| data.gouv.fr (`exp_data_gouv__*`) | the base cells, lot 1 columns and closed months |
+| external reporting (`external_reporting__beneficiary`, `__coverage`, `__diversity`) | NAT, REG and DEP figures = sums of the base cells |
+
+A territory and month therefore show **exactly** the same counts in every tool, and a consumer summing the published cells gets the external reporting figures. This is also why national figures are perturbed (they are sums of perturbed cells): the error stays within a few tens on several millions.
+
+Perturbing a total again (e.g. `perturb(department total)`) next to the sum of its perturbed cells would give two different values for the same figure, and comparing them helps to remove the noise. So a figure that can be computed from the base is never perturbed a second time. Only grains that the base does not hold are perturbed separately, with their own additive cell keys: EPCI and municipality levels of external reporting, and breakdowns of the active beneficiaries by gender or activity.
+
+Exception: coverage figures of external reporting exclude French Polynesia (987), which has no INSEE population estimate, so their REG and NAT sums are lower than the sums of the published cells by the beneficiaries of 987.
 
 ### Parameters
 

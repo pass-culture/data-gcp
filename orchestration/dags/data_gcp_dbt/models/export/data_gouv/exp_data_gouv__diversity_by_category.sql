@@ -9,5 +9,5 @@ select
     micro_density_label,
     offer_category_id,
     total_category_booked_beneficiaries
-from {{ ref("exp_vidoc__diversity_by_category") }}
+from {{ ref("exp_base__diversity_by_category") }}
 where {{ data_gouv_closed_month_filter("deposit_expiration_month") }}

@@ -15,6 +15,7 @@
         or "reco_cloudsql" in node.path
         or "vidoc" in node.path
         or "data_gouv" in node.path
+        or "export_base" in node.path
         or node.resource_type == "snapshot"
     ) -%}
     {%- set is_mart_or_export = "mart" in node.path or "export" in node.path -%}

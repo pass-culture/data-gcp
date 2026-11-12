@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: exp_base__beneficiary
+    description: "{{ doc('description__exp_base__beneficiary') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - department_name
+              - age_at_calculation
+              - is_in_qpv
+              - macro_density_label
+              - micro_density_label
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_actual_beneficiaries <= total_beneficiaries"
+      - dbt_utils.expression_is_true:
+          arguments:
+            # cell key perturbation: a published count is 0 or >= 5
+            expression: "coalesce(total_beneficiaries, 0) not between 1 and 4 and coalesce(total_actual_beneficiaries, 0) not between 1 and 4"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: age_at_calculation
+        description: "{{ doc('column__age_at_calculation') }}"
+      - name: is_in_qpv
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: macro_density_label
+        description: "{{ doc('column__user_macro_density_label') }}"
+      - name: micro_density_label
+        description: "{{ doc('column__user_density_label') }}"
+      - name: total_actual_beneficiaries
+        description: "{{ doc('column__metrics__total_actual_beneficiaries') }}"
+      - name: total_beneficiaries
+        description: "{{ doc('column__metrics__total_beneficiaries') }}"

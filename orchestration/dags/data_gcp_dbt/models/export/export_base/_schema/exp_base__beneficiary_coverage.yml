@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: exp_base__beneficiary_coverage
+    description: "{{ doc('description__exp_base__beneficiary_coverage') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - department_name
+              - milestone_age
+      - dbt_utils.expression_is_true:
+          arguments:
+            # cell key perturbation: a published count is 0 or >= 5
+            expression: "coalesce(total_beneficiaries_last_12_months, 0) not between 1 and 4"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: milestone_age
+        description: "{{ doc('column__milestone_age') }}"
+      - name: total_beneficiaries_last_12_months
+        description: "{{ doc('column__total_users_last_12_months') }}"

@@ -1,0 +1,80 @@
+version: 2
+
+models:
+  - name: exp_base__diversity
+    description: "{{ doc('description__exp_base__diversity') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - deposit_expiration_month
+              - department_name
+              - is_in_qpv
+              - macro_density_label
+              - micro_density_label
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_1plus_category_booked_beneficiaries <= total_expired_deposit_beneficiaries"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_2plus_category_booked_beneficiaries <= total_expired_deposit_beneficiaries"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_3plus_category_booked_beneficiaries <= total_expired_deposit_beneficiaries"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_4plus_category_booked_beneficiaries <= total_expired_deposit_beneficiaries"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_5plus_category_booked_beneficiaries <= total_expired_deposit_beneficiaries"
+      - dbt_utils.expression_is_true:
+          arguments:
+            # cell key perturbation: a published count is 0 or >= 5
+            expression: "coalesce(total_expired_deposit_beneficiaries, 0) not between 1 and 4 and coalesce(total_1plus_category_booked_beneficiaries, 0) not between 1 and 4 and coalesce(total_2plus_category_booked_beneficiaries, 0) not between 1 and 4 and coalesce(total_3plus_category_booked_beneficiaries, 0) not between 1 and 4 and coalesce(total_4plus_category_booked_beneficiaries, 0) not between 1 and 4 and coalesce(total_5plus_category_booked_beneficiaries, 0) not between 1 and 4"
+    columns:
+      - name: deposit_expiration_month
+        description: "{{ doc('column__deposit_expiration_month') }}"
+      - name: region_name
+        description: "{{ doc('column__region_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: department_name
+        description: "{{ doc('column__department_name') }}"
+      - name: department_code
+        description: "{{ doc('column__department_code') }}"
+      - name: is_in_qpv
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: macro_density_label
+        description: "{{ doc('column__user_macro_density_label') }}"
+      - name: micro_density_label
+        description: "{{ doc('column__user_density_label') }}"
+      - name: total_expired_deposit_beneficiaries
+        description: "{{ doc('column__metrics__total_expired_deposit_beneficiaries') }}"
+      - name: total_1plus_category_booked_beneficiaries
+        description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+      - name: total_2plus_category_booked_beneficiaries
+        description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+      - name: total_3plus_category_booked_beneficiaries
+        description: "{{ doc('column__metrics__total_3plus_category_booked_beneficiaries') }}"
+      - name: total_4plus_category_booked_beneficiaries
+        description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+      - name: total_5plus_category_booked_beneficiaries
+        description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+      - name: total_spent_share_0_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_0_25_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_25_50_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_50_75_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_75_90_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_90_100_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_deposit_amount_at_expiration
+        description: "{{ doc('column__metrics__total_deposit_amount_at_expiration') }}"
+      - name: total_actual_amount_spent_at_expiration
+        description: "{{ doc('column__metrics__total_actual_amount_spent_at_expiration') }}"
+      - name: total_distinct_venue_booked_at_expiration
+        description: "{{ doc('column__metrics__total_distinct_venue_booked_at_expiration') }}"

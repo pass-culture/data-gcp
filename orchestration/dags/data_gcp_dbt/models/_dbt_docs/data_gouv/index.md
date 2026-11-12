@@ -5,20 +5,22 @@ description: pass Culture datasets published as open data on data.gouv.fr, their
 
 ## data.gouv.fr exports
 
-pass Culture publishes the vidoc lot 1 indicators as open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`. The published figures are **the same** as the ones displayed in the ministry's vidoc tool: the `exp_data_gouv__*` models are copies of the `exp_vidoc__*` exports.
+pass Culture publishes the vidoc lot 1 indicators as open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`. The published figures are **the same** as the ones displayed in the ministry's vidoc tool: the `exp_data_gouv__*` and `exp_vidoc__*` models both read the same perturbed base, `exp_base__*` (see [A single perturbed base](../references/statistical_confidentiality.md#a-single-perturbed-base-for-every-export)), and the external reporting national, regional and departmental figures are sums of the same cells.
 
 Only pass Culture data is published. The INSEE population estimates used as the coverage rate denominator are not republished; their computation is public in [metrics_population__coverage](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population).
 
 ### Resources
 
-| Resource (CSV) | dbt model | Source | KPI |
+| Resource (CSV) | dbt model | Perturbed base | KPI |
 |---|---|---|---|
-| `beneficiary` | [exp_data_gouv__beneficiary](../models/export/data_gouv/description__exp_data_gouv__beneficiary.md) | `exp_vidoc__beneficiary` | [Ever-credited](../vidoc_kpis/beneficiaries/ever_credited_beneficiaries.md) and [active](../vidoc_kpis/beneficiaries/active_beneficiaries.md) beneficiaries |
-| `beneficiary_coverage` | [exp_data_gouv__beneficiary_coverage](../models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage.md) | `exp_vidoc__beneficiary_coverage` | [Coverage rate](../vidoc_kpis/beneficiaries/beneficiary_coverage_rate.md) numerator |
-| `diversity` | [exp_data_gouv__diversity](../models/export/data_gouv/description__exp_data_gouv__diversity.md) | `exp_vidoc__diversity` | [Diversity rate (3+ categories)](../vidoc_kpis/diversity/diversity_3plus_categories.md) |
-| `diversity_by_category` | [exp_data_gouv__diversity_by_category](../models/export/data_gouv/description__exp_data_gouv__diversity_by_category.md) | `exp_vidoc__diversity_by_category` | [Booking share by category](../vidoc_kpis/diversity/booking_share_by_category.md) |
+| `beneficiary` | [exp_data_gouv__beneficiary](../models/export/data_gouv/description__exp_data_gouv__beneficiary.md) | `exp_base__beneficiary` | [Ever-credited](../vidoc_kpis/beneficiaries/ever_credited_beneficiaries.md) and [active](../vidoc_kpis/beneficiaries/active_beneficiaries.md) beneficiaries |
+| `beneficiary_coverage` | [exp_data_gouv__beneficiary_coverage](../models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage.md) | `exp_base__beneficiary_coverage` | [Coverage rate](../vidoc_kpis/beneficiaries/beneficiary_coverage_rate.md) numerator |
+| `diversity` | [exp_data_gouv__diversity](../models/export/data_gouv/description__exp_data_gouv__diversity.md) | `exp_base__diversity` | [Diversity rate (3+ categories)](../vidoc_kpis/diversity/diversity_3plus_categories.md) |
+| `diversity_by_category` | [exp_data_gouv__diversity_by_category](../models/export/data_gouv/description__exp_data_gouv__diversity_by_category.md) | `exp_base__diversity_by_category` | [Booking share by category](../vidoc_kpis/diversity/booking_share_by_category.md) |
 
 ### Differences with the vidoc exports
+
+Same cells as the vidoc exports, with:
 
 - **Columns**: only the lot 1 columns (amounts, spent share buckets and 1+/2+/4+/5+ counts of `exp_vidoc__diversity` are not published).
 - **Months**: closed months only; the current month is excluded.

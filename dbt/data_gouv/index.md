@@ -1,0 +1,34 @@
+## data.gouv.fr exports
+
+pass Culture publishes the vidoc lot 1 indicators as open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`. The published figures are **the same** as the ones displayed in the ministry's vidoc tool: the `exp_data_gouv__*` and `exp_vidoc__*` models both read the same perturbed base, `exp_base__*` (see [A single perturbed base](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/#a-single-perturbed-base-for-every-export)), and the external reporting national, regional and departmental figures are sums of the same cells.
+
+Only pass Culture data is published. The INSEE population estimates used as the coverage rate denominator are not republished; their computation is public in [metrics_population\_\_coverage](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population).
+
+### Resources
+
+| Resource (CSV)          | dbt model                                                                                                                                                                | Perturbed base                    | KPI                                                                                                                                                                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `beneficiary`           | [exp_data_gouv\_\_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md)                     | `exp_base__beneficiary`           | [Ever-credited](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/ever_credited_beneficiaries/index.md) and [active](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/active_beneficiaries/index.md) beneficiaries |
+| `beneficiary_coverage`  | [exp_data_gouv\_\_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage/index.md)   | `exp_base__beneficiary_coverage`  | [Coverage rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate/index.md) numerator                                                                                                                        |
+| `diversity`             | [exp_data_gouv\_\_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md)                         | `exp_base__diversity`             | [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md)                                                                                                                    |
+| `diversity_by_category` | [exp_data_gouv\_\_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity_by_category/index.md) | `exp_base__diversity_by_category` | [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/index.md)                                                                                                                          |
+
+### Differences with the vidoc exports
+
+Same cells as the vidoc exports, with:
+
+- **Columns**: only the lot 1 columns (amounts, spent share buckets and 1+/2+/4+/5+ counts of `exp_vidoc__diversity` are not published).
+- **Months**: closed months only; the current month is excluded.
+- **Geography**: INSEE COG codes as strings, so that data.gouv.fr detects them (`region_code` zero-padded, e.g. `01` for Guadeloupe). Codes are empty for non-localised beneficiaries (label `non localisé` kept so that totals stay complete) and `region_code` is empty for overseas collectivities (975, 978, 986, 987, 988).
+
+### Data protection
+
+Counts of people are protected with the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md): a published count is 0 or >= 5, and nested counts are capped at their parent count. dbt tests on each model check the grain, the 0 or >= 5 rule, the nested caps and the code formats.
+
+### Schemas
+
+Each resource has a [Table Schema](https://specs.frictionlessdata.io/table-schema/) in French (field titles, definitions, constraints), generated by [`data_gouv/build_schemas.py`](https://github.com/pass-culture/data-gcp/tree/master/data_gouv) and versioned under `data_gouv/schemas/<resource>/<version>/schema.json`. The `exp_data_gouv__*` models have an enforced dbt contract, so a column change fails the build: bump the schema version, regenerate, and update the resource `schema` on data.gouv.fr.
+
+### Publication
+
+See the [data_gouv README](https://github.com/pass-culture/data-gcp/tree/master/data_gouv) for the export and upload process.

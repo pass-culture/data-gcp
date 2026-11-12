@@ -25,6 +25,10 @@
          <lastmod>2026-11-12</lastmod>
     </url>
     <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/data_gouv/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__achievement/</loc>
          <lastmod>2026-11-12</lastmod>
     </url>
@@ -398,6 +402,38 @@
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/backend/description__exp_product_delta/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity_by_category/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__beneficiary/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__beneficiary_coverage/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__diversity/</loc>
+         <lastmod>2026-11-12</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__diversity_by_category/</loc>
          <lastmod>2026-11-12</lastmod>
     </url>
     <url>

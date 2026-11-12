@@ -22,7 +22,7 @@ Every model reads the perturbed base `exp_base__*` (see [A single perturbed base
 
 ### Format
 
-- **Months**: closed months only; the current month is excluded.
+- **Months**: published each semester, up to the end of June and the end of December. The tables keep every closed month (the current month is excluded); the cut-off is applied by `data_gouv/export_csv.py --last-month`.
 - **Geography**: INSEE COG codes as strings, so that data.gouv.fr detects them (`region_code` zero-padded, e.g. `01` for Guadeloupe). Codes are empty for non-localised beneficiaries (label `non localisé` kept so that totals stay complete) and `region_code` is empty for overseas collectivities (975, 978, 986, 987, 988).
 - **CSV**: UTF-8, comma separator, ISO dates (first day of the month), lowercase booleans; an empty cell means "unknown", never zero.
 

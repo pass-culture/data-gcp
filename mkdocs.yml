@@ -96,6 +96,13 @@ nav:
             - EAC bookings by educational domain: dbt/vidoc_kpis/collective/eac_bookings_by_domain.md
             - EAC bookings by offer format: dbt/vidoc_kpis/collective/eac_bookings_by_format.md
             - EAC bookable collective offers: dbt/vidoc_kpis/collective/eac_bookable_offers.md
+          - Tops:
+            - dbt/vidoc_kpis/tops/index.md
+            - Top offers: dbt/vidoc_kpis/tops/top_offer_ranking.md
+            - Top offers by category: dbt/vidoc_kpis/tops/top_offer_category_ranking.md
+            - Top offers in labelled venues: dbt/vidoc_kpis/tops/top_offer_labelled_ranking.md
+            - Top venues: dbt/vidoc_kpis/tops/top_venue_ranking.md
+            - Top labelled venues: dbt/vidoc_kpis/tops/top_venue_labelled_ranking.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md

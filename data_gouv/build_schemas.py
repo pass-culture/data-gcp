@@ -362,7 +362,13 @@ def build_schema(resource, spec):
                 "path": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
             }
         ],
-        "contributors": [{"title": "pass Culture - Pôle données", "role": "author"}],
+        "contributors": [
+            {
+                "title": "pass Culture - Pôle données",
+                "email": "donnees@passculture.app",
+                "role": "author",
+            }
+        ],
         "sources": [
             {
                 "title": f"Modèle dbt {model}",

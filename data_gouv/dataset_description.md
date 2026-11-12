@@ -4,7 +4,7 @@
 
 Le pass Culture est un opérateur de l'État chargé d'une mission de service public : démocratiser l'accès à la culture et favoriser la participation active des jeunes à la vie culturelle, dans tous les territoires.
 
-Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'Observatoire du pass Culture rassemble les données, études et analyses produites par le Département Études et Recherche à partir des données de l'application, pour nourrir le débat et la décision publique.
+Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'Observatoire du pass Culture rassemble les données, études et analyses produites à partir des données de l'application, pour nourrir le débat et la décision publique.
 
 L'Observatoire s'appuie sur une politique d'ouverture des données concertée et progressive. Les indicateurs de suivi de la politique publique, co-construits avec le DEPS (ministère de la Culture), sont mis à jour chaque semestre, aux échelles nationale, régionale et départementale. Ils sont d'abord diffusés sous forme de fiches PDF sur le site de l'Observatoire, et seront tous progressivement publiés en données ouvertes sur data.gouv.fr, pour la transparence de l'action publique et leur réutilisation.
 
@@ -25,7 +25,7 @@ Les fichiers sont au format CSV (UTF-8, séparateur virgule). Les dates sont au 
 
 ## Indicateurs
 
-**Taux de couverture.** Nombre de jeunes bénéficiaires ayant atteint un âge donné sur 12 mois (`beneficiary_coverage.csv`), divisé par le nombre total de jeunes ayant atteint cet âge sur la même période et le même territoire, estimé par l'INSEE. Par exemple, la couverture « 18+ » correspond aux bénéficiaires ayant eu 19 ans au cours des 12 derniers mois, divisés par l'ensemble des jeunes ayant eu 19 ans en France sur la même période. Les estimations de population de l'INSEE ne sont pas republiées ici : elles sont diffusées par l'INSEE et le [code du calcul](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population) est public.
+**Taux de couverture.** Nombre de jeunes bénéficiaires ayant atteint un âge donné sur 12 mois (`beneficiary_coverage.csv`), divisé par le nombre total de jeunes ayant atteint cet âge sur la même période et le même territoire, estimé par l'INSEE. Par exemple, la couverture « 18+ » correspond aux bénéficiaires ayant eu 19 ans au cours des 12 derniers mois, divisés par l'ensemble des jeunes ayant eu 19 ans en France sur la même période. Les estimations de population de l'INSEE ne sont pas republiées ici : elles sont diffusées par l'INSEE et le [code du calcul](https://github.com/pass-culture/data-insee-population) est public.
 
 **Bénéficiaires et bénéficiaires actuels.** Un *bénéficiaire* est un jeune ayant créé son compte et débloqué son crédit individuel, qu'il ait ou non réservé et dépensé son crédit. Un *bénéficiaire actuel* dispose encore de crédit et n'a pas atteint l'âge limite d'utilisation (veille de ses 21 ans) : c'est un stock, une photo à la fin du mois, et non un flux.
 
@@ -69,3 +69,5 @@ Détail de la méthode : [secret statistique](https://pass-culture.github.io/dat
 Les données proviennent de l'entrepôt de données de la SAS pass Culture, alimenté par les données applicatives (inscriptions, crédits, réservations). Le jeu de données est mis à jour chaque semestre, avec les données jusqu'à fin juin et fin décembre. Le code de production des données est public : [pass-culture/data-gcp](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv).
 
 Producteur : pass Culture, Pôle données.
+
+Contact : pour toute question sur ce jeu de données, écrire à [donnees@passculture.app](mailto:donnees@passculture.app).

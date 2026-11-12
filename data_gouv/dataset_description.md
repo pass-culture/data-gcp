@@ -11,7 +11,7 @@ Ce sont les mêmes données que celles du tableau de bord VIDOC du ministère de
 | Fichier | Contenu | Granularité |
 |---|---|---|
 | `beneficiary.csv` | Nombre de bénéficiaires et de bénéficiaires actuels (crédit encore disponible), en stock à la fin de chaque mois | Mois × département × âge × QPV × densité |
-| `beneficiary_coverage.csv` | Nombre de bénéficiaires ayant atteint un âge donné (16 à 20 ans) sur 12 mois glissants : numérateur du taux de couverture | Mois × département × âge atteint |
+| `beneficiary_coverage.csv` | Nombre de bénéficiaires ayant atteint un âge donné (16 à 19 ans) sur 12 mois glissants : numérateur du taux de couverture | Mois × département × âge atteint |
 | `diversity.csv` | Bénéficiaires dont le crédit a expiré dans le mois, et parmi eux ceux ayant réservé dans au moins 3 catégories d'offres | Mois d'expiration × département × QPV × densité |
 | `diversity_by_category.csv` | Pour chaque catégorie d'offre, bénéficiaires dont le crédit a expiré dans le mois et ayant réservé dans cette catégorie | Mois d'expiration × département × QPV × densité × catégorie |
 

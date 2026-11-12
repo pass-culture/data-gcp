@@ -27,5 +27,10 @@ models:
         description: "{{ doc('column__department_code') }}"
       - name: milestone_age
         description: "{{ doc('column__milestone_age') }}"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [16, 17, 18, 19]
+                quote: false
       - name: total_beneficiaries_last_12_months
         description: "{{ doc('column__total_users_last_12_months') }}"

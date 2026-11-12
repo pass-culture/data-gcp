@@ -2,15 +2,13 @@
 
 <!-- Description du jeu de données à publier sur data.gouv.fr (Markdown). -->
 
-Le passe Culture est un opérateur de l'État qui met en œuvre une mission de service public de démocratisation culturelle et de participation active de la jeunesse aux dynamiques culturelles dans l'ensemble des territoires.
+Le pass Culture est un opérateur de l'État chargé d'une mission de service public : démocratiser l'accès à la culture et favoriser la participation active des jeunes à la vie culturelle, dans tous les territoires.
 
-Parmi les missions de service public du passe Culture figure l'enjeu de partager une connaissance sur l'offre et les pratiques culturelles des jeunes grâce à l'utilisation des données et des analyses produites par le Département Études et Recherche à partir des données de l'application. L'objectif de l'Observatoire du passe Culture est donc de proposer un environnement pour partager la connaissance produite (données, études, mise en perspective par des thématiques et témoignages) sur l'offre et les pratiques culturelles par le passe Culture et ses partenaires, et de participer à nourrir le débat et la décision publique à partir des recherches contemporaines.
+Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'Observatoire du pass Culture rassemble les données, études et analyses produites par le Département Études et Recherche à partir des données de l'application, pour nourrir le débat et la décision publique.
 
-L'Observatoire du passe Culture s'adosse à une politique d'ouverture des données concertée et progressive. Les indicateurs de fonctionnement de la politique publique, co-construits avec le DEPS et diffusés aux services déconcentrés du ministère de la Culture (grâce à des transmissions régulières et à Vidoc notamment), seront progressivement versés dans l'infrastructure data.gouv.fr afin de participer à la transparence de l'action publique et de permettre leur réutilisation. Les prochaines étapes visent à prolonger les projets de recherche ou initiatives du passe Culture sur des explorations par des publications en données ouvertes, dans le respect de la législation.
+L'Observatoire s'appuie sur une politique d'ouverture des données concertée et progressive. Les indicateurs de suivi de la politique publique, co-construits avec le DEPS (ministère de la Culture), sont mis à jour chaque semestre, aux échelles nationale, régionale et départementale. Ils sont d'abord diffusés sous forme de fiches PDF sur le site de l'Observatoire, et seront tous progressivement publiés en données ouvertes sur data.gouv.fr, pour la transparence de l'action publique et leur réutilisation.
 
-Pour rendre compte de l'appropriation du passe Culture dans les territoires, des indicateurs concernant l'activité des bénéficiaires et des acteurs culturels sur le passe Culture sont diffusés sur le site de l'Observatoire. Ces indicateurs sont mis à jour chaque semestre et disponibles à l'échelle nationale, régionale et départementale. Ils sont disponibles, dans un premier temps, sous forme de fiches statiques PDF, et seront tous progressivement publiés en données ouvertes.
-
-Ce jeu de données en est la première étape : il partage les indicateurs sur l'activité des jeunes bénéficiaires du **volet individuel** du passe Culture (hors temps scolaire). Le volet collectif (temps scolaire) n'est pas encore couvert.
+Ce jeu de données en est la première étape : il porte sur les jeunes bénéficiaires du **volet individuel** du pass Culture (hors temps scolaire). Le volet collectif (temps scolaire) et les partenaires culturels seront couverts par de prochaines publications.
 
 ## Ressources
 
@@ -35,21 +33,16 @@ Les fichiers sont au format CSV (UTF-8, séparateur virgule). Les dates sont au 
 
 ## Protection des données (secret statistique)
 
-Le passe Culture est tenu de respecter le secret statistique afin de préserver la confidentialité commerciale des acteurs économiques. Lorsque le tissu culturel est composé de moins de trois partenaires culturels, ou qu'une structure représente plus de 85 % des recettes, afficher le chiffre permettrait de révéler publiquement son chiffre d'affaires.
+Le pass Culture respecte le secret statistique : aucune donnée publiée ne doit permettre d'identifier un jeune ni de révéler le chiffre d'affaires d'un partenaire culturel.
 
-**Traitement appliqué aux données des bénéficiaires** : le nombre de bénéficiaires est « brouillé » s'il y a moins de 5 bénéficiaires déclarant résider dans la zone géographique observée. Le nombre de bénéficiaires pourra donc être légèrement modifié à l'aide d'une règle de perturbation statistique.
+**Bénéficiaires** (ce jeu de données). Les effectifs sont protégés par la **méthode des clés de cellule** (Cell Key Method), recommandée par l'INSEE et Eurostat : les petits effectifs sont légèrement modifiés par une perturbation statistique, tandis que les grands effectifs et les totaux restent quasiment exacts.
 
-**Traitement appliqué aux données sur les retombées économiques et sur le nombre de partenaires culturels** : aucune donnée ne pourra être partagée si au moins une des conditions suivantes est remplie, au cours des 6 ou 48 derniers mois :
-
-- la zone géographique observée compte moins de trois partenaires culturels actifs ;
-- un partenaire culturel concentre plus de 85 % du chiffre d'affaires local.
-
-Les ressources de ce jeu de données ne portent que sur des bénéficiaires. Leurs effectifs sont protégés par la **méthode des clés de cellule** (Cell Key Method), recommandée par l'INSEE et Eurostat :
-
-- Une valeur publiée vaut toujours 0 ou au moins 5.
+- Une valeur publiée vaut toujours 0 ou au moins 5 : aucun effectif de 1 à 4 n'est publié.
 - Le bruit est au maximum de ±5 et de moyenne nulle : il se compense quand on additionne des lignes.
 - **Additionner les lignes (département, région, trimestre, année) avant de calculer un taux.** Un taux calculé sur une seule petite ligne peut être fortement bruité.
 - La somme des lignes d'un département ne correspond pas exactement à un total qui serait perturbé directement.
+
+**Partenaires culturels et retombées économiques** (prochaines publications). Pour préserver la confidentialité commerciale, aucune donnée n'est publiée pour une zone géographique qui, sur les 6 ou 48 derniers mois, compte moins de trois partenaires culturels actifs, ou dans laquelle un partenaire concentre plus de 85 % du chiffre d'affaires local.
 
 Détail de la méthode : [secret statistique](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/) (en anglais).
 

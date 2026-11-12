@@ -221,7 +221,7 @@ RESOURCES = {
     "beneficiary_coverage": {
         "title": "Bénéficiaires du pass Culture ayant atteint un âge sur 12 mois glissants",
         "description": "Nombre de bénéficiaires du pass Culture ayant atteint un âge "
-        "donné (16 à 20 ans) au cours des 12 derniers mois, par département de "
+        "donné (16 à 19 ans) au cours des 12 derniers mois, par département de "
         "résidence. C'est le numérateur du taux de couverture : divisé par la "
         "population de cet âge estimée par l'INSEE sur la même période et le même "
         "territoire, il donne la part des jeunes ayant bénéficié du pass Culture. "
@@ -244,7 +244,7 @@ RESOURCES = {
                 "Culture avant leurs 19 ans.",
                 "type": "integer",
                 "example": "19",
-                "constraints": {"required": True, "minimum": 16, "maximum": 20},
+                "constraints": {"required": True, "minimum": 16, "maximum": 19},
             },
             count_field(
                 "total_beneficiaries_last_12_months",

@@ -21,3 +21,6 @@ from
             "pt", "s.total_beneficiaries_last_12_months", "s.cell_key_beneficiaries"
         )
     }}
+-- coverage 15+ to 18+ (milestone 16 to 19), the ages of the vidoc sheet and
+-- external_reporting; 19+ would only add late activations
+where s.milestone_age between 16 and 19

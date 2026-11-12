@@ -1,14 +1,14 @@
 # Table: Diversity by offer category (data.gouv.fr)
 
-The `exp_data_gouv__diversity_by_category` table is the open data version of [exp_vidoc_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/vidoc/description__exp_vidoc_diversity__by_category.md): for each offer category, beneficiaries whose credit expired in the month and who booked at least one offer of that category.
+The `exp_data_gouv__diversity_by_category` table gives, for each offer category, beneficiaries whose credit expired in the month and who booked at least one offer of that category.
 
 ## Table description
 
-Published on data.gouv.fr as the `diversity_by_category` resource. The denominator is `total_expired_deposit_beneficiaries` of [exp_data_gouv_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md) for the same month and cell. Same perturbed counts as the vidoc export, closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
+Published on data.gouv.fr as the `diversity_by_category` resource. The denominator is `total_expired_deposit_beneficiaries` of [exp_data_gouv_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md) for the same month and cell. Counts come from the perturbed base [exp_base\_\_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__diversity_by_category/index.md), closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
 
 **Grain**: `deposit_expiration_month`, `department_name`, `is_in_qpv`, `macro_density_label`, `micro_density_label`, `offer_category_id`.
 
-KPI definition: [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/index.md).
+KPI definition: [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/booking_share_by_category/index.md).
 
 | name                                | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

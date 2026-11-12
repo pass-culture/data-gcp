@@ -1,14 +1,14 @@
 # Table: Diversity at credit expiration (data.gouv.fr)
 
-The `exp_data_gouv__diversity` table is the open data version of [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/vidoc/description__exp_vidoc_diversity.md), restricted to the lot 1 indicator: beneficiaries whose credit expired in the month, and those among them who booked in at least 3 distinct offer categories.
+The `exp_data_gouv__diversity` table counts the beneficiaries whose credit expired in the month, and those among them who booked in at least 3 distinct offer categories.
 
 ## Table description
 
-Published on data.gouv.fr as the `diversity` resource. Amounts, spent share buckets and 1+/2+/4+/5+ counts of the vidoc table are not published. Same perturbed counts as the vidoc export, closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
+Published on data.gouv.fr as the `diversity` resource. Only the 3+ categories indicator and its denominator are published. Counts come from the perturbed base [exp_base\_\_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__diversity/index.md), closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
 
 **Grain**: `deposit_expiration_month`, `department_name`, `is_in_qpv`, `macro_density_label`, `micro_density_label`.
 
-KPI definition: [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md).
+KPI definition: [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/index.md).
 
 | name                                      | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ----------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

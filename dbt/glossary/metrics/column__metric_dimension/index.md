@@ -30,7 +30,7 @@
 
 **external_reporting_secret_reason**: Message to display instead of the KPI when it has no value: 'Données non disponibles (secret statistique)' when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI); 'Données non disponibles' when it is NULL for another reason (KPI published at national level only, or month missing from a stock KPI series). NULL when the KPI has a value. The secret message sorts after the plain one, so max(secret_reason) shows the secret when both are mixed. is_secret_stat, is_low_count, is_national_only and is_missing_month tell the rule apart.
 
-**milestone_age**: Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage.
+**milestone_age**: Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage.
 
 **age_at_calculation**: The user's age calculated at the specific reference date of the record (usually the end of the month). Unlike the current age, this value reflects the user's age at the historical point in time represented by the row.
 

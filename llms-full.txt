@@ -100,11 +100,11 @@ Young people who received a pass Culture credit, and the share of the eligible p
 
 **Data protection**: Beneficiary counts are perturbed (cell key method). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-| KPI                                                                                                                                                | Definition                                                               | Source table(s)                                                    | Tracking                    |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | --------------------------- |
-| [Number of ever-credited beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/ever_credited_beneficiaries/index.md) | Young people who have ever received a pass Culture credit, active or not | `exp_vidoc_beneficiary`                                            | Monthly                     |
-| [Number of active beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/active_beneficiaries/index.md)               | Beneficiaries with a non-expired, non-exhausted credit                   | `exp_vidoc_beneficiary`                                            | Monthly                     |
-| [Beneficiary coverage rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate/index.md)               | Share of eligible youth who received a credit                            | `exp_vidoc_beneficiary_coverage` + `exp_vidoc_population_coverage` | Monthly (rolling 12 months) |
+| KPI                                                                                                                                          | Definition                                                               | VIDOC table(s)                                                     | data.gouv.fr           | Tracking                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------ | ---------------------- | --------------------------- |
+| [Number of ever-credited beneficiaries](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/ever_credited_beneficiaries/index.md) | Young people who have ever received a pass Culture credit, active or not | `exp_vidoc_beneficiary`                                            | `beneficiary`          | Monthly                     |
+| [Number of active beneficiaries](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/active_beneficiaries/index.md)               | Beneficiaries with a non-expired, non-exhausted credit                   | `exp_vidoc_beneficiary`                                            | `beneficiary`          | Monthly                     |
+| [Beneficiary coverage rate](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/beneficiary_coverage_rate/index.md)               | Share of eligible youth who received a credit                            | `exp_vidoc_beneficiary_coverage` + `exp_vidoc_population_coverage` | `beneficiary_coverage` | Monthly (rolling 12 months) |
 
 ## Number of active beneficiaries
 
@@ -114,9 +114,13 @@ Number of beneficiaries whose credit is neither expired nor fully spent at the o
 
 A beneficiary is considered active if, on the last day of the observed month, their cumulative used bookings amount is strictly less than the initial credit amount.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary/index.md)
+
+**[data.gouv.fr](https://pass-culture.github.io/data-gcp/dbt/data_gouv/index.md)** (open data): [`beneficiary`](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md)
 
 ### Calculation
 
@@ -158,10 +162,14 @@ Note: `total_actual_beneficiaries` and `total_beneficiaries` correspond to neste
 
 Proportion of eligible young people who have benefited or are benefiting from a pass Culture credit over a given period and territory.
 
-### Source tables
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 - [exp_vidoc_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary__coverage/index.md) — beneficiary count (rolling 12-month window)
 - [exp_vidoc_population_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_population__coverage/index.md) — eligible population count (rolling 12-month window)
+
+**[data.gouv.fr](https://pass-culture.github.io/data-gcp/dbt/data_gouv/index.md)** (open data): [`beneficiary_coverage`](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage/index.md) (numerator only: the INSEE population is not republished)
 
 ### Calculation
 
@@ -190,11 +198,11 @@ ORDER BY b.partition_month, b.department_code, b.milestone_age
 
 ### Available dimensions
 
-| Dimension       | Column                               | Description                                   |
-| --------------- | ------------------------------------ | --------------------------------------------- |
-| Age (milestone) | `milestone_age`                      | Age at credit activation (16, 17, 18, 19, 20) |
-| Department      | `department_code`, `department_name` | Department of residence                       |
-| Region          | `region_code`, `region_name`         | Region of residence                           |
+| Dimension       | Column                               | Description                                                                                            |
+| --------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Age (milestone) | `milestone_age`                      | Age reached over the 12 months (16 to 19): milestone N gives the coverage rate (N-1)+, e.g. 19 for 18+ |
+| Department      | `department_code`, `department_name` | Department of residence                                                                                |
+| Region          | `region_code`, `region_name`         | Region of residence                                                                                    |
 
 ### Temporal tracking
 
@@ -204,7 +212,7 @@ ORDER BY b.partition_month, b.department_code, b.milestone_age
 
 Beneficiary counts are protected using the [Cell Key Perturbation method](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md). Population counts are public data and are not perturbed. Coverage rates computed on small departments may be slightly affected by the perturbation on the numerator.
 
-> The rate **can slightly exceed 100%**, even without perturbation: the denominator is an INSEE population estimate, not a superset of the beneficiaries (e.g. department 22, age 19: ~6,800 beneficiaries for ~6,650 estimated residents). It is therefore not capped, unlike the nested counts of the other vidoc exports.
+> The rate **can slightly exceed 100%**, even without perturbation: the denominator is an INSEE population estimate, not a superset of the beneficiaries (e.g. department 22, age 19: ~6,800 beneficiaries for ~6,650 estimated residents). It is therefore not capped, unlike the nested counts of the other exports.
 
 ## Number of ever-credited beneficiaries
 
@@ -219,9 +227,13 @@ Reported as a **stock at the end of each `partition_month`**, broken down by `ag
 - A user leaves the stock if their account becomes inactive for any reason other than "suspension upon user request" (e.g. account deletion).
 - Users with a `GRANT_FREE` deposit type are excluded.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary/index.md)
+
+**[data.gouv.fr](https://pass-culture.github.io/data-gcp/dbt/data_gouv/index.md)** (open data): [`beneficiary`](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md)
 
 ### Calculation
 
@@ -261,15 +273,15 @@ Collective part of the pass Culture (EAC): school and student participation, cre
 
 **Data protection**: Not perturbed: ADAGE aggregates of school headcounts, institutions (public bodies), bookings and offers. Bookings by school geography are not secret (public money); bookings by cultural partner geography are under the **statistical secret** of external reporting. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-| KPI                                                                                                                                                 | Definition                                                                                     | Source table(s)                                                       | Tracking                          |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------- |
-| [Student EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/student_eac_participation_rate/index.md)         | Share of eligible students engaged in at least one EAC action                                  | `exp_vidoc_student_coverage`                                          | School year (monthly, cumulative) |
-| [Institution EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/institution_eac_participation_rate/index.md) | Share of credited institutions with at least one collective booking                            | `exp_vidoc_institution_activity`                                      | School year (monthly, cumulative) |
-| [EAC credit consumption rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_credit_consumption_rate/index.md)               | Share of the collective credit allocated to institutions that was engaged                      | `exp_vidoc_institution_activity`                                      | School year (monthly, cumulative) |
-| [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_collective_bookings/index.md)                       | Confirmed collective bookings and amount, by school (default) or cultural partner geography    | `exp_vidoc_booking_collective` + `exp_vidoc_booking_collective_venue` | Monthly (scholar year)            |
-| [EAC bookings by educational domain](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_bookings_by_domain/index.md)             | Confirmed collective bookings, amount, tickets and schools by domain (domains not summable)    | `exp_vidoc_booking_collective_by_domain`                              | Monthly (scholar year)            |
-| [EAC bookings by offer format](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_bookings_by_format/index.md)                   | Confirmed collective bookings, amount, tickets and schools by format (formats not summable)    | `exp_vidoc_booking_collective_by_format`                              | Monthly (scholar year)            |
-| [EAC bookable collective offers](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_bookable_offers/index.md)                    | Bookable (non showcase) collective offers created and pre-reserved, and partners creating them | `exp_vidoc_offer_collective_bookable`                                 | Monthly (scholar year)            |
+| KPI                                                                                                                                           | Definition                                                                                     | VIDOC table(s)                                                        | data.gouv.fr | Tracking                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------ | --------------------------------- |
+| [Student EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/student_eac_participation_rate/index.md)         | Share of eligible students engaged in at least one EAC action                                  | `exp_vidoc_student_coverage`                                          | –            | School year (monthly, cumulative) |
+| [Institution EAC participation rate](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/institution_eac_participation_rate/index.md) | Share of credited institutions with at least one collective booking                            | `exp_vidoc_institution_activity`                                      | –            | School year (monthly, cumulative) |
+| [EAC credit consumption rate](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/eac_credit_consumption_rate/index.md)               | Share of the collective credit allocated to institutions that was engaged                      | `exp_vidoc_institution_activity`                                      | –            | School year (monthly, cumulative) |
+| [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/eac_collective_bookings/index.md)                       | Confirmed collective bookings and amount, by school (default) or cultural partner geography    | `exp_vidoc_booking_collective` + `exp_vidoc_booking_collective_venue` | –            | Monthly (scholar year)            |
+| [EAC bookings by educational domain](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/eac_bookings_by_domain/index.md)             | Confirmed collective bookings, amount, tickets and schools by domain (domains not summable)    | `exp_vidoc_booking_collective_by_domain`                              | –            | Monthly (scholar year)            |
+| [EAC bookings by offer format](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/eac_bookings_by_format/index.md)                   | Confirmed collective bookings, amount, tickets and schools by format (formats not summable)    | `exp_vidoc_booking_collective_by_format`                              | –            | Monthly (scholar year)            |
+| [EAC bookable collective offers](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/eac_bookable_offers/index.md)                    | Bookable (non showcase) collective offers created and pre-reserved, and partners creating them | `exp_vidoc_offer_collective_bookable`                                 | –            | Monthly (scholar year)            |
 
 ## Bookable collective (EAC) offers created and pre-reserved
 
@@ -285,7 +297,9 @@ Same values as the external reporting KPIs `total_offres_reservables_creees`, `t
 
 An offer belongs to the scholar year of its **action** (event date); an offer created before that scholar year starts is counted in its first month (September). A bookable offer is made for one school and has at most one booking, so it is counted once (5 exceptions out of about 594,000 booked offers).
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_offer_collective_bookable](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_offer_collective_bookable/index.md) (cultural partner geography)
 
@@ -335,11 +349,13 @@ Interest of this indicator for the observatoire is still to be decided; it is ex
 
 ### Definition
 
-Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_collective_bookings/index.md)) split by the **educational domain** of the booked offer (e.g. Théâtre, Cinéma, Patrimoine), as declared by the cultural partner. Indicators: bookings, amount, tickets, bookings made with a venue labelled by the Ministry of Culture, and distinct schools involved in the month. Same values as `external_reporting__eac_domain`.
+Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/eac_collective_bookings/index.md)) split by the **educational domain** of the booked offer (e.g. Théâtre, Cinéma, Patrimoine), as declared by the cultural partner. Indicators: bookings, amount, tickets, bookings made with a venue labelled by the Ministry of Culture, and distinct schools involved in the month. Same values as `external_reporting__eac_domain`.
 
 **An offer can have several domains** (about 21% of collective offers have 2 or more): its bookings count in **each** of its domains. Domains are therefore **not summable**: in 2025-2026 the sum over domains is 133,227 bookings for 99,019 actual bookings (+35%), and 51.8 M€ for 37.6 M€. Take totals from `exp_vidoc__booking_collective`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_booking_collective_by_domain](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective_by_domain/index.md) (school geography)
 
@@ -383,11 +399,13 @@ Bookings and schools are not counts of people: no cell key perturbation. School 
 
 ### Definition
 
-Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/collective/eac_collective_bookings/index.md)) split by the **format** of the booked offer (e.g. REPRESENTATION, ATELIER_DE_PRATIQUE, VISITE_GUIDEE), as declared by the cultural partner. Indicators: bookings, amount and tickets (same values as `external_reporting__eac_format`), and distinct schools involved.
+Confirmed collective bookings (same definition as [EAC collective bookings](https://pass-culture.github.io/data-gcp/dbt/kpis/collective/eac_collective_bookings/index.md)) split by the **format** of the booked offer (e.g. REPRESENTATION, ATELIER_DE_PRATIQUE, VISITE_GUIDEE), as declared by the cultural partner. Indicators: bookings, amount and tickets (same values as `external_reporting__eac_format`), and distinct schools involved.
 
 **An offer can have several formats** (11% of the 2025-2026 bookings): its bookings count in **each** of its formats. Formats are therefore **not summable**: in 2025-2026 the sum over formats is 113,189 bookings for 99,019 actual bookings (+14%). Take totals from `exp_vidoc__booking_collective`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_booking_collective_by_format](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective_by_format/index.md) (school geography)
 
@@ -438,7 +456,9 @@ A booking is counted in the month it was **created**, within its scholar year (S
 
 Same values as the external reporting KPIs `total_reservations_collectives_etablissements` / `total_montant_engage_etablissements` (school geography) and `total_reservations_collectives` / `total_montant_engage` (cultural partner geography).
 
-### Source tables
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 Two geographies are available; **the school geography is the vidoc default**.
 
@@ -493,7 +513,9 @@ Bookings are not counts of people: no cell key perturbation.
 
 Share of the credit allocated to the institutions (schools) for a school year that has been engaged in collective bookings since the start of that school year. The consumed credit is the amount of the confirmed, used or reimbursed bookings (cancelled and not yet confirmed bookings excluded), counted at the booking creation month. Same definition as `taux_d_utilisation_du_credit` in `external_reporting__eac_credit_usage`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_institution_activity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_institution__activity/index.md)
 
@@ -543,7 +565,9 @@ ORDER BY scholar_year
 
 Share of the institutions (schools) credited for a school year that made at least one non-cancelled collective booking since the start of that school year. Same definition as `taux_participation_eac_eple` in `external_reporting__eac_institution`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_institution_activity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_institution__activity/index.md)
 
@@ -593,7 +617,9 @@ Share of the students eligible to the collective part of the pass Culture who to
 
 Eligible levels: 4e to Terminale (incl. CAP, SEGPA, MLDS) up to 2022-2023, 6e to Terminale from 2023-2024 (6e and 5e opened at the rentrée 2023). Rates before and after 2023-2024 are not computed on the same population.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_student_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_student__coverage/index.md)
 
@@ -643,12 +669,12 @@ Diversity of the cultural practices of young people at credit expiration: number
 
 **Data protection**: Counts are perturbed (cell key method); the number of distinct venues is hidden when fewer than 5 beneficiaries are in the row. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-| KPI                                                                                                                                         | Definition                                                                 | Source table(s)                                           | Tracking |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------- | -------- |
-| [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md)      | Share who booked in 3+ categories at credit expiration                     | `exp_vidoc_diversity`                                     | Monthly  |
-| [Diversity depth (1+ to 5+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_category_depth/index.md) | Share who booked in at least N categories at credit expiration, N = 1 to 5 | `exp_vidoc_diversity`                                     | Monthly  |
-| [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/index.md)            | Share who booked in category X at credit expiration                        | `exp_vidoc_diversity_by_category` + `exp_vidoc_diversity` | Monthly  |
-| [Distinct venues booked](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/distinct_venues_booked/index.md)                  | Average number of distinct venues booked per beneficiary at expiration     | `exp_vidoc_diversity`                                     | Monthly  |
+| KPI                                                                                                                                   | Definition                                                                 | VIDOC table(s)                                            | data.gouv.fr            | Tracking |
+| ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------- | -------- |
+| [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/index.md)      | Share who booked in 3+ categories at credit expiration                     | `exp_vidoc_diversity`                                     | `diversity`             | Monthly  |
+| [Diversity depth (1+ to 5+ categories)](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_category_depth/index.md) | Share who booked in at least N categories at credit expiration, N = 1 to 5 | `exp_vidoc_diversity`                                     | –                       | Monthly  |
+| [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/booking_share_by_category/index.md)            | Share who booked in category X at credit expiration                        | `exp_vidoc_diversity_by_category` + `exp_vidoc_diversity` | `diversity_by_category` | Monthly  |
+| [Distinct venues booked](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/distinct_venues_booked/index.md)                  | Average number of distinct venues booked per beneficiary at expiration     | `exp_vidoc_diversity`                                     | –                       | Monthly  |
 
 ## Share of beneficiaries booking in category X at credit expiration
 
@@ -658,10 +684,14 @@ Share of credited beneficiaries who made a validated booking in a given offer ca
 
 Only beneficiaries who received an age-18 credit are considered.
 
-### Source tables
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 - [exp_vidoc_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity__by_category/index.md) — beneficiary count per category
 - [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md) — total expired-credit beneficiaries (denominator)
+
+**[data.gouv.fr](https://pass-culture.github.io/data-gcp/dbt/data_gouv/index.md)** (open data): [`diversity_by_category`](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity_by_category/index.md), denominator in [`diversity`](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md)
 
 ### Calculation
 
@@ -751,7 +781,9 @@ Counts are protected using the [Cell Key Perturbation method](https://pass-cultu
 
 For beneficiaries whose credit expired in the month, average number of distinct venues (`venue_id`) where they made a non-cancelled booking before expiration. A partner with several venues counts several times.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
 
@@ -774,7 +806,7 @@ ORDER BY deposit_expiration_month
 
 ### Available dimensions
 
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions).
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/#available-dimensions).
 
 ## Share of beneficiaries booking in 3+ distinct categories at credit expiration
 
@@ -784,9 +816,13 @@ Share of credited beneficiaries who made a validated booking in at least 3 diffe
 
 Only beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18`) expired in a closed month are considered.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
+
+**[data.gouv.fr](https://pass-culture.github.io/data-gcp/dbt/data_gouv/index.md)** (open data): [`diversity`](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md)
 
 ### Calculation
 
@@ -833,11 +869,13 @@ Both columns are protected using the [Cell Key Perturbation method](https://pass
 
 ### Definition
 
-For N = 1 to 5, share of beneficiaries whose credit expired in the month and who made a non-cancelled booking in at least N different offer categories before expiration. `1+` is the share of beneficiaries who booked at least once. The 3+ threshold is the lot 1 [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md).
+For N = 1 to 5, share of beneficiaries whose credit expired in the month and who made a non-cancelled booking in at least N different offer categories before expiration. `1+` is the share of beneficiaries who booked at least once. The 3+ threshold is the lot 1 [diversity rate](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/index.md).
 
 Population: beneficiaries whose last credit is a 17-18 credit (`GRANT_18`, `GRANT_17_18`) and expired in a closed month. Bookings made with all the credits they received (15-17 included) are observed. Categories are declared by the cultural partner.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
 
@@ -858,7 +896,7 @@ ORDER BY deposit_expiration_month
 
 ### Available dimensions
 
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions): expiration month, region, department, QPV, density.
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/#available-dimensions): expiration month, region, department, QPV, density.
 
 ### Temporal tracking
 
@@ -873,15 +911,15 @@ Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_k
 
 Active and activated cultural partners, and their bookings and revenue from individual bookings by venue territory.
 
-**Data protection**: Partner counts are neither perturbed nor secret (lists of partners are public). Bookings and revenue by venue territory are under the **statistical secret** of external reporting: a secret department is hidden on every month. No category breakdown on the partner side: categories are read on the young people's side ([Usage](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/index.md)). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+**Data protection**: Partner counts are neither perturbed nor secret (lists of partners are public). Bookings and revenue by venue territory are under the **statistical secret** of external reporting: a secret department is hidden on every month. No category breakdown on the partner side: categories are read on the young people's side ([Usage](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/index.md)). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-| KPI                                                                                                                                                                   | Definition                                                                                | Source table(s)                                | Tracking                   |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------- |
-| [Number of active cultural partners by channel](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md)                    | Venues with a bookable offer in the last 365 days: individual only, collective only, both | `exp_vidoc_cultural_partner`                   | Monthly (rolling 365 days) |
-| [Cumulative number of activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/activated_cultural_partners/index.md)              | Venues that have had at least one bookable offer since 2022-06-10                         | `exp_vidoc_cultural_partner`                   | Monthly (cumulative)       |
-| [Number of active and activated cultural partners by type](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners_by_type/index.md) | Active and activated venues for one partner type (never summed over types)                | `exp_vidoc_cultural_partner_by_type`           | Monthly (rolling 365 days) |
-| [Individual bookings and tickets by venue territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/individual_bookings_venue_territory/index.md)    | Used individual bookings and tickets in a payment batch, by venue department              | `exp_vidoc_booking_partner_finance_individual` | Monthly                    |
-| [Individual booking revenue by venue territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/individual_revenue_venue_territory/index.md)          | Partner revenue, reimbursed and contributed amounts, by venue department                  | `exp_vidoc_booking_partner_finance_individual` | Monthly                    |
+| KPI                                                                                                                                                             | Definition                                                                                | VIDOC table(s)                                 | data.gouv.fr | Tracking                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------ | -------------------------- |
+| [Number of active cultural partners by channel](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/active_cultural_partners/index.md)                    | Venues with a bookable offer in the last 365 days: individual only, collective only, both | `exp_vidoc_cultural_partner`                   | –            | Monthly (rolling 365 days) |
+| [Cumulative number of activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/activated_cultural_partners/index.md)              | Venues that have had at least one bookable offer since 2022-06-10                         | `exp_vidoc_cultural_partner`                   | –            | Monthly (cumulative)       |
+| [Number of active and activated cultural partners by type](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/active_cultural_partners_by_type/index.md) | Active and activated venues for one partner type (never summed over types)                | `exp_vidoc_cultural_partner_by_type`           | –            | Monthly (rolling 365 days) |
+| [Individual bookings and tickets by venue territory](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/individual_bookings_venue_territory/index.md)    | Used individual bookings and tickets in a payment batch, by venue department              | `exp_vidoc_booking_partner_finance_individual` | –            | Monthly                    |
+| [Individual booking revenue by venue territory](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/individual_revenue_venue_territory/index.md)          | Partner revenue, reimbursed and contributed amounts, by venue department                  | `exp_vidoc_booking_partner_finance_individual` | –            | Monthly                    |
 
 ## Cumulative number of activated cultural partners
 
@@ -902,7 +940,9 @@ The count is cumulative: once activated, a partner stays counted in every follow
 
 `global = individual_only + collective_only + dual_part`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md). Same definitions as `external_reporting__cultural_partner` (`nombre_total_cumule_de_partenaires_actives_*`), which does not publish the global column.
 
@@ -919,7 +959,7 @@ ORDER BY partition_month
 
 ### Available dimensions
 
-Same as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md): `partition_month`, partner department and region.
+Same as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/active_cultural_partners/index.md): `partition_month`, partner department and region.
 
 ### Temporal tracking
 
@@ -929,7 +969,7 @@ Same as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/v
 
 - "Since inception" means since **2022-06-10** (start of the bookable offer history), not since the launch of pass Culture: a venue whose offers were only bookable before that date is not counted.
 - Venues are counted in their **current** department; venues that no longer exist in the applicative database are not counted.
-- Same `partner_region_code = '-1'` handling and same data protection status as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md) (not perturbed, no secrecy).
+- Same `partner_region_code = '-1'` handling and same data protection status as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/active_cultural_partners/index.md) (not perturbed, no secrecy).
 
 ## Number of active cultural partners by channel
 
@@ -952,7 +992,9 @@ Split by channel:
 
 `global = individual_only + collective_only + dual_part`, `individual = individual_only + dual_part`, `collective = collective_only + dual_part`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md). Same KPIs as `external_reporting__cultural_partner` (`nombre_total_de_partenaire_actif_*`).
 
@@ -999,13 +1041,15 @@ Partner counts are **not perturbed** and **not under statistical secrecy**, as i
 
 ### Definition
 
-Same definitions as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md) and [activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/activated_cultural_partners/index.md), restricted to the partners of one **partner type** (cinemas, bookshops, live shows, museums, festivals, ...).
+Same definitions as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/active_cultural_partners/index.md) and [activated cultural partners](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/activated_cultural_partners/index.md), restricted to the partners of one **partner type** (cinemas, bookshops, live shows, museums, festivals, ...).
 
 Available columns: active partners `total_active_partners_{global, individual, collective, dual_part}` and cumulative activated partners `total_cumulative_activated_partners_{global, individual, collective, dual_part, individual_only, collective_only}`. The individual only / collective only split of active partners is not available by type.
 
 Types and labels are defined in the `get_partner_types` macro, from the venue type and venue tags. Label rows (`tag_*`: art et essai cinemas, LIR bookshops, labelled live shows, labelled museums) are subsets of a type.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_cultural_partner_by_type](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner__by_type/index.md). `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
 
@@ -1038,7 +1082,7 @@ ORDER BY partition_month, partner_type
 ### Notes and caveats
 
 - The partner type and the location are the **current** ones, applied to all past months.
-- Same months, same `-1` region handling and same data protection status (not perturbed, no secrecy) as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/active_cultural_partners/index.md).
+- Same months, same `-1` region handling and same data protection status (not perturbed, no secrecy) as [active cultural partners](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/active_cultural_partners/index.md).
 
 ## Used individual bookings and tickets by venue territory
 
@@ -1048,7 +1092,9 @@ Number of used individual bookings (`total_bookings`) and of tickets or items bo
 
 Only bookings already included in a payment batch are counted: a used booking is counted once its pricing is invoiced to the cultural partner.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md)
 
@@ -1086,7 +1132,7 @@ Partner revenue is under **statistical secret** (not cell key perturbation), wit
 
 - Region and national totals are sums of the visible departments, so they leave out the secret departments (mostly overseas collectivities and Lozère): less than 0.06% of the national volume in 2026. External reporting publishes REG and NAT unmasked; this table has the department grain only.
 - `venue_region_code` is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...); `venue_region_name` is filled.
-- Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory/index.md) (residence of the young person, no payment batch condition).
+- Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/individual_bookings_beneficiary_territory/index.md) (residence of the young person, no payment batch condition).
 
 ## Individual booking revenue by venue territory
 
@@ -1099,7 +1145,9 @@ Revenue generated for the cultural partners by used individual bookings (`total_
 
 Only bookings already included in a payment batch are counted.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md)
 
@@ -1137,7 +1185,7 @@ ORDER BY partition_month
 
 - Sums of departments underestimate the region and national revenue by the secret departments (less than 0.03% of the national revenue in 2026). External reporting publishes REG and NAT unmasked; this table has the department grain only.
 - `venue_region_code` is NULL for the overseas collectivities; `venue_region_name` is filled.
-- Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory/index.md).
+- Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/individual_bookings_beneficiary_territory/index.md).
 
 ## Tops
 
@@ -1145,13 +1193,13 @@ Monthly top 50 offers and cultural venues by used booking revenue, at national, 
 
 **Data protection**: Only the first 50 entities of each ranking are exported; amounts are published per offer and per venue, as in the external reporting tops. Not part of the vidoc lot 1 export to the ministry. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-| KPI                                                                                                                              | Definition                                                                      | Source table(s)                | Tracking |
-| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------ | -------- |
-| [Top offers](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_offer_ranking/index.md)                             | Top 50 items by used booking revenue                                            | `exp_vidoc_top_offer`          | Monthly  |
-| [Top offers by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_offer_category_ranking/index.md)        | Top 50 items by used booking revenue within each offer category                 | `exp_vidoc_top_offer_category` | Monthly  |
-| [Top offers in labelled venues](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_offer_labelled_ranking/index.md) | Top 50 items by used booking revenue in venues with a Ministry of Culture label | `exp_vidoc_top_offer_labelled` | Monthly  |
-| [Top venues](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_venue_ranking/index.md)                             | Top 50 venues by used booking revenue                                           | `exp_vidoc_top_venue`          | Monthly  |
-| [Top labelled venues](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/tops/top_venue_labelled_ranking/index.md)           | Top 50 venues with a Ministry of Culture label by used booking revenue          | `exp_vidoc_top_venue_labelled` | Monthly  |
+| KPI                                                                                                                        | Definition                                                                      | VIDOC table(s)                 | data.gouv.fr | Tracking |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------ | ------------ | -------- |
+| [Top offers](https://pass-culture.github.io/data-gcp/dbt/kpis/tops/top_offer_ranking/index.md)                             | Top 50 items by used booking revenue                                            | `exp_vidoc_top_offer`          | –            | Monthly  |
+| [Top offers by category](https://pass-culture.github.io/data-gcp/dbt/kpis/tops/top_offer_category_ranking/index.md)        | Top 50 items by used booking revenue within each offer category                 | `exp_vidoc_top_offer_category` | –            | Monthly  |
+| [Top offers in labelled venues](https://pass-culture.github.io/data-gcp/dbt/kpis/tops/top_offer_labelled_ranking/index.md) | Top 50 items by used booking revenue in venues with a Ministry of Culture label | `exp_vidoc_top_offer_labelled` | –            | Monthly  |
+| [Top venues](https://pass-culture.github.io/data-gcp/dbt/kpis/tops/top_venue_ranking/index.md)                             | Top 50 venues by used booking revenue                                           | `exp_vidoc_top_venue`          | –            | Monthly  |
+| [Top labelled venues](https://pass-culture.github.io/data-gcp/dbt/kpis/tops/top_venue_labelled_ranking/index.md)           | Top 50 venues with a Ministry of Culture label by used booking revenue          | `exp_vidoc_top_venue_labelled` | –            | Monthly  |
 
 ## Top offer rankings by category and geographic level
 
@@ -1161,7 +1209,9 @@ Top 50 items ranked by used booking amount (`total_booking_amount`) **within eac
 
 Item metadata (`offer_name`, `offer_category_id`, `offer_subcategory_id`) are unified to the monthly most-booked version, guaranteeing a single consolidated row per item. Ties are resolved deterministically using `item_id ASC`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_top_offer_category](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer_category/index.md)
 
@@ -1218,7 +1268,9 @@ Revenues and quantities are restricted to eligible venues, while item attributes
 
 Ties in revenue are broken deterministically using `item_id ASC`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_top_offer_labelled](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer_labelled/index.md)
 
@@ -1277,7 +1329,9 @@ Top 50 items ranked by used booking amount (`total_booking_amount`) per month ac
 
 Item metadata (`offer_name`, `offer_category_id`, `offer_subcategory_id`) are unified to the monthly most-booked version, guaranteeing a single consolidated row per item. Ties are resolved deterministically using `item_id ASC`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_top_offer](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer/index.md)
 
@@ -1330,7 +1384,9 @@ Identifies the top 50 partner cultural venues holding Ministry of Culture labels
 
 Ties in revenue are broken deterministically using `venue_id ASC`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_top_venue_labelled](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_venue_labelled/index.md)
 
@@ -1386,7 +1442,9 @@ Identifies the top 50 partner cultural venues generating the most used booking r
 
 Ties in revenue are broken deterministically using `venue_id ASC`.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc\_\_top_venue](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_venue/index.md)
 
@@ -1437,17 +1495,17 @@ Use of the individual credit by young people: amounts granted and spent at expir
 
 **Data protection**: Counts are perturbed (cell key method); amounts at expiration are hidden when fewer than 5 beneficiaries are in the row. Bookings by territory of residence are not perturbed but hidden on every month when fewer than 5 beneficiaries account for them (20 for the category breakdown), as in external reporting. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-| KPI                                                                                                                                                                          | Definition                                                                                         | Source table(s)                 | Tracking |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | -------- |
-| [Amount granted, spent and spending rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/credit_amount_at_expiration/index.md)                                 | Average amount granted and spent per beneficiary, and share of credit spent, at expiration         | `exp_vidoc_diversity`           | Monthly  |
-| [Distribution by share of credit spent](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/credit_spent_share_distribution/index.md)                               | Beneficiaries by bucket of share of credit spent at expiration                                     | `exp_vidoc_diversity`           | Monthly  |
-| [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/usage/individual_bookings_beneficiary_territory/index.md) | Used individual bookings and amount spent by young people, by department of residence and category | `exp_vidoc_booking_beneficiary` | Monthly  |
+| KPI                                                                                                                                                                    | Definition                                                                                         | VIDOC table(s)                  | data.gouv.fr | Tracking |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | ------------ | -------- |
+| [Amount granted, spent and spending rate](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/credit_amount_at_expiration/index.md)                                 | Average amount granted and spent per beneficiary, and share of credit spent, at expiration         | `exp_vidoc_diversity`           | –            | Monthly  |
+| [Distribution by share of credit spent](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/credit_spent_share_distribution/index.md)                               | Beneficiaries by bucket of share of credit spent at expiration                                     | `exp_vidoc_diversity`           | –            | Monthly  |
+| [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/individual_bookings_beneficiary_territory/index.md) | Used individual bookings and amount spent by young people, by department of residence and category | `exp_vidoc_booking_beneficiary` | –            | Monthly  |
 
 ## Average amount granted, spent and spending rate at credit expiration
 
 ### Definition
 
-For beneficiaries whose credit expired in the month (same population as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md)):
+For beneficiaries whose credit expired in the month (same population as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/index.md)):
 
 - **Average amount granted**: total of all the credits the beneficiary received (15-17 credits, 17-18 credit, bonus), per beneficiary.
 - **Average amount spent**: amount of non-cancelled bookings made with those credits, per beneficiary.
@@ -1455,7 +1513,9 @@ For beneficiaries whose credit expired in the month (same population as the [div
 
 The credit amount depends on the generation (500 € before the 2023 reform, then 300 €, then 150 € + 50 € bonus after 2025): compare generations with the spending rate rather than with amounts.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
 
@@ -1479,7 +1539,7 @@ ORDER BY deposit_expiration_month
 
 ### Available dimensions
 
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions).
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/#available-dimensions).
 
 ### Temporal tracking
 
@@ -1491,7 +1551,9 @@ Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_k
 
 For beneficiaries whose credit expired in the month, split by the share of all the credits they received that they spent: `0` (no booking), `]0-25]`, `]25-50]`, `]50-75]`, `]75-90]`, `]90-100]` %. The last bucket includes beneficiaries with a few cents left.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md)
 
@@ -1515,7 +1577,7 @@ For a lighter display, the buckets can be merged into 4: `0`, `< 50` (`0_25 + 25
 
 ### Available dimensions
 
-Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/#available-dimensions).
+Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/#available-dimensions).
 
 ### Data protection and caveats
 
@@ -1527,9 +1589,11 @@ Each bucket is perturbed independently and capped at `total_expired_deposit_bene
 
 Number of used individual bookings made by beneficiaries (`total_used_bookings`) and amount they spent from their pass Culture credit (`total_used_amount`, in euros), by month of use, territory of **residence of the young person** and offer category. Categories are as declared by the cultural partner when creating the offer.
 
-Unlike the [venue territory KPIs](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/partners/individual_bookings_venue_territory/index.md), bookings are counted when used, whether or not they are already in a payment batch.
+Unlike the [venue territory KPIs](https://pass-culture.github.io/data-gcp/dbt/kpis/partners/individual_bookings_venue_territory/index.md), bookings are counted when used, whether or not they are already in a payment batch.
 
-### Source table
+### Published in
+
+**VIDOC** (ministry dashboard):
 
 [exp_vidoc_booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_beneficiary/index.md)
 
@@ -1580,28 +1644,53 @@ Same low count rule as external reporting (`external_reporting__individual`, wit
 - Category rows cover the external reporting categories (`get_categories()`); marginal categories are kept as is (`MEDIA`, `CARTE_JEUNES`: about 1,000-1,500 bookings a year each; `LIVRE` and `CINEMA` make up 85% of the bookings).
 - Amounts are booking amounts paid with the credit: this is the young people's spending, not the partners' revenue.
 
+## VIDOC exports
+
+VIDOC is the Ministry of Culture dashboard. pass Culture feeds it with the `exp_vidoc__*` tables (BigQuery dataset `export_vidoc_{env}`). The lot 1 tables are also sent to the ministry S3 bucket by the `export_vidoc` DAG, which only sends the lot 1 columns.
+
+The KPIs computed from these tables are defined in [KPIs](https://pass-culture.github.io/data-gcp/dbt/kpis/index.md).
+
+### Tables
+
+| Domain            | Tables                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Lot                                                   | Also published on data.gouv.fr                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Beneficiaries     | [beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary/index.md), [beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary__coverage/index.md), [population_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_population__coverage/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 1                                                     | `beneficiary`, `beneficiary_coverage` (the INSEE population is not republished) |
+| Diversity         | [diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity/index.md), [diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_diversity__by_category/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | 1 (3+ categories), 2 (amounts, 1+ to 5+, spent share) | `diversity` (3+ categories only), `diversity_by_category`                       |
+| Usage             | [booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_beneficiary/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 2                                                     | –                                                                               |
+| Cultural partners | [cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner/index.md), [cultural_partner_by_type](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_cultural_partner__by_type/index.md), [booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 2                                                     | –                                                                               |
+| Collective (EAC)  | [student_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_student__coverage/index.md), [institution_activity](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_institution__activity/index.md), [booking_collective](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective/index.md), [booking_collective_venue](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective_venue/index.md), [booking_collective_by_domain](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective_by_domain/index.md), [booking_collective_by_format](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective_by_format/index.md), [offer_collective_bookable](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_offer_collective_bookable/index.md) | 2                                                     | –                                                                               |
+| Tops              | [top_offer](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer/index.md), [top_offer_category](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer_category/index.md), [top_offer_labelled](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_offer_labelled/index.md), [top_venue](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_venue/index.md), [top_venue_labelled](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc__top_venue_labelled/index.md)                                                                                                                                                                                                                                                                                                                                                                                        | –                                                     | –                                                                               |
+
+### Open data
+
+The lot 1 beneficiary and diversity tables are also published as open data on [data.gouv.fr](https://pass-culture.github.io/data-gcp/dbt/data_gouv/index.md). Both exports read the same perturbed base (`exp_base__*`), so the open data figures are the VIDOC figures. The data.gouv.fr resources keep only the lot 1 columns and closed months, and format geographic codes for data.gouv.fr.
+
+### Data protection
+
+Beneficiary counts are perturbed with the cell key method; partner and finance figures follow the external reporting rules. See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
 ## data.gouv.fr exports
 
-pass Culture publishes the vidoc lot 1 indicators as open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`. The published figures are **the same** as the ones displayed in the ministry's vidoc tool: the `exp_data_gouv__*` and `exp_vidoc__*` models both read the same perturbed base, `exp_base__*` (see [A single perturbed base](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/#a-single-perturbed-base-for-every-export)), and the external reporting national, regional and departmental figures are sums of the same cells.
+pass Culture publishes open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`: indicators on the young beneficiaries of the individual part of the pass Culture (outside school time), by month and territory of residence. The collective part (school time) is not covered.
 
 Only pass Culture data is published. The INSEE population estimates used as the coverage rate denominator are not republished; their computation is public in [metrics_population\_\_coverage](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population).
 
 ### Resources
 
-| Resource (CSV)          | dbt model                                                                                                                                                                | Perturbed base                    | KPI                                                                                                                                                                                                                                                       |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `beneficiary`           | [exp_data_gouv\_\_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md)                     | `exp_base__beneficiary`           | [Ever-credited](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/ever_credited_beneficiaries/index.md) and [active](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/active_beneficiaries/index.md) beneficiaries |
-| `beneficiary_coverage`  | [exp_data_gouv\_\_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage/index.md)   | `exp_base__beneficiary_coverage`  | [Coverage rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate/index.md) numerator                                                                                                                        |
-| `diversity`             | [exp_data_gouv\_\_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md)                         | `exp_base__diversity`             | [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md)                                                                                                                    |
-| `diversity_by_category` | [exp_data_gouv\_\_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity_by_category/index.md) | `exp_base__diversity_by_category` | [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/index.md)                                                                                                                          |
+| Resource (CSV)          | Content                                                                                      | dbt model                                                                                                                                                                | KPIs                                                                                                                                                                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `beneficiary`           | Monthly stock of beneficiaries and active beneficiaries, by department, age, QPV and density | [exp_data_gouv\_\_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md)                     | [Ever-credited](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/ever_credited_beneficiaries/index.md) and [active](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/active_beneficiaries/index.md) beneficiaries |
+| `beneficiary_coverage`  | Beneficiaries who reached an age (16 to 19) over the last 12 months, by department           | [exp_data_gouv\_\_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary_coverage/index.md)   | [Coverage rate](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/beneficiary_coverage_rate/index.md) numerator                                                                                                                  |
+| `diversity`             | Beneficiaries whose credit expired in the month, and those who booked in 3+ categories       | [exp_data_gouv\_\_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md)                         | [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/index.md)                                                                                                              |
+| `diversity_by_category` | Same population, by offer category booked                                                    | [exp_data_gouv\_\_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity_by_category/index.md) | [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/booking_share_by_category/index.md)                                                                                                                    |
 
-### Differences with the vidoc exports
+Every model reads the perturbed base `exp_base__*` (see [A single perturbed base](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/#a-single-perturbed-base-for-every-export)), so the published figures are the ones pass Culture uses in all its reporting.
 
-Same cells as the vidoc exports, with:
+### Format
 
-- **Columns**: only the lot 1 columns (amounts, spent share buckets and 1+/2+/4+/5+ counts of `exp_vidoc__diversity` are not published).
 - **Months**: closed months only; the current month is excluded.
 - **Geography**: INSEE COG codes as strings, so that data.gouv.fr detects them (`region_code` zero-padded, e.g. `01` for Guadeloupe). Codes are empty for non-localised beneficiaries (label `non localisé` kept so that totals stay complete) and `region_code` is empty for overseas collectivities (975, 978, 986, 987, 988).
+- **CSV**: UTF-8, comma separator, ISO dates (first day of the month), lowercase booleans; an empty cell means "unknown", never zero.
 
 ### Data protection
 
@@ -2316,11 +2405,11 @@ ______________________________________________________________________
 
 # Table: Beneficiaries (data.gouv.fr)
 
-The `exp_data_gouv__beneficiary` table is the open data version of [exp_vidoc_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/vidoc/description__exp_vidoc_beneficiary.md): monthly stock of ever-credited and active (current) beneficiaries by territory of residence, age, QPV and density.
+The `exp_data_gouv__beneficiary` table is the monthly stock of ever-credited and active (current) beneficiaries by territory of residence, age, QPV and density.
 
 ## Table description
 
-Published on data.gouv.fr as the `beneficiary` resource. Same perturbed counts as the vidoc export (cell key perturbation, see [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md)), with:
+Published on data.gouv.fr as the `beneficiary` resource. Counts come from the perturbed base [exp_base\_\_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__beneficiary/index.md) (cell key perturbation, see [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md)), with:
 
 - closed months only (the current month is excluded);
 - `region_code` as a zero-padded INSEE code (`01` for Guadeloupe); `region_code` and `department_code` are empty for non-localised beneficiaries (`non localisé`), and `region_code` is empty for overseas collectivities (975, 978, 986, 987, 988).
@@ -2329,7 +2418,7 @@ Published on data.gouv.fr as the `beneficiary` resource. Same perturbed counts a
 
 `age_at_calculation` is empty when the birth date is unknown. A few cells show ages outside 15-20 (inconsistent declared birth dates, or beneficiaries kept in the ever-credited stock after their credit expired).
 
-KPI definitions: [Ever-credited beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/ever_credited_beneficiaries/index.md), [Active beneficiaries](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/active_beneficiaries/index.md).
+KPI definitions: [Ever-credited beneficiaries](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/ever_credited_beneficiaries/index.md), [Active beneficiaries](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/active_beneficiaries/index.md).
 
 | name                       | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2347,37 +2436,37 @@ KPI definitions: [Ever-credited beneficiaries](https://pass-culture.github.io/da
 
 # Table: Beneficiary coverage numerator (data.gouv.fr)
 
-The `exp_data_gouv__beneficiary_coverage` table is the open data version of [exp_vidoc_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/vidoc/description__exp_vidoc_beneficiary__coverage.md): number of beneficiaries who reached a milestone age over the last 12 months, by department of residence.
+The `exp_data_gouv__beneficiary_coverage` table is the number of beneficiaries who reached a milestone age over the last 12 months, by department of residence. Milestone ages 16 to 19 give the coverage rates 15+ to 18+.
 
 ## Table description
 
-Published on data.gouv.fr as the `beneficiary_coverage` resource. It is the numerator of the [coverage rate](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/beneficiaries/beneficiary_coverage_rate/index.md). The denominator (INSEE population estimates) is **not** republished: it is INSEE data, and its computation is public in [metrics_population\_\_coverage](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population).
+Published on data.gouv.fr as the `beneficiary_coverage` resource. It is the numerator of the [coverage rate](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/beneficiary_coverage_rate/index.md). The denominator (INSEE population estimates) is **not** republished: it is INSEE data, and its computation is public in [metrics_population\_\_coverage](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population).
 
-Same perturbed counts as the vidoc export, closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
+Counts come from the perturbed base [exp_base\_\_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__beneficiary_coverage/index.md), closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
 
 **Grain**: `partition_month`, `department_name`, `milestone_age`.
 
-| name                               | data_type | description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partition_month                    | DATE      | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                        |
-| region_code                        | STRING    | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                             |
-| region_name                        | STRING    | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                                      |
-| department_code                    | STRING    | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                                    |
-| department_name                    | STRING    | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                                                  |
-| milestone_age                      | INT64     | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
-| total_beneficiaries_last_12_months | INT64     | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                                           |
+| name                               | data_type | description                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month                    | DATE      | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                    |
+| region_code                        | STRING    | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                         |
+| region_name                        | STRING    | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                  |
+| department_code                    | STRING    | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                |
+| department_name                    | STRING    | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                              |
+| milestone_age                      | INT64     | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
+| total_beneficiaries_last_12_months | INT64     | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                       |
 
 # Table: Diversity at credit expiration (data.gouv.fr)
 
-The `exp_data_gouv__diversity` table is the open data version of [exp_vidoc_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/vidoc/description__exp_vidoc_diversity.md), restricted to the lot 1 indicator: beneficiaries whose credit expired in the month, and those among them who booked in at least 3 distinct offer categories.
+The `exp_data_gouv__diversity` table counts the beneficiaries whose credit expired in the month, and those among them who booked in at least 3 distinct offer categories.
 
 ## Table description
 
-Published on data.gouv.fr as the `diversity` resource. Amounts, spent share buckets and 1+/2+/4+/5+ counts of the vidoc table are not published. Same perturbed counts as the vidoc export, closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
+Published on data.gouv.fr as the `diversity` resource. Only the 3+ categories indicator and its denominator are published. Counts come from the perturbed base [exp_base\_\_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__diversity/index.md), closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
 
 **Grain**: `deposit_expiration_month`, `department_name`, `is_in_qpv`, `macro_density_label`, `micro_density_label`.
 
-KPI definition: [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/diversity_3plus_categories/index.md).
+KPI definition: [Diversity rate (3+ categories)](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/diversity_3plus_categories/index.md).
 
 | name                                      | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ----------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2394,15 +2483,15 @@ KPI definition: [Diversity rate (3+ categories)](https://pass-culture.github.io/
 
 # Table: Diversity by offer category (data.gouv.fr)
 
-The `exp_data_gouv__diversity_by_category` table is the open data version of [exp_vidoc_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/vidoc/description__exp_vidoc_diversity__by_category.md): for each offer category, beneficiaries whose credit expired in the month and who booked at least one offer of that category.
+The `exp_data_gouv__diversity_by_category` table gives, for each offer category, beneficiaries whose credit expired in the month and who booked at least one offer of that category.
 
 ## Table description
 
-Published on data.gouv.fr as the `diversity_by_category` resource. The denominator is `total_expired_deposit_beneficiaries` of [exp_data_gouv_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md) for the same month and cell. Same perturbed counts as the vidoc export, closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
+Published on data.gouv.fr as the `diversity_by_category` resource. The denominator is `total_expired_deposit_beneficiaries` of [exp_data_gouv_diversity](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__diversity/index.md) for the same month and cell. Counts come from the perturbed base [exp_base\_\_diversity_by_category](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__diversity_by_category/index.md), closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
 
 **Grain**: `deposit_expiration_month`, `department_name`, `is_in_qpv`, `macro_density_label`, `micro_density_label`, `offer_category_id`.
 
-KPI definition: [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/index.md).
+KPI definition: [Booking share by category](https://pass-culture.github.io/data-gcp/dbt/kpis/diversity/booking_share_by_category/index.md).
 
 | name                                | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2459,15 +2548,15 @@ Every export reads this table and only **sums** its perturbed cells, never re-pe
 
 Columns, grain and capping rules are described in [exp_vidoc_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_beneficiary__coverage/index.md). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
 
-| name                               | data_type | description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partition_month                    |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                        |
-| region_name                        |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                                      |
-| region_code                        |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                             |
-| department_name                    |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                                                  |
-| department_code                    |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                                    |
-| milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
-| total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                                           |
+| name                               | data_type | description                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month                    |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                    |
+| region_name                        |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                  |
+| region_code                        |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                         |
+| department_name                    |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                              |
+| department_code                    |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                |
+| milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
+| total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                       |
 
 # Table: Diversity at credit expiration (perturbed base)
 
@@ -3153,15 +3242,15 @@ Each row represents a key indicator calculated for a specific month, geographic 
 
 **Grain**: `partition_month`, `region_code`, `department_code`, `milestone_age`.
 
-| name                               | data_type | description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partition_month                    |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                        |
-| region_name                        |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                                      |
-| region_code                        |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                             |
-| department_name                    |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                                                  |
-| department_code                    |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                                    |
-| milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
-| total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                                           |
+| name                               | data_type | description                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month                    |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                    |
+| region_name                        |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                  |
+| region_code                        |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                         |
+| department_name                    |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                              |
+| department_code                    |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                |
+| milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
+| total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                       |
 
 The `exp_vidoc_booking_beneficiary` model provides the used individual bookings and the amounts spent by young people, by month of use, territory of residence of the beneficiary and offer category. It is designed to be exported to the ministry for vidoc visualisation. It is built from [`metrics_booking__individual`](#!/model/model.data_gcp_dbt.metrics_booking__individual) with the same rules as `external_reporting__beneficiary_booking`, and the low count rule of `external_reporting__individual` (`external_reporting__beneficiary_booking_bookers`).
 
@@ -3456,16 +3545,16 @@ Each row represents a key indicator calculated for a specific month and a geogra
 
 Public INSEE population data — see [data-insee-population](https://github.com/pass-culture/data-insee-population/) for details.
 
-| name                            | data_type | description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partition_month                 |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                        |
-| birth_month                     |           | The estimated birth month of individuals based on observed birth trends.                                                                                                                                                                                                                                                                                                                       |
-| milestone_age                   |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
-| department_code                 |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                                    |
-| department_name                 |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                                                  |
-| region_name                     |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                                      |
-| region_code                     |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                             |
-| total_population_last_12_months |           | Rolling sum of french population over the last 12 months for a given age and department.                                                                                                                                                                                                                                                                                                       |
+| name                            | data_type | description                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month                 |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                    |
+| birth_month                     |           | The estimated birth month of individuals based on observed birth trends.                                                                                                                                                                                                                                                                                                   |
+| milestone_age                   |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
+| department_code                 |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                |
+| department_name                 |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                              |
+| region_name                     |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                  |
+| region_code                     |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                         |
+| total_population_last_12_months |           | Rolling sum of french population over the last 12 months for a given age and department.                                                                                                                                                                                                                                                                                   |
 
 The `exp_vidoc_student__coverage` model provides the number of students eligible for EAC (Education Artistique et Culturelle) and the number of students engaged in at least one EAC action, by school year, month and territory. It is designed to be exported to ministry for vidoc visualisation.
 
@@ -8401,7 +8490,7 @@ Each row represents a key indicator calculated for a specific month, geographic 
 | region_code                        |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | department_name                    |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | department_code                    |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                                                                                                                            |
-| milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage.                                                                                         |
+| milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage.                                                                                                             |
 | total_monthly_beneficiaries        |           | Number of distinct beneficiaries with an active credit during the partition month whose age in months, that month, is exactly the milestone age, by department. Monthly count, not rolled (0 on a month without any such beneficiary): `total_beneficiaries_last_12_months` is its sum over the current and 11 previous calendar months.                                                                                                                                               |
 | total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                                                                                                                                   |
 | cell_key_beneficiaries             | INT64     | Cell key (0-255) of the matching count, used to perturb that count on publication (statistical disclosure control, cell key method): the salted record keys of the counted users, each user once, summed modulo 256. Neither a measure nor a dimension: do not display it. When rows covering disjoint sets of users are aggregated, the key of the aggregate is mod(abs(sum(cell_key)), 256), not the plain sum: it equals the key computed directly from the users of the aggregate. |
@@ -8875,16 +8964,16 @@ The `metrics_population__coverage` model aggregates key performance indicators t
 
 Each row represents a key indicator calculated for a specific month and a geographic aggregation level.
 
-| name                            | data_type | description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partition_month                 |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                        |
-| birth_month                     |           | The estimated birth month of individuals based on observed birth trends.                                                                                                                                                                                                                                                                                                                       |
-| milestone_age                   |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
-| department_code                 |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                                    |
-| department_name                 |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                                                  |
-| region_name                     |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                                      |
-| region_code                     |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                             |
-| total_population_last_12_months |           | Rolling sum of french population over the last 12 months for a given age and department.                                                                                                                                                                                                                                                                                                       |
+| name                            | data_type | description                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| partition_month                 |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                    |
+| birth_month                     |           | The estimated birth month of individuals based on observed birth trends.                                                                                                                                                                                                                                                                                                   |
+| milestone_age                   |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
+| department_code                 |           | The official code of the department (département) containing the IRIS area.                                                                                                                                                                                                                                                                                                |
+| department_name                 |           | The official name of the department containing the IRIS area.                                                                                                                                                                                                                                                                                                              |
+| region_name                     |           | The official name of the region containing the IRIS area.                                                                                                                                                                                                                                                                                                                  |
+| region_code                     |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                         |
+| total_population_last_12_months |           | Rolling sum of french population over the last 12 months for a given age and department.                                                                                                                                                                                                                                                                                   |
 
 Statistical secrecy of cultural partners' revenue from **collective** bookings, by territory: whether a department, an EPCI or a municipality can be published. One row per `partition_month` × `rolling_window_months_count` (6 or 48 months) × `municipality_code`, for every municipality of the IRIS reference (most have no revenue). Revenue is the booking amount of used bookings over the window ending with the month, by venue territory.
 
@@ -11233,7 +11322,7 @@ Work in progress
 
 **external_reporting_secret_reason**: Message to display instead of the KPI when it has no value: 'Données non disponibles (secret statistique)' when it is masked, whatever the rule (statistical secret on cultural partners, or fewer than 5 beneficiaries behind the KPI); 'Données non disponibles' when it is NULL for another reason (KPI published at national level only, or month missing from a stock KPI series). NULL when the KPI has a value. The secret message sorts after the plain one, so max(secret_reason) shows the secret when both are mixed. is_secret_stat, is_low_count, is_national_only and is_missing_month tell the rule apart.
 
-**milestone_age**: Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc\_\_population_coverage, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage.
+**milestone_age**: Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage.
 
 **age_at_calculation**: The user's age calculated at the specific reference date of the record (usually the end of the month). Unlike the current age, this value reflects the user's age at the historical point in time represented by the row.
 

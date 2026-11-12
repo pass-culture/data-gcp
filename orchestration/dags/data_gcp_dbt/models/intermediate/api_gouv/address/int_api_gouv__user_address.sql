@@ -99,6 +99,8 @@ select
         case
             when user_postal_code = "97150"
             then "978"
+            when user_postal_code = "97133"
+            then "977"
             when left(user_postal_code, 3) = "978"
             then "974"
             when left(user_postal_code, 2) in ("97", "98")

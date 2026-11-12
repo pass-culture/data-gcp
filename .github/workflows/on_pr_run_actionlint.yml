@@ -19,4 +19,3 @@ jobs:
         with:
           persist-credentials: false
       - uses: pass-culture/common-workflows/actions/actionlint-check@547f3df463509ca831922b667e6dc2d29f74e4e0 # actionlint/v0.3
-

@@ -457,20 +457,25 @@
     flagged_kpis as (
         select
             filled_kpis.*,
-            filled_kpis.dimension_name != 'NAT'
-            and (
-                low_count_kpis.kpi_name is not null
-                {% for prefix in low_count_denominator_kpis %}
-                    or (
-                        starts_with(filled_kpis.kpi_name, '{{ prefix }}')
-                        and filled_kpis.denominator
-                        between 1 and {{ min_individuals - 1 }}
-                    )
-                {% endfor %}
+            -- coalesce: on a month missing from the territory series the
+            -- denominator is null, which would make the flag null, not false
+            coalesce(
+                filled_kpis.dimension_name != 'NAT'
+                and (
+                    low_count_kpis.kpi_name is not null
+                    {% for prefix in low_count_denominator_kpis %}
+                        or (
+                            starts_with(filled_kpis.kpi_name, '{{ prefix }}')
+                            and filled_kpis.denominator
+                            between 1 and {{ min_individuals - 1 }}
+                        )
+                    {% endfor %}
+                ),
+                false
             ) as is_low_count,
             {% if low_count_denominator_kpis %}
                 filled_kpis.dimension_name != 'NAT'
-                and filled_kpis.denominator = 0
+                and coalesce(filled_kpis.denominator, 0) = 0
                 and (
                     {% for prefix in low_count_denominator_kpis %}
                         {% if not loop.first %}or {% endif %}

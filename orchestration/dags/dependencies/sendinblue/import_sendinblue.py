@@ -12,7 +12,7 @@ raw_tables = {
 clean_tables = {
     "sendinblue_transactional_clean": {
         "sql": f"{SQL_PATH}/clean/sendinblue_transactional.sql",
-        "destination_dataset": "{{ bigquery_history_dataset }}",
+        "destination_dataset": "{{ bigquery_int_brevo_dataset }}",
         "destination_table": "sendinblue_transactional${{ yyyymmdd(ds) }}",
         "time_partitioning": {"field": "update_date"},
     },

@@ -51,7 +51,7 @@ models:
         data_tests:
           - not_null:
               config:
-                where: "not is_secret_stat and not is_low_count and not is_national_only and not is_missing_month"
+                where: "secret_reason is null"  # no mask of any kind
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
       - name: denominator
@@ -59,7 +59,7 @@ models:
         data_tests:
           - not_null:
               config:
-                where: "not is_secret_stat and not is_low_count and not is_national_only and not is_missing_month"
+                where: "secret_reason is null"  # no mask of any kind
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
       - name: kpi
@@ -67,7 +67,7 @@ models:
         data_tests:
           - not_null:
               config:
-                where: "not is_secret_stat and not is_low_count and not is_national_only and not is_missing_month"
+                where: "secret_reason is null"  # no mask of any kind
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
           - kpi_variation_threshold:

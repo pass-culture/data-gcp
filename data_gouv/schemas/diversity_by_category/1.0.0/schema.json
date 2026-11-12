@@ -1,0 +1,183 @@
+{
+  "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
+  "name": "pass-culture-diversity-by-category",
+  "title": "Catégories d'offres réservées à l'expiration du crédit",
+  "description": "Pour chaque catégorie d'offre, nombre de bénéficiaires dont le crédit pass Culture a expiré dans le mois et ayant réservé au moins une offre de cette catégorie, par territoire de résidence, QPV et densité. Le dénominateur est total_expired_deposit_beneficiaries du jeu « diversity » pour le même mois et la même ligne (mêmes territoire, QPV et densité). Un même bénéficiaire pouvant réserver dans plusieurs catégories, la somme des parts dépasse 100 %.",
+  "version": "1.0.0",
+  "path": "https://raw.githubusercontent.com/pass-culture/data-gcp/master/data_gouv/schemas/diversity_by_category/1.0.0/schema.json",
+  "homepage": "https://github.com/pass-culture/data-gcp/tree/master/data_gouv",
+  "countryCode": "FR",
+  "licenses": [
+    {
+      "name": "etalab-2.0",
+      "title": "Licence Ouverte / Open Licence version 2.0",
+      "path": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/"
+    }
+  ],
+  "contributors": [
+    {
+      "title": "pass Culture - Pôle données",
+      "role": "author"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Modèle dbt exp_data_gouv__diversity_by_category",
+      "path": "https://github.com/pass-culture/data-gcp/blob/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv/exp_data_gouv__diversity_by_category.sql"
+    },
+    {
+      "title": "Définition de l'indicateur (documentation, en anglais)",
+      "path": "https://pass-culture.github.io/data-gcp/dbt/vidoc_kpis/diversity/booking_share_by_category/"
+    },
+    {
+      "title": "Méthode de protection statistique (en anglais)",
+      "path": "https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/"
+    }
+  ],
+  "missingValues": [
+    ""
+  ],
+  "fields": [
+    {
+      "name": "deposit_expiration_month",
+      "title": "Mois d'expiration du crédit",
+      "description": "Mois au cours duquel le crédit des bénéficiaires a expiré (voir le jeu « diversity » pour le creux statistique d'avril 2025 à février 2026). Date au format AAAA-MM-JJ, toujours le premier jour du mois. Seuls les mois terminés sont publiés.",
+      "type": "date",
+      "format": "%Y-%m-%d",
+      "example": "2026-01-01",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "region_code",
+      "title": "Code région",
+      "description": "Code INSEE (Code officiel géographique) de la région de l'adresse déclarée par le bénéficiaire à l'inscription. Vide pour les collectivités d'outre-mer (975, 978, 986, 987, 988) et pour les bénéficiaires non localisés.",
+      "type": "string",
+      "example": "11",
+      "constraints": {
+        "required": false,
+        "pattern": "^[0-9]{2}$"
+      }
+    },
+    {
+      "name": "region_name",
+      "title": "Région",
+      "description": "Nom de la région. « non localisé » lorsque l'adresse n'a pas pu être rattachée à une commune ; nom de la collectivité ou « Collectivités d'outre-mer » pour les collectivités d'outre-mer.",
+      "type": "string",
+      "example": "Île-de-France",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "department_code",
+      "title": "Code département",
+      "description": "Code INSEE (Code officiel géographique) du département de l'adresse déclarée par le bénéficiaire à l'inscription (2A, 2B pour la Corse, 971 à 988 pour l'outre-mer). Vide pour les bénéficiaires non localisés.",
+      "type": "string",
+      "example": "75",
+      "constraints": {
+        "required": false,
+        "pattern": "^([0-9]{2}|2A|2B|9[78][0-9])$"
+      }
+    },
+    {
+      "name": "department_name",
+      "title": "Département",
+      "description": "Nom du département. « non localisé » lorsque l'adresse n'a pas pu être rattachée à une commune.",
+      "type": "string",
+      "example": "Paris",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "is_in_qpv",
+      "title": "Résident en QPV",
+      "description": "Vrai si l'adresse déclarée par le bénéficiaire est située dans un quartier prioritaire de la politique de la ville (QPV). L'adresse peut différer du lieu de résidence effectif (domicile parental, études). Vide si l'adresse n'a pas pu être localisée.",
+      "type": "boolean",
+      "trueValues": [
+        "true"
+      ],
+      "falseValues": [
+        "false"
+      ],
+      "constraints": {
+        "required": false
+      }
+    },
+    {
+      "name": "macro_density_label",
+      "title": "Densité (2 niveaux)",
+      "description": "Densité de la commune de l'adresse déclarée selon la grille communale de densité de l'INSEE : « urbain » (niveaux 1 à 4), « rural » (niveaux 5 à 7), « non localisé » si l'adresse n'a pas pu être rattachée à une commune.",
+      "type": "string",
+      "example": "rural",
+      "constraints": {
+        "required": false,
+        "enum": [
+          "urbain",
+          "rural",
+          "non localisé"
+        ]
+      }
+    },
+    {
+      "name": "micro_density_label",
+      "title": "Densité (7 niveaux)",
+      "description": "Niveau de la grille communale de densité de l'INSEE (7 niveaux) de la commune de l'adresse déclarée, « non localisé » si l'adresse n'a pas pu être rattachée à une commune.",
+      "type": "string",
+      "example": "Bourgs ruraux",
+      "constraints": {
+        "required": false,
+        "enum": [
+          "Grands centres urbains",
+          "Centres urbains intermédiaires",
+          "Ceintures urbaines",
+          "Petites villes",
+          "Bourgs ruraux",
+          "Rural à habitat dispersé",
+          "Rural à habitat très dispersé",
+          "non localisé"
+        ]
+      }
+    },
+    {
+      "name": "offer_category_id",
+      "title": "Catégorie d'offre",
+      "description": "Catégorie de l'offre, renseignée par le partenaire culturel lors de la création de l'offre sur le portail pass Culture : BEAUX_ARTS = Beaux-arts ; CARTE_JEUNES = Carte jeunes ; CINEMA = Cinéma (séances, abonnements) ; CONFERENCE = Conférences, rencontres ; FILM = Films, vidéos (supports physiques, VOD) ; INSTRUMENT = Instruments de musique ; JEU = Jeux ; LIVRE = Livres ; MEDIA = Médias, presse ; MUSEE = Musées, patrimoine, expositions, visites ; MUSIQUE_ENREGISTREE = Musique enregistrée ; MUSIQUE_LIVE = Musique live (concerts, festivals) ; PRATIQUE_ART = Pratiques artistiques (cours, ateliers) ; SPECTACLE = Spectacle vivant ; TECHNIQUE = Catégorie technique (offres internes).",
+      "type": "string",
+      "example": "LIVRE",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "BEAUX_ARTS",
+          "CARTE_JEUNES",
+          "CINEMA",
+          "CONFERENCE",
+          "FILM",
+          "INSTRUMENT",
+          "JEU",
+          "LIVRE",
+          "MEDIA",
+          "MUSEE",
+          "MUSIQUE_ENREGISTREE",
+          "MUSIQUE_LIVE",
+          "PRATIQUE_ART",
+          "SPECTACLE",
+          "TECHNIQUE"
+        ]
+      }
+    },
+    {
+      "name": "total_category_booked_beneficiaries",
+      "title": "Nombre de bénéficiaires ayant réservé dans la catégorie",
+      "description": "Parmi les bénéficiaires dont le crédit a expiré dans le mois, nombre de ceux ayant effectué au moins une réservation validée dans la catégorie avant l'expiration. Jamais supérieur à total_expired_deposit_beneficiaries de la même ligne du jeu « diversity ». Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "type": "integer",
+      "example": "41000",
+      "constraints": {
+        "required": true,
+        "minimum": 0
+      }
+    }
+  ]
+}

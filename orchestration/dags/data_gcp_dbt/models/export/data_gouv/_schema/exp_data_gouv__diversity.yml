@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: exp_data_gouv__diversity
+    description: "{{ doc('description__exp_data_gouv__diversity') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - deposit_expiration_month
+              - department_name
+              - is_in_qpv
+              - macro_density_label
+              - micro_density_label
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_3plus_category_booked_beneficiaries <= total_expired_deposit_beneficiaries"
+      - dbt_utils.expression_is_true:
+          arguments:
+            # cell key perturbation: a published count is 0 or >= 5
+            expression: "total_expired_deposit_beneficiaries not between 1 and 4 and total_3plus_category_booked_beneficiaries not between 1 and 4"
+    columns:
+      - name: deposit_expiration_month
+        data_type: DATE
+        description: "{{ doc('column__deposit_expiration_month') }}"
+        data_tests:
+          - not_null
+      - name: region_code
+        data_type: STRING
+        description: "{{ doc('column__region_code') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^[0-9]{2}$"
+      - name: region_name
+        data_type: STRING
+        description: "{{ doc('column__region_name') }}"
+        data_tests:
+          - not_null
+      - name: department_code
+        data_type: STRING
+        description: "{{ doc('column__department_code') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^([0-9]{2}|2A|2B|9[78][0-9])$"
+      - name: department_name
+        data_type: STRING
+        description: "{{ doc('column__department_name') }}"
+        data_tests:
+          - not_null
+      - name: is_in_qpv
+        data_type: BOOL
+        description: "{{ doc('column__user_is_in_qpv') }}"
+      - name: macro_density_label
+        data_type: STRING
+        description: "{{ doc('column__user_macro_density_label') }}"
+      - name: micro_density_label
+        data_type: STRING
+        description: "{{ doc('column__user_density_label') }}"
+      - name: total_expired_deposit_beneficiaries
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_expired_deposit_beneficiaries') }}"
+        data_tests:
+          - not_null
+      - name: total_3plus_category_booked_beneficiaries
+        data_type: INT64
+        description: "{{ doc('column__metrics__total_3plus_category_booked_beneficiaries') }}"
+        data_tests:
+          - not_null

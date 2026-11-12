@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: exp_data_gouv__beneficiary_coverage
+    description: "{{ doc('description__exp_data_gouv__beneficiary_coverage') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - department_name
+              - milestone_age
+      - dbt_utils.expression_is_true:
+          arguments:
+            # cell key perturbation: a published count is 0 or >= 5
+            expression: "total_beneficiaries_last_12_months not between 1 and 4"
+    columns:
+      - name: partition_month
+        data_type: DATE
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: region_code
+        data_type: STRING
+        description: "{{ doc('column__region_code') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^[0-9]{2}$"
+      - name: region_name
+        data_type: STRING
+        description: "{{ doc('column__region_name') }}"
+        data_tests:
+          - not_null
+      - name: department_code
+        data_type: STRING
+        description: "{{ doc('column__department_code') }}"
+        data_tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^([0-9]{2}|2A|2B|9[78][0-9])$"
+      - name: department_name
+        data_type: STRING
+        description: "{{ doc('column__department_name') }}"
+        data_tests:
+          - not_null
+      - name: milestone_age
+        data_type: INT64
+        description: "{{ doc('column__milestone_age') }}"
+        data_tests:
+          - not_null
+      - name: total_beneficiaries_last_12_months
+        data_type: INT64
+        description: "{{ doc('column__total_users_last_12_months') }}"
+        data_tests:
+          - not_null

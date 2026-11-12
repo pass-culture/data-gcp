@@ -103,6 +103,7 @@ nav:
             - Top offers in labelled venues: dbt/vidoc_kpis/tops/top_offer_labelled_ranking.md
             - Top venues: dbt/vidoc_kpis/tops/top_venue_ranking.md
             - Top labelled venues: dbt/vidoc_kpis/tops/top_venue_labelled_ranking.md
+        - data.gouv.fr exports: dbt/data_gouv/index.md
         - Ministry exports:
           - dbt/ministry_kpis/index.md
           - User and deposits: dbt/ministry_kpis/user_and_deposit.md
@@ -145,6 +146,7 @@ plugins:
         Data Models:
           - dbt/overview.md
           - dbt/vidoc_kpis/**/*.md
+          - dbt/data_gouv/*.md
           - dbt/ministry_kpis/*.md
           - dbt/models/**/description*.md
         Glossary:

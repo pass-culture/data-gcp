@@ -125,6 +125,16 @@ models:
       vidoc:
         +schema: export_vidoc_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      export_base:
+        # perturbed base of every export (vidoc, data_gouv, external_reporting)
+        +schema: export_base_{{ target.name }}
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      data_gouv:
+        +schema: export_data_gouv_{{ target.name }}
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+        # published schema (Table Schema on data.gouv.fr): fail the build on drift
+        +contract:
+          enforced: true
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:

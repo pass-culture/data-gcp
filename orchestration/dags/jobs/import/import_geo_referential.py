@@ -28,7 +28,7 @@ schedule = "0 3 5 * *"
 # year also needs its page id in the job's utils/config.py::COG_PAGE_IDS.
 COG_YEAR = 2026
 DENSITY_GRID_YEAR = 2024
-FRR_YEAR = 2025
+FRR_YEAR = 2026
 
 GEO_REFERENTIAL_CONTAINER_RESOURCES = V1ResourceRequirements(
     requests={"cpu": "1", "memory": "2Gi"},

@@ -186,14 +186,16 @@ RESOURCES = {
             {
                 "name": "age_at_calculation",
                 "title": "Âge",
-                "description": "Âge révolu du bénéficiaire à la fin du mois "
-                "d'observation. Un même jeune change donc de tranche d'âge au fil "
-                "des mois. Vide si la date de naissance est inconnue. Quelques "
-                "lignes présentent des âges hors 15-20 ans (dates de naissance "
-                "déclarées incohérentes, ou bénéficiaires dont le crédit a expiré).",
+                "description": "Âge révolu du bénéficiaire au premier jour du mois "
+                "d'observation : un jeune ayant reçu son crédit à 15 ans au cours du "
+                "mois apparaît donc à 14 ans. Un même jeune change de tranche d'âge "
+                "au fil des mois, et le stock comprenant tous les bénéficiaires "
+                "depuis 2019, les âges dépassent 21 ans. Vide si la date de "
+                "naissance est inconnue ou incohérente avec l'historique des "
+                "crédits.",
                 "type": "integer",
                 "example": "18",
-                "constraints": {"required": False, "minimum": 0},
+                "constraints": {"required": False, "minimum": 14, "maximum": 30},
             },
             *QPV_DENSITY_FIELDS,
             count_field(

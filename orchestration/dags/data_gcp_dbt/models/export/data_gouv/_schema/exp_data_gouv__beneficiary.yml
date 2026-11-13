@@ -57,6 +57,13 @@ models:
       - name: age_at_calculation
         data_type: INT64
         description: "{{ doc('column__age_at_calculation') }}"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                # impossible ages are published as unknown (see the model)
+                expression: "age_at_calculation between 14 and 30"
+              config:
+                where: "age_at_calculation is not null"
       - name: is_in_qpv
         data_type: BOOL
         description: "{{ doc('column__user_is_in_qpv') }}"

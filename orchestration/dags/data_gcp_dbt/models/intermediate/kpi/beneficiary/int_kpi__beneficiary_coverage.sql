@@ -9,7 +9,7 @@ with
             date_diff(dud.deposit_active_date, dud.user_birth_date, month)
             / 12.0 as user_decimal_age
         from {{ ref("int_global__daily_deposit") }} as dud
-        where dud.deposit_active_date > date_sub(current_date(), interval 48 month)
+        where dud.deposit_active_date >= date("{{ var('PASS_START_DATE') }}")
     ),
 
     beneficiary_coverage as (
@@ -116,4 +116,13 @@ select
     mod(cell_key_rolling, 256) as cell_key_beneficiaries
 from final_data
 -- months without any beneficiary over the last 12 months carry no information
-where total_beneficiaries_last_12_months > 0
+where
+    total_beneficiaries_last_12_months > 0
+    -- the 12-month window must be complete: the first 11 months only see part of it
+    and partition_month >= date_add(
+        (
+            select min(first_bc.deposit_active_month) as first_month
+            from beneficiary_coverage as first_bc
+        ),
+        interval 11 month
+    )

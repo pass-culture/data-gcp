@@ -17,7 +17,12 @@
     department_name
 {% endmacro %}
 
-{% macro data_gouv_closed_month_filter(month_column) %}
-    {#- Publish closed months only: the current month is still being filled -#}
-    {{ month_column }} < date_trunc(date("{{ ds() }}"), month)
+{% macro data_gouv_month_filter(month_column, first_month) %}
+    {#-
+        Published months: from first_month (start of the national pass Culture,
+        see the models) to the last closed month (the current month is still
+        being filled)
+    -#}
+    {{ month_column }} >= date("{{ first_month }}")
+    and {{ month_column }} < date_trunc(date("{{ ds() }}"), month)
 {% endmacro %}

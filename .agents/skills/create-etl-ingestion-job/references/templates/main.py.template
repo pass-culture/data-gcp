@@ -1,0 +1,61 @@
+"""
+{{SOURCE}} ETL Main Entry Point.
+
+Scaffolded from the create-etl-ingestion-job skill.
+"""
+
+from enum import Enum
+
+import typer
+from loguru import logger
+
+from client import {{SOURCE}}Client
+from etl import DATASETS, {{SOURCE}}ETL
+from utils import get_api_token
+
+
+class Dataset(str, Enum):
+    # TODO: list the datasets this job can import
+    all = "all"
+
+
+def main(
+    start_date: str = typer.Option(
+        ..., help="Start date for exporting data (YYYY-MM-DD format)."
+    ),
+    end_date: str = typer.Option(
+        ..., help="End date for exporting data (YYYY-MM-DD format)."
+    ),
+    # TODO: add source-specific options (e.g. ext_id)
+    dataset: Dataset = typer.Option(
+        Dataset.all, help="Data to import."
+    ),
+) -> None:
+    """Main entry point for {{SOURCE}} ETL job."""
+    try:
+        logger.info("Starting {{SOURCE}} ETL job...")
+        logger.info(f"Date range: {start_date} to {end_date}")
+
+        datasets = DATASETS if dataset == Dataset.all else (dataset.value,)
+
+        client = {{SOURCE}}Client(api_token=get_api_token())
+        etl_processor = {{SOURCE}}ETL(client)
+        success = etl_processor.run_etl(
+            from_date=start_date, to_date=end_date, datasets=datasets
+        )
+
+        if success:
+            logger.success("{{SOURCE}} ETL job completed successfully!")
+        else:
+            logger.error("{{SOURCE}} ETL job failed during execution.")
+            raise typer.Exit(code=1)
+    except typer.Exit:
+        # typer.Exit subclasses Exception — re-raise before the broad except.
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error in {{SOURCE}} ETL job: {e}")
+        raise typer.Exit(code=1) from e
+
+
+if __name__ == "__main__":
+    typer.run(main)

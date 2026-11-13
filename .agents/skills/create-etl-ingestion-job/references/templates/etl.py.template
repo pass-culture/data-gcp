@@ -1,0 +1,74 @@
+"""{{SOURCE}} ETL processing (extract / transform / load)."""
+
+from typing import Any
+
+import pandas as pd
+from loguru import logger
+
+from client import {{SOURCE}}Client
+from utils import (
+    {{SOURCE_UPPER}}_ITEMS,
+    {{SOURCE_UPPER}}_ITEMS_SCHEMA,
+    save_to_bq,
+)
+
+# Datasets this job can import.
+DATASETS = ("items",)
+
+
+class {{SOURCE}}ETL:
+    """Extract, transform and load {{SOURCE}} data into BigQuery."""
+
+    def __init__(self, client: {{SOURCE}}Client):
+        self.client = client
+
+    # ---- items dataset -------------------------------------------------
+    def extract_items(self, from_date: str, to_date: str) -> list[dict[str, Any]]:
+        return self.client.get_all_items(from_date, to_date)
+
+    def transform_items(self, items: list[dict[str, Any]]) -> pd.DataFrame:
+        rows = [
+            {
+                # TODO: map raw fields -> columns matching the schema
+                "id": str(item["id"]),
+                "date": item["date"],
+            }
+            for item in items
+        ]
+        return pd.DataFrame(rows, columns=list({{SOURCE_UPPER}}_ITEMS_SCHEMA.keys()))
+
+    def load_items(self, df: pd.DataFrame, from_date: str, to_date: str) -> None:
+        logger.info(f"Loading {len(df)} items into {{{SOURCE_UPPER}}_ITEMS}")
+        # NOTE: save_to_bq (Strategy A) overwrites a SINGLE daily partition
+        # (event_date). It is only correct when the run covers one day and one
+        # entity owns the whole partition. If the window spans several days, or
+        # several entities share a partition, switch to Strategy B
+        # (replace_entity_rows_in_bq) and pass from_date/to_date instead.
+        save_to_bq(
+            df=df,
+            table_name={{SOURCE_UPPER}}_ITEMS,
+            schema_field={{SOURCE_UPPER}}_ITEMS_SCHEMA,
+            event_date=to_date,
+            date_column="date",
+        )
+
+    def run_items_etl(self, from_date: str, to_date: str) -> None:
+        raw = self.extract_items(from_date, to_date)
+        logger.info(f"Extracted {len(raw)} items")
+        df = self.transform_items(raw)
+        self.load_items(df, from_date, to_date)
+
+    # ---- orchestration -------------------------------------------------
+    def run_etl(
+        self, from_date: str, to_date: str, datasets: tuple[str, ...] = DATASETS
+    ) -> bool:
+        """Run every requested dataset; keep going on error, fail at the end."""
+        runners = {"items": self.run_items_etl}
+        success = True
+        for dataset in datasets:
+            try:
+                runners[dataset](from_date, to_date)
+            except Exception as e:
+                logger.error(f"{{SOURCE}} {dataset} ETL failed: {e}")
+                success = False
+        return success

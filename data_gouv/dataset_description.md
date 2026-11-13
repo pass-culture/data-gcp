@@ -66,7 +66,7 @@ Détail de la méthode : [secret statistique](https://pass-culture.github.io/dat
 
 ## Mise à jour et source
 
-Les données proviennent de l'entrepôt de données de la SAS pass Culture, alimenté par les données applicatives (inscriptions, crédits, réservations). Le jeu de données est mis à jour chaque semestre, avec les données jusqu'à fin juin et fin décembre. Le code de production des données est public : [pass-culture/data-gcp](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv).
+Les données proviennent de l'entrepôt de données de la SAS pass Culture, alimenté par les données applicatives (inscriptions, crédits, réservations). Le jeu de données est mis à jour chaque semestre, avec les données jusqu'à fin juin et fin décembre. Les séries commencent en mai 2021, date de la généralisation du volet individuel à 18 ans (la phase d'expérimentation de 2019 à 2021 n'est pas publiée) ; les indicateurs à l'expiration du crédit (`diversity.csv`, `diversity_by_category.csv`) commencent en mai 2023, avec l'expiration des premiers crédits octroyés depuis la généralisation. Le code de production des données est public : [pass-culture/data-gcp](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv).
 
 Producteur : pass Culture, Pôle données.
 

@@ -1,0 +1,11 @@
+---
+title: EAC bookings count
+description: Description of the `external_reporting__eac_bookings_count` model.
+---
+
+{% docs description__external_reporting__eac_bookings_count %}
+
+The `external_reporting__eac_bookings_count` model counts, for each territory (school geography), the collective bookings of its schools over the last 12 complete months, for every school side KPI of the collective reporting: amounts and bookings (`*_etablissements`), domain and format breakdowns, credit usage.
+`external_reporting__eac` masks these KPIs, on every month, when 1 to 4 bookings account for them, since they would disclose single transactions. Counts of schools stay visible.
+
+{% enddocs %}

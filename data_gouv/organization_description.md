@@ -2,7 +2,7 @@
 
 Le passe Culture est un opérateur de l'État chargé d'une mission de service public : démocratiser l'accès à la culture et favoriser la participation active des jeunes à la vie culturelle, dans tous les territoires.
 
-Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'Observatoire du passe Culture rassemble les données, études et analyses produites à partir des données de l'application, pour nourrir le débat et la décision publique.
+Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'objectif de l'Observatoire du passe Culture est donc de proposer un environnement pour partager la connaissance produite (données, études, mise en perspective par des thématiques et témoignages) sur l'offre et les pratiques culturelles par le passe Culture et ses partenaires, et de participer à nourrir le débat et la décision publique à partir des recherches contemporaines.
 
 **Volet individuel.** Une application gratuite et géolocalisée permet aux jeunes de **découvrir les propositions culturelles** autour de chez eux (cinéma, spectacle vivant, musées, livres, pratiques artistiques…) et en ligne. Depuis mars 2025, les jeunes de 15 et 16 ans accèdent aux offres gratuites ; un crédit de 50 € est attribué à 17 ans et de 150 € à 18 ans, utilisable jusqu'à la veille de leurs 21 ans.
 

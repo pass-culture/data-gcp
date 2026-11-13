@@ -143,8 +143,8 @@ def month_range(files):
 
 
 def sha1(file):
-    """Checksum data.gouv.fr stores for an uploaded file."""
-    return hashlib.sha1(file.read_bytes()).hexdigest()
+    """Checksum data.gouv.fr stores for an uploaded file (change detection only)."""
+    return hashlib.sha1(file.read_bytes(), usedforsecurity=False).hexdigest()
 
 
 def schema(resource):

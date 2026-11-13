@@ -55,7 +55,28 @@ with
                     sum(total_3plus_category_booked_beneficiaries) as total_3plus,
                     cast(null as int64) as cell_key_expired,
                     cast(null as int64) as cell_key_3plus
-                from {{ ref("exp_base__diversity") }}
+                -- the base leaves out all-zero cells: zero rows from the metrics
+                -- keep every territory and month, with 0 when all its cells are 0
+                from
+                    (
+                        select
+                            deposit_expiration_month,
+                            region_name,
+                            department_name,
+                            total_expired_deposit_beneficiaries,
+                            total_3plus_category_booked_beneficiaries
+                        from {{ ref("exp_base__diversity") }}
+                        union all
+                        select
+                            deposit_expiration_month,
+                            region_name,
+                            department_name,
+                            0 as total_expired_deposit_beneficiaries,
+                            0 as total_3plus_category_booked_beneficiaries
+                        from {{ ref("metrics_diversity") }}
+                        -- same months as the base (exp_base__diversity)
+                        where deposit_expiration_month > "2021-01-01"
+                    )
             {% else %}
                 select
                     deposit_expiration_month as partition_month,

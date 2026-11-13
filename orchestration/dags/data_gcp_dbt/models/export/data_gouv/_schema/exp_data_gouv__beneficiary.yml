@@ -15,6 +15,10 @@ models:
               - micro_density_label
       - dbt_utils.expression_is_true:
           arguments:
+            # all-zero cells are left out of the base (see exp_base__beneficiary)
+            expression: "total_beneficiaries > 0"
+      - dbt_utils.expression_is_true:
+          arguments:
             expression: "total_actual_beneficiaries <= total_beneficiaries"
       - dbt_utils.expression_is_true:
           arguments:
@@ -53,6 +57,13 @@ models:
       - name: age_at_calculation
         data_type: INT64
         description: "{{ doc('column__age_at_calculation') }}"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                # impossible ages are unknown in the base (see plausible_beneficiary_age)
+                expression: "age_at_calculation between 14 and 30"
+              config:
+                where: "age_at_calculation is not null"
       - name: is_in_qpv
         data_type: BOOL
         description: "{{ doc('column__user_is_in_qpv') }}"

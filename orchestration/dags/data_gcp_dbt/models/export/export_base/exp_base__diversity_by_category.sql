@@ -71,16 +71,19 @@ select
     p.micro_density_label,
     p.offer_category_id,
     least(
-        p.total_category_booked_beneficiaries,
-        coalesce(
-            d.total_expired_deposit_beneficiaries, p.total_category_booked_beneficiaries
-        )
+        p.total_category_booked_beneficiaries, d.total_expired_deposit_beneficiaries
     ) as total_category_booked_beneficiaries
 from perturbed as p
-left join
+-- inner join: a category of a cell left out of exp_base__diversity (all 0) is left
+-- out too
+inner join
     {{ ref("exp_base__diversity") }} as d
     on p.deposit_expiration_month = d.deposit_expiration_month
     and p.department_code = d.department_code
     and p.is_in_qpv is not distinct from d.is_in_qpv
     and p.macro_density_label is not distinct from d.macro_density_label
     and p.micro_density_label is not distinct from d.micro_density_label
+-- a cell whose counts are all 0 had 1 to 5 young people (rows only exist for
+-- cells with at least one): left out, so that a missing combination reads as 0
+-- or a very small count. Sums are unchanged
+where p.total_category_booked_beneficiaries > 0

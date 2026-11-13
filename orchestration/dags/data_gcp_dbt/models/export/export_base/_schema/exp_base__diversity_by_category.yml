@@ -15,6 +15,10 @@ models:
               - offer_category_id
       - dbt_utils.expression_is_true:
           arguments:
+            # all-zero cells are left out (see the model)
+            expression: "total_category_booked_beneficiaries > 0"
+      - dbt_utils.expression_is_true:
+          arguments:
             # cell key perturbation: a published count is 0 or >= 5
             expression: "coalesce(total_category_booked_beneficiaries, 0) not between 1 and 4"
     columns:

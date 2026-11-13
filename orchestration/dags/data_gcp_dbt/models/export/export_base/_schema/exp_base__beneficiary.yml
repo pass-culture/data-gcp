@@ -15,6 +15,10 @@ models:
               - micro_density_label
       - dbt_utils.expression_is_true:
           arguments:
+            # all-zero cells are left out (see the model)
+            expression: "total_beneficiaries > 0"
+      - dbt_utils.expression_is_true:
+          arguments:
             expression: "total_actual_beneficiaries <= total_beneficiaries"
       - dbt_utils.expression_is_true:
           arguments:
@@ -33,6 +37,13 @@ models:
         description: "{{ doc('column__department_code') }}"
       - name: age_at_calculation
         description: "{{ doc('column__age_at_calculation') }}"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                # impossible ages are unknown (see plausible_beneficiary_age)
+                expression: "age_at_calculation between 14 and 30"
+              config:
+                where: "age_at_calculation is not null"
       - name: is_in_qpv
         description: "{{ doc('column__user_is_in_qpv') }}"
       - name: macro_density_label

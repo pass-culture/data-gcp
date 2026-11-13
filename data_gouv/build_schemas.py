@@ -1,5 +1,5 @@
 """Build the Table Schema (https://specs.frictionlessdata.io/table-schema/) files of
-the pass Culture datasets published on data.gouv.fr.
+the passe Culture datasets published on data.gouv.fr.
 
 Field definitions are written in French for data.gouv.fr users; column names are
 the ones of the dbt models `exp_data_gouv__<resource>`. A published version is
@@ -169,8 +169,8 @@ def count_field(name, title, description, example):
 
 RESOURCES = {
     "beneficiary": {
-        "title": "Bénéficiaires du pass Culture par mois et territoire",
-        "description": "Stock mensuel de bénéficiaires du volet individuel du pass "
+        "title": "Bénéficiaires du passe Culture par mois et territoire",
+        "description": "Stock mensuel de bénéficiaires du volet individuel du passe "
         "Culture (jeunes ayant reçu un crédit individuel), et parmi eux des "
         "bénéficiaires actuels (crédit encore disponible), par territoire de "
         "résidence, âge, QPV et densité. Une ligne par mois et combinaison de "
@@ -201,7 +201,7 @@ RESOURCES = {
             count_field(
                 "total_beneficiaries",
                 "Nombre de bénéficiaires",
-                "Nombre de jeunes ayant reçu au moins un crédit individuel du pass "
+                "Nombre de jeunes ayant reçu au moins un crédit individuel du passe "
                 "Culture à la fin du mois, que ce crédit soit encore disponible, "
                 "entièrement dépensé ou expiré, et qu'ils aient ou non réservé. Les "
                 "comptes supprimés sortent du stock. Les jeunes de 15-16 ans "
@@ -221,12 +221,12 @@ RESOURCES = {
         ],
     },
     "beneficiary_coverage": {
-        "title": "Bénéficiaires du pass Culture ayant atteint un âge sur 12 mois glissants",
-        "description": "Nombre de bénéficiaires du pass Culture ayant atteint un âge "
+        "title": "Bénéficiaires du passe Culture ayant atteint un âge sur 12 mois glissants",
+        "description": "Nombre de bénéficiaires du passe Culture ayant atteint un âge "
         "donné (16 à 19 ans) au cours des 12 derniers mois, par département de "
         "résidence. C'est le numérateur du taux de couverture : divisé par la "
         "population de cet âge estimée par l'INSEE sur la même période et le même "
-        "territoire, il donne la part des jeunes ayant bénéficié du pass Culture. "
+        "territoire, il donne la part des jeunes ayant bénéficié du passe Culture. "
         "La population INSEE n'est pas republiée ici ; le code de calcul est public.",
         "kpi_doc": "kpis/beneficiaries/beneficiary_coverage_rate/",
         "fields": [
@@ -242,7 +242,7 @@ RESOURCES = {
                 "description": "Âge (en années révolues) atteint par les jeunes au "
                 "cours de la fenêtre de 12 mois. Un âge atteint de N ans correspond "
                 "au taux de couverture « N-1+ » : 19 ans correspond au taux de "
-                "couverture 18+, c'est-à-dire aux jeunes ayant bénéficié du pass "
+                "couverture 18+, c'est-à-dire aux jeunes ayant bénéficié du passe "
                 "Culture avant leurs 19 ans.",
                 "type": "integer",
                 "example": "19",
@@ -261,7 +261,7 @@ RESOURCES = {
     },
     "diversity": {
         "title": "Diversité des pratiques culturelles à l'expiration du crédit",
-        "description": "Bénéficiaires dont le crédit pass Culture a expiré dans le "
+        "description": "Bénéficiaires dont le crédit passe Culture a expiré dans le "
         "mois, et parmi eux ceux ayant réservé dans au moins 3 catégories d'offres "
         "distinctes, par territoire de résidence, QPV et densité. Le rapport des "
         "deux colonnes donne la part de bénéficiaires ayant diversifié leurs "
@@ -302,7 +302,7 @@ RESOURCES = {
     "diversity_by_category": {
         "title": "Catégories d'offres réservées à l'expiration du crédit",
         "description": "Pour chaque catégorie d'offre, nombre de bénéficiaires dont "
-        "le crédit pass Culture a expiré dans le mois et ayant réservé au moins une "
+        "le crédit passe Culture a expiré dans le mois et ayant réservé au moins une "
         "offre de cette catégorie, par territoire de résidence, QPV et densité. Le "
         "dénominateur est total_expired_deposit_beneficiaries du jeu « diversity » "
         "pour le même mois et la même ligne (mêmes territoire, QPV et densité). Un "
@@ -323,7 +323,7 @@ RESOURCES = {
                 "name": "offer_category_id",
                 "title": "Catégorie d'offre",
                 "description": "Catégorie de l'offre, renseignée par le partenaire "
-                "culturel lors de la création de l'offre sur le portail pass "
+                "culturel lors de la création de l'offre sur le portail passe "
                 "Culture : "
                 + " ; ".join(f"{k} = {v}" for k, v in OFFER_CATEGORIES.items())
                 + ".",
@@ -366,7 +366,7 @@ def build_schema(resource, spec):
         ],
         "contributors": [
             {
-                "title": "pass Culture - Pôle données",
+                "title": "passe Culture - Pôle données",
                 "email": "donnees@passculture.app",
                 "role": "author",
             }

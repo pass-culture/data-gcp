@@ -1,14 +1,14 @@
-# Recours au pass Culture et diversité des pratiques culturelles des jeunes
+# Recours au passe Culture et diversité des pratiques culturelles des jeunes
 
 <!-- Description du jeu de données à publier sur data.gouv.fr (Markdown). -->
 
-Le pass Culture est un opérateur de l'État chargé d'une mission de service public : démocratiser l'accès à la culture et favoriser la participation active des jeunes à la vie culturelle, dans tous les territoires.
+Le passe Culture est un opérateur de l'État chargé d'une mission de service public : démocratiser l'accès à la culture et favoriser la participation active des jeunes à la vie culturelle, dans tous les territoires.
 
-Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'Observatoire du pass Culture rassemble les données, études et analyses produites à partir des données de l'application, pour nourrir le débat et la décision publique.
+Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'Observatoire du passe Culture rassemble les données, études et analyses produites à partir des données de l'application, pour nourrir le débat et la décision publique.
 
 L'Observatoire s'appuie sur une politique d'ouverture des données concertée et progressive. Les indicateurs de suivi de la politique publique, co-construits avec le DEPS (ministère de la Culture), sont mis à jour chaque semestre, aux échelles nationale, régionale et départementale. Ils sont d'abord diffusés sous forme de fiches PDF sur le site de l'Observatoire, et seront tous progressivement publiés en données ouvertes sur data.gouv.fr, pour la transparence de l'action publique et leur réutilisation.
 
-Ce jeu de données en est la première étape : il porte sur les jeunes bénéficiaires du **volet individuel** du pass Culture (hors temps scolaire). Le volet collectif (temps scolaire) et les partenaires culturels seront couverts par de prochaines publications.
+Ce jeu de données en est la première étape : il porte sur les jeunes bénéficiaires du **volet individuel** du passe Culture (hors temps scolaire). Le volet collectif (temps scolaire) et les partenaires culturels seront couverts par de prochaines publications.
 
 ## Ressources
 
@@ -33,7 +33,7 @@ Les fichiers sont au format CSV (UTF-8, séparateur virgule). Les dates sont au 
 
 ## Protection des données (secret statistique)
 
-Le pass Culture respecte le secret statistique : aucune donnée publiée ne doit permettre d'identifier un jeune ni de révéler le chiffre d'affaires d'un partenaire culturel.
+Le passe Culture respecte le secret statistique : aucune donnée publiée ne doit permettre d'identifier un jeune ni de révéler le chiffre d'affaires d'un partenaire culturel.
 
 **Bénéficiaires** (ce jeu de données). Les effectifs sont protégés par la **méthode des clés aléatoires** (Cell Key Method), utilisée par l'INSEE et recommandée par Eurostat : un bruit est injecté dans toutes les cases à partir d'une clé aléatoire attachée à chaque individu. Les petits effectifs sont légèrement modifiés, tandis que les grands effectifs et les totaux restent quasiment exacts.
 
@@ -63,12 +63,12 @@ Détail de la méthode : [secret statistique](https://pass-culture.github.io/dat
 - **Expiration** : au bout de 2 ans pour les crédits 18 ans antérieurs à mars 2025 ; à la veille des 21 ans pour les crédits 17-18 ans depuis mars 2025.
 - **QPV** : quartier prioritaire de la politique de la ville.
 - **Densité** : grille communale de densité de l'INSEE (7 niveaux, regroupés en « urbain » pour les niveaux 1 à 4 et « rural » pour les niveaux 5 à 7).
-- **Catégorie d'offre** : catégorie renseignée par le partenaire culturel lors de la création de l'offre sur le portail pass Culture.
+- **Catégorie d'offre** : catégorie renseignée par le partenaire culturel lors de la création de l'offre sur le portail passe Culture.
 
 ## Mise à jour et source
 
-Les données proviennent de l'entrepôt de données de la SAS pass Culture, alimenté par les données applicatives (inscriptions, crédits, réservations). Le jeu de données est mis à jour chaque semestre, avec les données jusqu'à fin juin et fin décembre. Les séries commencent en mai 2021, date de la généralisation du volet individuel à 18 ans (la phase d'expérimentation de 2019 à 2021 n'est pas publiée) ; les indicateurs à l'expiration du crédit (`diversity.csv`, `diversity_by_category.csv`) commencent en mai 2023, avec l'expiration des premiers crédits octroyés depuis la généralisation. Le code de production des données est public : [pass-culture/data-gcp](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv).
+Les données proviennent de l'entrepôt de données de la SAS passe Culture, alimenté par les données applicatives (inscriptions, crédits, réservations). Le jeu de données est mis à jour chaque semestre, avec les données jusqu'à fin juin et fin décembre. Les séries commencent en mai 2021, date de la généralisation du volet individuel à 18 ans (la phase d'expérimentation de 2019 à 2021 n'est pas publiée) ; les indicateurs à l'expiration du crédit (`diversity.csv`, `diversity_by_category.csv`) commencent en mai 2023, avec l'expiration des premiers crédits octroyés depuis la généralisation. Le code de production des données est public : [pass-culture/data-gcp](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv).
 
-Producteur : pass Culture, Pôle données.
+Producteur : passe Culture, Pôle données.
 
 Contact : pour toute question sur ce jeu de données, écrire à [donnees@passculture.app](mailto:donnees@passculture.app).

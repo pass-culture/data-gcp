@@ -2,7 +2,7 @@
   "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
   "name": "pass-culture-diversity",
   "title": "Diversité des pratiques culturelles à l'expiration du crédit",
-  "description": "Bénéficiaires dont le crédit pass Culture a expiré dans le mois, et parmi eux ceux ayant réservé dans au moins 3 catégories d'offres distinctes, par territoire de résidence, QPV et densité. Le rapport des deux colonnes donne la part de bénéficiaires ayant diversifié leurs pratiques. Seuls les bénéficiaires dont le dernier crédit est un crédit 17-18 ans sont pris en compte.",
+  "description": "Bénéficiaires dont le crédit passe Culture a expiré dans le mois, et parmi eux ceux ayant réservé dans au moins 3 catégories d'offres distinctes, par territoire de résidence, QPV et densité. Le rapport des deux colonnes donne la part de bénéficiaires ayant diversifié leurs pratiques. Seuls les bénéficiaires dont le dernier crédit est un crédit 17-18 ans sont pris en compte.",
   "version": "1.0.0",
   "path": "https://raw.githubusercontent.com/pass-culture/data-gcp/master/data_gouv/schemas/diversity/1.0.0/schema.json",
   "homepage": "https://github.com/pass-culture/data-gcp/tree/master/data_gouv",
@@ -16,7 +16,7 @@
   ],
   "contributors": [
     {
-      "title": "pass Culture - Pôle données",
+      "title": "passe Culture - Pôle données",
       "email": "donnees@passculture.app",
       "role": "author"
     }

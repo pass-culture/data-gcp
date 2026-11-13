@@ -1,6 +1,6 @@
 # data.gouv.fr exports
 
-pass Culture open data published on [data.gouv.fr](https://www.data.gouv.fr): indicators on beneficiaries, coverage (numerator) and diversity at credit expiration. Technical documentation: [data.gouv.fr exports](https://pass-culture.github.io/data-gcp/dbt/data_gouv/).
+passe Culture open data published on [data.gouv.fr](https://www.data.gouv.fr): indicators on beneficiaries, coverage (numerator) and diversity at credit expiration. Technical documentation: [data.gouv.fr exports](https://pass-culture.github.io/data-gcp/dbt/data_gouv/).
 
 | Path | Content |
 |---|---|
@@ -8,6 +8,7 @@ pass Culture open data published on [data.gouv.fr](https://www.data.gouv.fr): in
 | `build_schemas.py` | Source of the schemas (field titles, definitions, constraints). |
 | `export_csv.py` | Exports the BigQuery tables `export_data_gouv_prod.<resource>` to CSV. |
 | `dataset_description.md` | French description of the dataset, to paste on data.gouv.fr. |
+| `organization_description.md` | French presentation of the passe Culture organization on data.gouv.fr (key figures to update each semester). |
 
 The data comes from the dbt models `orchestration/dags/data_gcp_dbt/models/export/data_gouv/exp_data_gouv__<resource>.sql`.
 

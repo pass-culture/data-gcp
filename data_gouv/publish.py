@@ -158,7 +158,11 @@ def schema(resource):
     }
 
 
-def main():
+def schema_name(resource):
+    return (resource.get("schema") or {}).get("name")
+
+
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", choices=API, required=True)
     parser.add_argument(
@@ -175,81 +179,105 @@ def main():
     args = parser.parse_args()
     if not args.csv_dir and not (args.dataset and args.publish):
         parser.error("--csv-dir is required, unless publishing an existing --dataset")
+    return args
 
+
+def csv_files(csv_dir):
+    """resource -> CSV file, all of them required."""
+    files = {resource: csv_dir / f"{resource}.csv" for resource in RESOURCES}
+    missing = [str(file) for file in files.values() if not file.exists()]
+    if missing:
+        sys.exit(f"missing files: {missing}")
+    return files
+
+
+def dataset_metadata(files):
+    title, description = dataset_text()
+    start, end = month_range(files.values())
+    return {
+        "title": title,
+        "description": description,
+        "tags": TAGS,
+        "license": LICENSE,
+        "frequency": FREQUENCY,
+        "temporal_coverage": {"start": start, "end": end},
+        "spatial": {"zones": ["country:fr"], "granularity": "fr:departement"},
+    }
+
+
+def save_dataset(api, metadata, dataset=None, organization=None):
+    """Update the given dataset, or create a draft one under the organization."""
+    if dataset:
+        return api.call("PUT", f"/datasets/{dataset}/", json=metadata)
+    organization_id = api.call("GET", f"/organizations/{organization}/")["id"]
+    return api.call(
+        "POST",
+        "/datasets/",
+        json={**metadata, "organization": organization_id, "private": True},
+    )
+
+
+def save_resource(api, dataset, resource, file):
+    """Upload the file (new resource, or replace a changed one), then its metadata."""
+    content, schema_ref = schema(resource)
+    current = next(
+        (r for r in dataset["resources"] if schema_name(r) == schema_ref["name"]), None
+    )
+    if current is None:
+        uploaded = api.upload(f"/datasets/{dataset['id']}/upload/", file)
+    elif (current.get("checksum") or {}).get("value") == sha1(file):
+        uploaded = current
+        print(f"  {file.name}: unchanged, not uploaded")
+    else:
+        uploaded = api.upload(
+            f"/datasets/{dataset['id']}/resources/{current['id']}/upload/", file
+        )
+    api.call(
+        "PUT",
+        f"/datasets/{dataset['id']}/resources/{uploaded['id']}/",
+        json={
+            "title": file.name,
+            "description": content["description"],
+            "schema": schema_ref,
+        },
+    )
+    print(f"  {file.name}: {uploaded['url']}")
+
+
+def warn_extra_resources(api, dataset_id):
+    """A retried request that had in fact succeeded leaves an extra resource."""
+    expected = {schema(resource)[1]["name"] for resource in RESOURCES}
+    for r in api.call("GET", f"/datasets/{dataset_id}/")["resources"]:
+        if schema_name(r) not in expected:
+            print(
+                f"  WARNING extra resource, check and delete it: {r['title']} {r['id']}"
+            )
+
+
+def upload(api, args):
+    """Create or update the dataset and its resources, return the dataset id."""
+    files = csv_files(args.csv_dir)
+    metadata = dataset_metadata(files)
+    dataset = save_dataset(api, metadata, args.dataset, args.organization)
+    coverage = metadata["temporal_coverage"]
+    print(
+        f"dataset {dataset['page']} (private={dataset['private']}), "
+        f"months {coverage['start']} to {coverage['end']}"
+    )
+    for resource, file in files.items():
+        save_resource(api, dataset, resource, file)
+    warn_extra_resources(api, dataset["id"])
+    return dataset["id"]
+
+
+def main():
+    args = parse_args()
     key = os.environ.get("DATA_GOUV_API_KEY")
     if not key:
         sys.exit("DATA_GOUV_API_KEY is not set")
     api = Client(API[args.env], key)
 
-    if args.csv_dir:
-        files = {r: args.csv_dir / f"{r}.csv" for r in RESOURCES}
-        missing = [str(f) for f in files.values() if not f.exists()]
-        if missing:
-            sys.exit(f"missing files: {missing}")
-        title, description = dataset_text()
-        start, end = month_range(files.values())
-        metadata = {
-            "title": title,
-            "description": description,
-            "tags": TAGS,
-            "license": LICENSE,
-            "frequency": FREQUENCY,
-            "temporal_coverage": {"start": start, "end": end},
-            "spatial": {"zones": ["country:fr"], "granularity": "fr:departement"},
-        }
-        if args.dataset:
-            dataset = api.call("PUT", f"/datasets/{args.dataset}/", json=metadata)
-        else:
-            organization = api.call("GET", f"/organizations/{args.organization}/")
-            dataset = api.call(
-                "POST",
-                "/datasets/",
-                json={**metadata, "organization": organization["id"], "private": True},
-            )
-        dataset_id = dataset["id"]
-        print(
-            f"dataset {dataset['page']} (private={dataset['private']}), months {start} to {end}"
-        )
-
-        existing = {
-            (r.get("schema") or {}).get("name"): r for r in dataset["resources"]
-        }
-        for resource, file in files.items():
-            content, schema_ref = schema(resource)
-            current = existing.get(schema_ref["name"])
-            if current and (current.get("checksum") or {}).get("value") == sha1(file):
-                uploaded = current
-                print(f"  {file.name}: unchanged, not uploaded")
-            elif current:
-                uploaded = api.upload(
-                    f"/datasets/{dataset_id}/resources/{current['id']}/upload/", file
-                )
-            else:
-                uploaded = api.upload(f"/datasets/{dataset_id}/upload/", file)
-            api.call(
-                "PUT",
-                f"/datasets/{dataset_id}/resources/{uploaded['id']}/",
-                json={
-                    "title": file.name,
-                    "description": content["description"],
-                    "schema": schema_ref,
-                },
-            )
-            print(f"  {file.name}: {uploaded['url']}")
-
-        # a retried request that had in fact succeeded leaves an extra resource
-        expected = {schema(r)[1]["name"] for r in RESOURCES}
-        resources = api.call("GET", f"/datasets/{dataset_id}/")["resources"]
-        extra = [
-            r for r in resources if (r.get("schema") or {}).get("name") not in expected
-        ]
-        for r in extra:
-            print(
-                f"  WARNING extra resource, check and delete it: {r['title']} {r['id']}"
-            )
-    else:
-        dataset_id = args.dataset
-
+    dataset_id = upload(api, args) if args.csv_dir else args.dataset
     if args.publish:
         dataset = api.call("PUT", f"/datasets/{dataset_id}/", json={"private": False})
         print(f"published {dataset['page']} (private={dataset['private']})")

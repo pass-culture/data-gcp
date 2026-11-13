@@ -1,0 +1,127 @@
+version: 2
+
+models:
+  - name: mrt_global__product
+    description: '{{ doc("description__mrt_global__product") }}'
+    columns:
+      - name: product_id
+        description: "{{ doc('column__product_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null
+          - unique
+      - name: product_ean
+        description: "{{ doc('column__product_ean') }}"
+        data_type: STRING
+        data_tests:
+          - unique
+      - name: product_name
+        description: "{{ doc('column__product_name') }}"
+        data_type: STRING
+      - name: product_description
+        description: "{{ doc('column__product_description') }}"
+        data_type: STRING
+      - name: product_subcategory_id
+        description: "{{ doc('column__product_subcategory_id') }}"
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: product_category_id
+        description: "{{ doc('column__product_category_id') }}"
+        data_type: STRING
+      - name: product_last_provider_id
+        description: "{{ doc('column__product_last_provider_id') }}"
+        data_type: STRING
+      - name: product_last_provider_name
+        description: "{{ doc('column__product_last_provider_name') }}"
+        data_type: STRING
+      - name: product_modified_at_last_provider_date
+        description: "{{ doc('column__product_modified_at_last_provider_date') }}"
+        data_type: DATETIME
+      - name: product_has_image
+        description: "{{ doc('column__product_has_image') }}"
+        data_type: BOOLEAN
+      - name: product_author
+        description: "{{ doc('column__product_author') }}"
+        data_type: STRING
+      - name: product_performer
+        description: "{{ doc('column__product_metadata_performer') }}"
+        data_type: STRING
+      - name: product_publisher
+        description: "{{ doc('column__product_publisher') }}"
+        data_type: STRING
+      - name: product_music_label
+        description: "{{ doc('column__product_music_label') }}"
+        data_type: STRING
+      - name: product_distributor
+        description: "{{ doc('column__product_distributor') }}"
+        data_type: STRING
+      - name: product_collection
+        description: "{{ doc('column__product_collection') }}"
+        data_type: STRING
+      - name: product_book_format
+        description: "{{ doc('column__product_book_format') }}"
+        data_type: STRING
+      - name: product_language_iso
+        description: "{{ doc('column__product_language_iso') }}"
+        data_type: STRING
+      - name: product_clil_code
+        description: "{{ doc('column__product_clil_code') }}"
+        data_type: STRING
+      - name: product_rayon
+        description: "{{ doc('column__product_rayon') }}"
+        data_type: STRING
+      - name: product_release_date
+        description: "{{ doc('column__product_release_date') }}"
+        data_type: DATE
+      - name: product_price
+        description: "{{ doc('column__product_price') }}"
+        data_type: NUMERIC
+      - name: product_gtl_id
+        description: "{{ doc('column__product_gtl_id') }}"
+        data_type: STRING
+      - name: gtl_type
+        description: "{{ doc('column__gtl_type') }}"
+        data_type: STRING
+      - name: gtl_label_level_1
+        description: "{{ doc('column__gtl_label_level_1') }}"
+        data_type: STRING
+      - name: gtl_label_level_2
+        description: "{{ doc('column__gtl_label_level_2') }}"
+        data_type: STRING
+      - name: gtl_label_level_3
+        description: "{{ doc('column__gtl_label_level_3') }}"
+        data_type: STRING
+      - name: gtl_label_level_4
+        description: "{{ doc('column__gtl_label_level_4') }}"
+        data_type: STRING
+      - name: product_allocine_id
+        description: "{{ doc('column__product_allocine_id') }}"
+        data_type: STRING
+      - name: product_movie_visa
+        description: "{{ doc('column__product_movie_visa') }}"
+        data_type: STRING
+      - name: product_movie_runtime
+        description: "{{ doc('column__product_movie_runtime') }}"
+        data_type: INT64
+      - name: product_movie_production_year
+        description: "{{ doc('column__product_movie_production_year') }}"
+        data_type: INT64
+      - name: product_first_offer_creation_date
+        description: "{{ doc('column__product_first_offer_creation_date') }}"
+        data_type: DATE
+      - name: product_total_offers
+        description: "{{ doc('column__product_total_offers') }}"
+        data_type: INT64
+      - name: product_total_bookable_offers
+        description: "{{ doc('column__product_total_bookable_offers') }}"
+        data_type: INT64
+      - name: product_total_venues
+        description: "{{ doc('column__product_total_venues') }}"
+        data_type: INT64
+      - name: product_total_individual_bookings
+        description: "{{ doc('column__product_total_individual_bookings') }}"
+        data_type: INT64
+      - name: product_total_non_cancelled_individual_bookings
+        description: "{{ doc('column__product_total_non_cancelled_individual_bookings') }}"
+        data_type: INT64

@@ -41,7 +41,7 @@ models:
           - dbt_utils.expression_is_true:
               arguments:
                 # impossible ages are unknown (see plausible_beneficiary_age)
-                expression: "age_at_calculation between 14 and 30"
+                expression: "between 14 and 30"
               config:
                 where: "age_at_calculation is not null"
       - name: is_in_qpv

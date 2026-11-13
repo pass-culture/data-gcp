@@ -31,6 +31,9 @@ dags_in_paris:
   import_appfollow:
     source_dataset: raw
     tables_to_copy: [appfollow_reviews, appfollow_ratings] # delete+append by date window over raw tables -> copy history
+  import_applicative_database:
+    source_dataset: history
+    tables_to_copy: [applicative_database_booking_history, applicative_database_collective_booking_history, applicative_database_collective_offer_history, applicative_database_collective_offer_template_history, applicative_database_collective_stock_history, applicative_database_offerer_tag_history, applicative_database_offerer_tag_mapping_history, applicative_database_offerer_tag_category_mapping_history, applicative_database_stock_history, applicative_database_venue_history, applicative_database_venue_criterion_history] # daily partitioned snapshots of mutable applicative tables -> irreplaceable history to copy (raw.* are full CloudSQL re-imports each run -> not copied)
   import_batch:
     source_dataset: raw
     tables_to_copy: [batch_campaigns_stats, batch_transac] # incremental append/partitioned raw loads -> copy history
@@ -46,6 +49,12 @@ dags_in_paris:
   import_downloads:
     source_dataset: raw
     tables_to_copy: [apple_download_stats, google_download_stats] # delete+append by date window on raw tables -> copy history
+  import_intraday_firebase_data:
+    source_dataset: raw
+    tables_to_copy: [firebase_events, firebase_pro_events, firebase_institutional_events, firebase_ios_performance, firebase_android_performance] # daily partitioned event/perf loads -> irreplaceable history to copy
+  import_daily_firebase_data:
+    source_dataset: raw
+    tables_to_copy: [] # writes the same raw.firebase_* tables as import_intraday_firebase_data -> copy once via that entry
   import_gcs_seed:
     source_dataset: seed
     tables_to_copy: [] # full refresh from GCS snapshots -> no tables to copy

@@ -4790,6 +4790,8 @@
       
         
       
+        
+      
     
     
     
@@ -4850,6 +4852,34 @@
     
   
     Individual Indicators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../external_reporting/collective/description__external_reporting__eac_bookings_count/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EAC bookings count
   
 
     
@@ -18974,7 +19004,7 @@
 <li><code>region_code</code> as a zero-padded INSEE code (<code>01</code> for Guadeloupe); <code>region_code</code> and <code>department_code</code> are empty for non-localised beneficiaries (<code>non localisé</code>), and <code>region_code</code> is empty for overseas collectivities (975, 978, 986, 987, 988).</li>
 </ul>
 <p><strong>Grain</strong>: <code>partition_month</code>, <code>department_name</code>, <code>age_at_calculation</code>, <code>is_in_qpv</code>, <code>macro_density_label</code>, <code>micro_density_label</code>.</p>
-<p><code>age_at_calculation</code> is empty when the birth date is unknown. A few cells show ages outside 15-20 (inconsistent declared birth dates, or beneficiaries kept in the ever-credited stock after their credit expired).</p>
+<p><code>age_at_calculation</code> is measured on the first day of the month (a young person credited at 15 during the month shows as 14), and the ever-credited stock keeps beneficiaries after their credit expired, so ages go beyond 21. It is empty when the birth date is unknown, or when the age is impossible given the credit history (inconsistent declared birth dates): below 14 until the March 2025 reform and then one more year per year (no credit at 15 since), or above 19 in February 2019 plus one per year. They are merged into the empty age in the perturbed base (see <a href="../../../../references/statistical_confidentiality/#a-single-perturbed-base-for-every-export">Statistical confidentiality</a>), so totals are unchanged.</p>
 <p>KPI definitions: <a href="../../../../kpis/beneficiaries/ever_credited_beneficiaries/">Ever-credited beneficiaries</a>, <a href="../../../../kpis/beneficiaries/active_beneficiaries/">Active beneficiaries</a>.</p>
 <table>
 <thead>

@@ -4,7 +4,7 @@ The `exp_data_gouv__beneficiary_coverage` table is the number of beneficiaries w
 
 ## Table description
 
-Published on data.gouv.fr as the `beneficiary_coverage` resource. It is the numerator of the [coverage rate](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/beneficiary_coverage_rate/index.md). The denominator (INSEE population estimates) is **not** republished: it is INSEE data, and its computation is public in [metrics_population\_\_coverage](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population).
+Published on data.gouv.fr as the `beneficiary_coverage` resource. It is the numerator of the [coverage rate](https://pass-culture.github.io/data-gcp/dbt/kpis/beneficiaries/beneficiary_coverage_rate/index.md). The denominator (INSEE population estimates) is **not** republished: it is INSEE data, and its computation is public in [data-insee-population](https://github.com/pass-culture/data-insee-population).
 
 Counts come from the perturbed base [exp_base\_\_beneficiary_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__beneficiary_coverage/index.md), closed months only, geographic codes formatted as in [exp_data_gouv_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/data_gouv/description__exp_data_gouv__beneficiary/index.md).
 

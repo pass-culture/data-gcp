@@ -107,6 +107,7 @@ Documentation for Pass Culture's data repository: dbt data models, KPIs, glossar
 - [population_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_population__coverage/index.md)
 - [student_coverage](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_student__coverage/index.md)
 - [Individual Indicators](https://pass-culture.github.io/data-gcp/dbt/models/external_reporting/collective/description__external_reporting__eac/index.md)
+- [EAC bookings count](https://pass-culture.github.io/data-gcp/dbt/models/external_reporting/collective/description__external_reporting__eac_bookings_count/index.md)
 - [EAC coverage Indicators](https://pass-culture.github.io/data-gcp/dbt/models/external_reporting/collective/description__external_reporting__eac_coverage/index.md)
 - [EAC credit usage Indicators](https://pass-culture.github.io/data-gcp/dbt/models/external_reporting/collective/description__external_reporting__eac_credit_usage/index.md)
 - [EAC coverage Indicators](https://pass-culture.github.io/data-gcp/dbt/models/external_reporting/collective/description__external_reporting__eac_cultural_partner/index.md)

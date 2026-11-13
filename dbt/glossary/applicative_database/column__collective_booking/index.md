@@ -1,3 +1,5 @@
+**collective_booking_amount**: Total price of the collective booking, for the whole group: the price of its collective stock, charged to the institution's educational deposit. It is already a total — do not multiply it by collective_stock_number_of_tickets.
+
 **collective_booking_id**: Unique identifier for a collective booking.
 
 **collective_booking_creation_date**: Creation date of the collective booking.

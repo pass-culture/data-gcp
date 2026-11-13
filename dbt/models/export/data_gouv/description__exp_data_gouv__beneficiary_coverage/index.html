@@ -4790,6 +4790,8 @@
       
         
       
+        
+      
     
     
     
@@ -4850,6 +4852,34 @@
     
   
     Individual Indicators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../external_reporting/collective/description__external_reporting__eac_bookings_count/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EAC bookings count
   
 
     
@@ -18968,7 +18998,7 @@
 <p>The <code>exp_data_gouv__beneficiary_coverage</code> table is the number of beneficiaries who reached a milestone age over the last 12 months, by department of residence. Milestone ages 16 to 19 give the coverage rates 15+ to 18+.</p>
 
 <h2 id="table-description">Table description</h2>
-<p>Published on data.gouv.fr as the <code>beneficiary_coverage</code> resource. It is the numerator of the <a href="../../../../kpis/beneficiaries/beneficiary_coverage_rate/">coverage rate</a>. The denominator (INSEE population estimates) is <strong>not</strong> republished: it is INSEE data, and its computation is public in <a href="https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/metrics/population">metrics_population__coverage</a>.</p>
+<p>Published on data.gouv.fr as the <code>beneficiary_coverage</code> resource. It is the numerator of the <a href="../../../../kpis/beneficiaries/beneficiary_coverage_rate/">coverage rate</a>. The denominator (INSEE population estimates) is <strong>not</strong> republished: it is INSEE data, and its computation is public in <a href="https://github.com/pass-culture/data-insee-population">data-insee-population</a>.</p>
 <p>Counts come from the perturbed base <a href="../../export_base/description__exp_base__beneficiary_coverage/">exp_base__beneficiary_coverage</a>, closed months only, geographic codes formatted as in <a href="../description__exp_data_gouv__beneficiary/">exp_data_gouv_beneficiary</a>.</p>
 <p><strong>Grain</strong>: <code>partition_month</code>, <code>department_name</code>, <code>milestone_age</code>.</p>
 <table>

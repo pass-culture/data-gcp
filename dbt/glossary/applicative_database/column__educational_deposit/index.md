@@ -8,7 +8,7 @@
 
 **calendar_year**: Calendar year of the deposit.
 
-**educational_deposit_period**: Period associated to the deposit : sept-dec, jan-aug, all_year (sept-aug).
+**educational_deposit_period**: Part of the scholar year the deposit covers: all_year (September to August), sept-dec or jan-aug. Before the scholar year was split into two allocations, every institution received a single all_year deposit; since then most institutions receive a sept-dec and a jan-aug deposit, while some still receive all_year, depending on the year and the institution's ministry. The period describes how the money was released, not a filter for a scholar-year amount: that amount sums every period of the scholar year.
 
 **is_current_scholar_year**: Whether or not the deposit is associated to the current scholar year (scholar year = a year from 1st Sept to 31 Aug, ex : 2024-2025, from 1st Sept 2024 to 31th Aug 2025).
 

@@ -1,6 +1,6 @@
 <!-- Présentation de l'organisation passe Culture sur data.gouv.fr (Markdown). Chiffres clés à mettre à jour à chaque publication semestrielle. -->
 
-Le passe Culture est un opérateur de l'État chargé d'une mission de service public : démocratiser l'accès à la culture et favoriser la participation active des jeunes à la vie culturelle, dans tous les territoires. Il s'adresse aux jeunes de 15 à 20 ans.
+Le passe Culture est un opérateur de l'État chargé d'une mission de service public : démocratiser l'accès à la culture et favoriser la participation active des jeunes à la vie culturelle, dans tous les territoires.
 
 Cette mission comprend le partage de la connaissance sur l'offre et les pratiques culturelles des jeunes. L'Observatoire du passe Culture rassemble les données, études et analyses produites à partir des données de l'application, pour nourrir le débat et la décision publique.
 

@@ -157,8 +157,19 @@ with
     aggregated as (
         select
             aggregated_metrics.*,
+            -- the base leaves out all-zero cells: a NAT, REG or DEP value missing
+            -- from it is 0, never a value perturbed here
             {% for measure in base_measures %}
-                aggregated_base.{{ measure }}_base{% if not loop.last %},{% endif %}
+                if(
+                    aggregated_metrics.dimension_name in (
+                        {% for d in base_dimensions %}
+                            '{{ d }}'{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ),
+                    coalesce(aggregated_base.{{ measure }}_base, 0),
+                    null
+                ) as {{ measure }}_base
+                {% if not loop.last %},{% endif %}
             {% endfor %}
         from aggregated_metrics
         left join

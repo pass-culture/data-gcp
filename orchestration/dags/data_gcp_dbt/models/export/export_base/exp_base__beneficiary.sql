@@ -6,7 +6,9 @@ with
             region_code,
             department_name,
             department_code,
-            age_at_calculation,
+            -- impossible ages are merged into the unknown age before perturbation
+            {{ plausible_beneficiary_age("age_at_calculation", "partition_month") }}
+            as age_at_calculation,
             is_in_qpv,
             macro_density_label,
             micro_density_label,
@@ -23,7 +25,7 @@ with
             region_code,
             department_name,
             department_code,
-            age_at_calculation,
+            {{ plausible_beneficiary_age("age_at_calculation", "partition_month") }},
             is_in_qpv,
             macro_density_label,
             micro_density_label
@@ -83,3 +85,7 @@ select
     total_beneficiaries,
     least(total_actual_beneficiaries, total_beneficiaries) as total_actual_beneficiaries
 from perturbed
+-- a cell whose counts are all 0 had 1 to 5 young people (rows only exist for
+-- cells with at least one): left out, so that a missing combination reads as 0
+-- or a very small count. Sums are unchanged
+where total_beneficiaries > 0

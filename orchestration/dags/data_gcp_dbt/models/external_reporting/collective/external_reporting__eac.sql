@@ -15,6 +15,7 @@ with
         apply_statistical_secret(
             kpis_cte="kpis",
             secret_models=["statistical_secret__cultural_partner_collective"],
+            low_count_models=["external_reporting__eac_bookings_count"],
             kpi_attributes=["aggregation"],
             flow_attribute="aggregation",
             zero_row_columns={

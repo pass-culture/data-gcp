@@ -10,4 +10,6 @@ select
     offer_category_id,
     total_category_booked_beneficiaries
 from {{ ref("exp_base__diversity_by_category") }}
-where {{ data_gouv_closed_month_filter("deposit_expiration_month") }}
+-- from May 2023: first expirations of the credits granted since the national
+-- opening in May 2021 (24-month credits); earlier ones are pilot cohorts
+where {{ data_gouv_month_filter("deposit_expiration_month", "2023-05-01") }}

@@ -14,6 +14,10 @@ models:
               - micro_density_label
       - dbt_utils.expression_is_true:
           arguments:
+            # all-zero cells are left out (see the model)
+            expression: "total_expired_deposit_beneficiaries > 0"
+      - dbt_utils.expression_is_true:
+          arguments:
             expression: "total_1plus_category_booked_beneficiaries <= total_expired_deposit_beneficiaries"
       - dbt_utils.expression_is_true:
           arguments:

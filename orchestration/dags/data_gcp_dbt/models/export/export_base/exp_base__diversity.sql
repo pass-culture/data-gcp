@@ -133,3 +133,7 @@ select
         null
     ) as total_distinct_venue_booked_at_expiration
 from perturbed
+-- a cell whose counts are all 0 had 1 to 5 young people (rows only exist for
+-- cells with at least one): left out, so that a missing combination reads as 0
+-- or a very small count. Sums are unchanged
+where total_expired_deposit_beneficiaries > 0

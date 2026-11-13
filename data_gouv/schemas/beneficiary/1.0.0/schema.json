@@ -1,8 +1,8 @@
 {
   "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
   "name": "pass-culture-beneficiary",
-  "title": "Bénéficiaires du pass Culture par mois et territoire",
-  "description": "Stock mensuel de bénéficiaires du volet individuel du pass Culture (jeunes ayant reçu un crédit individuel), et parmi eux des bénéficiaires actuels (crédit encore disponible), par territoire de résidence, âge, QPV et densité. Une ligne par mois et combinaison de dimensions.",
+  "title": "Bénéficiaires du passe Culture par mois et territoire",
+  "description": "Stock mensuel de bénéficiaires du volet individuel du passe Culture (jeunes ayant reçu un crédit individuel), et parmi eux des bénéficiaires actuels (crédit encore disponible), par territoire de résidence, âge, QPV et densité. Une ligne par mois et combinaison de dimensions.",
   "version": "1.0.0",
   "path": "https://raw.githubusercontent.com/pass-culture/data-gcp/master/data_gouv/schemas/beneficiary/1.0.0/schema.json",
   "homepage": "https://github.com/pass-culture/data-gcp/tree/master/data_gouv",
@@ -16,7 +16,8 @@
   ],
   "contributors": [
     {
-      "title": "pass Culture - Pôle données",
+      "title": "passe Culture - Pôle données",
+      "email": "donnees@passculture.app",
       "role": "author"
     }
   ],
@@ -94,12 +95,13 @@
     {
       "name": "age_at_calculation",
       "title": "Âge",
-      "description": "Âge révolu du bénéficiaire à la fin du mois d'observation. Un même jeune change donc de tranche d'âge au fil des mois. Vide si la date de naissance est inconnue. Quelques lignes présentent des âges hors 15-20 ans (dates de naissance déclarées incohérentes, ou bénéficiaires dont le crédit a expiré).",
+      "description": "Âge révolu du bénéficiaire au premier jour du mois d'observation : un jeune ayant reçu son crédit à 15 ans au cours du mois apparaît donc à 14 ans. Un même jeune change de tranche d'âge au fil des mois, et le stock comprenant tous les bénéficiaires depuis 2019, les âges dépassent 21 ans. Vide si la date de naissance est inconnue ou incohérente avec l'historique des crédits.",
       "type": "integer",
       "example": "18",
       "constraints": {
         "required": false,
-        "minimum": 0
+        "minimum": 14,
+        "maximum": 30
       }
     },
     {
@@ -155,7 +157,7 @@
     {
       "name": "total_beneficiaries",
       "title": "Nombre de bénéficiaires",
-      "description": "Nombre de jeunes ayant reçu au moins un crédit individuel du pass Culture à la fin du mois, que ce crédit soit encore disponible, entièrement dépensé ou expiré, et qu'ils aient ou non réservé. Les comptes supprimés sortent du stock. Les jeunes de 15-16 ans bénéficiant uniquement des offres gratuites (depuis mars 2025) ne sont pas comptés. Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "description": "Nombre de jeunes ayant reçu au moins un crédit individuel du passe Culture à la fin du mois, que ce crédit soit encore disponible, entièrement dépensé ou expiré, et qu'ils aient ou non réservé. Les comptes supprimés sortent du stock. Les jeunes de 15-16 ans bénéficiant uniquement des offres gratuites (depuis mars 2025) ne sont pas comptés. Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
       "type": "integer",
       "example": "723065",
       "constraints": {
@@ -166,7 +168,7 @@
     {
       "name": "total_actual_beneficiaries",
       "title": "Nombre de bénéficiaires actuels",
-      "description": "Nombre de bénéficiaires dont le crédit n'est ni expiré ni entièrement dépensé à la fin du mois (crédit encore disponible et âge limite d'utilisation non atteint). Sous-ensemble de total_beneficiaries : il ne lui est jamais supérieur. Effectif protégé par la méthode de perturbation des clés de cellule (Cell Key Method, recommandée par l'INSEE et Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "description": "Nombre de bénéficiaires dont le crédit n'est ni expiré ni entièrement dépensé à la fin du mois (crédit encore disponible et âge limite d'utilisation non atteint). Sous-ensemble de total_beneficiaries : il ne lui est jamais supérieur. Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
       "type": "integer",
       "example": "684122",
       "constraints": {

@@ -119,6 +119,7 @@ fetch_install_code = InstallDependenciesOperator(
     instance_name="{{ params.instance_name }}",
     branch="{{ params.branch }}",
     base_dir=BASE_PATH,
+    python_version="3.10",
     retries=2,
     dag=dag,
 )

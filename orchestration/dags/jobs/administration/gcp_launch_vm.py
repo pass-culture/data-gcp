@@ -96,7 +96,7 @@ with (
             "use_gke_network": Param(default=False, type="boolean"),
             "disk_size_gb": Param(default="100", type="string"),
             "python_version": Param(
-                default="'3.10'",
+                default="'3.12'",
                 enum=["'3.8'", "'3.9'", "'3.10'", "'3.11'", "'3.12'", "'3.13'"],
             ),
             "provisioning_model": Param(

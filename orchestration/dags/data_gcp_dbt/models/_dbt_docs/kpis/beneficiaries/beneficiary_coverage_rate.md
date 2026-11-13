@@ -55,6 +55,8 @@ ORDER BY b.partition_month, b.department_code, b.milestone_age
 
 **Monthly, over a rolling 12-month window.** Each `partition_month` counts the beneficiaries and the population of the 12 months ending with that month (`total_beneficiaries_last_12_months` / `total_population_last_12_months`).
 
+The series starts with the first complete 12-month window after the first credits (2019): months whose window is incomplete are not published. 2019-2021 figures cover the pilot phase (a few departments) before the national opening in May 2021.
+
 ### Data protection
 
 Beneficiary counts are protected using the [Cell Key Perturbation method](../../references/statistical_confidentiality.md). Population counts are public data and are not perturbed. Coverage rates computed on small departments may be slightly affected by the perturbation on the numerator.

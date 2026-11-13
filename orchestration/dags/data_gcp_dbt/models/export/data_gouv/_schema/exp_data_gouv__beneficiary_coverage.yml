@@ -12,7 +12,7 @@ models:
               - milestone_age
       - dbt_utils.expression_is_true:
           arguments:
-            # all-zero rows are not published (see the model)
+            # all-zero cells are left out of the base (see exp_base__beneficiary_coverage)
             expression: "total_beneficiaries_last_12_months > 0"
       - dbt_utils.expression_is_true:
           arguments:

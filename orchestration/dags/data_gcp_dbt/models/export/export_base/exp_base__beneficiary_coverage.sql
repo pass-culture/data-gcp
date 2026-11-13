@@ -23,4 +23,9 @@ from
     }}
 -- coverage 15+ to 18+ (milestone 16 to 19), the ages of the vidoc sheet and
 -- external_reporting; 19+ would only add late activations
-where s.milestone_age between 16 and 19
+where
+    s.milestone_age between 16 and 19
+    -- a cell whose counts are all 0 had 1 to 5 young people (rows only exist for
+    -- cells with at least one): left out, so that a missing combination reads as 0
+    -- or a very small count. Sums are unchanged
+    and s.total_beneficiaries_last_12_months + pt.perturbation > 0

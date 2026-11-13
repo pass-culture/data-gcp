@@ -96,6 +96,11 @@ A territory and month therefore show **exactly** the same counts in every tool, 
 
 Perturbing a total again (e.g. `perturb(department total)`) next to the sum of its perturbed cells would give two different values for the same figure, and comparing them helps to remove the noise. So a figure that can be computed from the base is never perturbed a second time. Only grains that the base does not hold are perturbed separately, with their own additive cell keys: EPCI and municipality levels of external reporting, and breakdowns of the active beneficiaries by gender or activity.
 
+The base also applies two rules for every tool:
+
+- **All-zero cells are left out.** Rows only exist for cells with at least one young person, so a published cell whose counts are all 0 would reveal a cell of 1 to 5 people perturbed to 0. Leaving it out makes a missing combination read as "0 or a very small count". Sums are unchanged. A diversity category is left out with its cell.
+- **Impossible ages are unknown.** In `exp_base__beneficiary`, an age that no credit history allows (inconsistent declared birth date) is merged into the unknown age (`null`) **before** perturbation, with the [`plausible_beneficiary_age`](https://github.com/pass-culture/data-gcp/blob/master/orchestration/dags/data_gcp_dbt/macros/export_base/plausible_beneficiary_age.sql) rule: ages are measured on the first day of the month, so 14 is possible until the March 2025 reform, then the youngest age grows by one year per year; the oldest is 19 in February 2019 plus one year per year.
+
 Exception: coverage figures of external reporting exclude French Polynesia (987), which has no INSEE population estimate, so their REG and NAT sums are lower than the sums of the published cells by the beneficiaries of 987.
 
 ### Parameters

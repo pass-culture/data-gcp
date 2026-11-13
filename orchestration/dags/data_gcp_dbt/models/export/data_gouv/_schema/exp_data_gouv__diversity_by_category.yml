@@ -15,7 +15,7 @@ models:
               - offer_category_id
       - dbt_utils.expression_is_true:
           arguments:
-            # all-zero rows are not published (see the model)
+            # all-zero cells are left out of the base (see exp_base__diversity_by_category)
             expression: "total_category_booked_beneficiaries > 0"
       - dbt_utils.expression_is_true:
           arguments:

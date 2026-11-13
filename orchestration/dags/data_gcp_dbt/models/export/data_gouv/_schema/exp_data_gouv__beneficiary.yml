@@ -15,7 +15,7 @@ models:
               - micro_density_label
       - dbt_utils.expression_is_true:
           arguments:
-            # all-zero rows are not published (see the model)
+            # all-zero cells are left out of the base (see exp_base__beneficiary)
             expression: "total_beneficiaries > 0"
       - dbt_utils.expression_is_true:
           arguments:
@@ -60,7 +60,7 @@ models:
         data_tests:
           - dbt_utils.expression_is_true:
               arguments:
-                # impossible ages are published as unknown (see the model)
+                # impossible ages are unknown in the base (see plausible_beneficiary_age)
                 expression: "age_at_calculation between 14 and 30"
               config:
                 where: "age_at_calculation is not null"

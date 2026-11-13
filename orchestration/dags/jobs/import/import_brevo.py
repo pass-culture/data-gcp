@@ -20,21 +20,20 @@ from common.utils import (
     depends_loop,
     get_airflow_schedule,
 )
-from dependencies.brevo.import_brevo import (
+from dependencies.sendinblue.import_sendinblue import (
     analytics_tables,
     clean_tables,
     raw_tables,
 )
 
-DAG_NAME = "import_brevo_v2"
-MICROSERVICE_PATH = "jobs/etl_jobs/jobs/brevo"
-SPARSE_PATHS = [
-    MICROSERVICE_PATH,
-    "jobs/etl_jobs/connectors",
-    "jobs/etl_jobs/http_tools",
-]
+DAG_NAME = "import_brevo"
+MICROSERVICE_PATH = "jobs/etl_jobs/external/brevo"
+MAIN_SCRIPT = "main.py"
 yesterday = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-
+dag_config = {
+    "GCP_PROJECT": GCP_PROJECT_ID,
+    "ENV_SHORT_NAME": ENV_SHORT_NAME,
+}
 
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 21),
@@ -48,15 +47,16 @@ with DAG(
     DAG_NAME,
     default_args=default_dag_args,
     description="Import brevo tables",
-    schedule=get_airflow_schedule("00 03 * * *" if ENV_SHORT_NAME == "prod" else None),
+    schedule=get_airflow_schedule("00 04 * * *")
+    if ENV_SHORT_NAME in ["prod", "prd", "stg"]
+    else get_airflow_schedule(None),
     catchup=False,
-    dagrun_timeout=datetime.timedelta(minutes=120),
+    dagrun_timeout=datetime.timedelta(minutes=240),
     user_defined_macros=macros.default,
     template_searchpath=DAG_FOLDER,
-    render_template_as_native_obj=True,
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
         ),
         "start_date": Param(
@@ -67,8 +67,6 @@ with DAG(
             default=yesterday,
             type="string",
         ),
-        "async": Param(default=True, type="boolean"),
-        "async_concurent": Param(default=5, type="integer"),
     },
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
 ) as dag:
@@ -80,16 +78,15 @@ with DAG(
         "runtime_image": "py313",
         "runtime_image_tag": "v1",
         "microservice_path": MICROSERVICE_PATH,
-        "runtime_sparse_paths": SPARSE_PATHS,
-        "runtime_workdir": MICROSERVICE_PATH,
-        "env_vars": {"PYTHONPATH": "/app/jobs/etl_jobs", "GCP_PROJECT": GCP_PROJECT_ID},
+        "service_account_name": f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
+        "env_vars": dag_config,
         "container_resources": DEFAULT_CONTAINER_RESOURCES,
     }
 
     import_pro_transactional_data_to_tmp = CustomKubernetesPodOperator(
         task_id="import_pro_transactional_data_to_tmp",
         arguments=[
-            "main.py",
+            MAIN_SCRIPT,
             "--target",
             "transactional",
             "--audience",
@@ -98,16 +95,14 @@ with DAG(
             "{{ params.start_date }}",
             "--end-date",
             "{{ params.end_date }}",
-            "{{ '--async --max-concurrent ' + params.async_concurent|string if params['async'] else '' }}",
         ],
-        do_xcom_push=True,
         **_kpo_common,
     )
 
     import_native_transactional_data_to_tmp = CustomKubernetesPodOperator(
         task_id="import_native_transactional_data_to_tmp",
         arguments=[
-            "main.py",
+            MAIN_SCRIPT,
             "--target",
             "transactional",
             "--audience",
@@ -116,9 +111,7 @@ with DAG(
             "{{ params.start_date }}",
             "--end-date",
             "{{ params.end_date }}",
-            "{{ '--async --max-concurrent ' + params.async_concurent|string if params['async'] else '' }}",
         ],
-        do_xcom_push=True,
         **_kpo_common,
     )
 
@@ -145,7 +138,7 @@ with DAG(
     import_pro_newsletter_data_to_raw = CustomKubernetesPodOperator(
         task_id="import_pro_newsletter_data_to_raw",
         arguments=[
-            "main.py",
+            MAIN_SCRIPT,
             "--target",
             "newsletter",
             "--audience",
@@ -155,14 +148,13 @@ with DAG(
             "--end-date",
             "{{ params.end_date }}",
         ],
-        do_xcom_push=True,
         **_kpo_common,
     )
 
     import_native_newsletter_data_to_raw = CustomKubernetesPodOperator(
         task_id="import_native_newsletter_data_to_raw",
         arguments=[
-            "main.py",
+            MAIN_SCRIPT,
             "--target",
             "newsletter",
             "--audience",
@@ -172,7 +164,6 @@ with DAG(
             "--end-date",
             "{{ params.end_date }}",
         ],
-        do_xcom_push=True,
         **_kpo_common,
     )
 

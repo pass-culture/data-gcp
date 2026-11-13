@@ -7,12 +7,15 @@ SECRET_VERSION = "latest"
 
 # BigQuery
 BQ_DATASET = f"raw_{ENV_SHORT_NAME}"
-BQ_LOCATION = "europe-west1"
+BQ_LOCATION = "europe-west9" if GCP_PROJECT_ID.startswith("pc-data-") else "europe-west1"
 STAGING_TABLE = "tmp_allocine_movie"
 RAW_TABLE = "allocine_movie"
 
 # GCS
-GCS_BUCKET = f"de-lake-{ENV_SHORT_NAME}"
+# The data lake bucket was renamed on the new (French) DC: "de-lake-eu-{env}" instead
+# of the legacy "de-lake-{env}". New-DC projects are prefixed with "pc-data-". This can
+# be simplified to the "de-lake-eu-" form once the migration is complete.
+GCS_BUCKET = f"de-lake-eu-{ENV_SHORT_NAME}" if GCP_PROJECT_ID.startswith("pc-data-") else f"de-lake-{ENV_SHORT_NAME}"
 POSTER_PREFIX = "allocine/movie/posters"
 
 # API

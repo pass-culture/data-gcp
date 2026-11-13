@@ -82,3 +82,6 @@ dags_in_paris:
   import_zendesk:
     source_dataset: raw
     tables_to_copy: [zendesk_macro_usage, zendesk_ticket, zendesk_survey_response] # per-partition ($yyyymmdd) WRITE_TRUNCATE daily loads -> copy history
+  import_metabase:
+    source_dataset: raw
+    tables_to_copy: []

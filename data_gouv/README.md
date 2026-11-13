@@ -19,11 +19,16 @@ The data comes from the dbt models `orchestration/dags/data_gcp_dbt/models/expor
    uv run dbt build --target prod --vars '{ENV_SHORT_NAME: prod}' --select path:models/export/data_gouv
    ```
 
-2. Export the CSV files (UTF-8, comma separated, ISO dates, empty cells for missing values):
+2. Export the CSV files (UTF-8, comma separated, ISO dates, empty cells for missing values). Data is published **each semester**: `--last-month` is the last published month (June or December); the dbt tables keep every closed month, the cut-off is only applied here.
 
    ```sh
-   uv run python -I data_gouv/export_csv.py --out-dir <dir>
+   uv run python -I data_gouv/export_csv.py --out-dir <dir> --last-month 2026-06
    ```
+
+   | Publication | `--last-month` |
+   |---|---|
+   | First (test, then real) | `2026-06` |
+   | January 2027 | `2026-12` |
 
 3. Check the files against their schemas:
 

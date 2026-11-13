@@ -1,8 +1,8 @@
 {
   "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
   "name": "pass-culture-beneficiary-coverage",
-  "title": "Bénéficiaires du pass Culture ayant atteint un âge sur 12 mois glissants",
-  "description": "Nombre de bénéficiaires du pass Culture ayant atteint un âge donné (16 à 19 ans) au cours des 12 derniers mois, par département de résidence. C'est le numérateur du taux de couverture : divisé par la population de cet âge estimée par l'INSEE sur la même période et le même territoire, il donne la part des jeunes ayant bénéficié du pass Culture. La population INSEE n'est pas republiée ici ; le code de calcul est public.",
+  "title": "Bénéficiaires du passe Culture ayant atteint un âge sur 12 mois glissants",
+  "description": "Nombre de bénéficiaires du passe Culture ayant atteint un âge donné (16 à 19 ans) au cours des 12 derniers mois, par département de résidence. C'est le numérateur du taux de couverture : divisé par la population de cet âge estimée par l'INSEE sur la même période et le même territoire, il donne la part des jeunes ayant bénéficié du passe Culture. La population INSEE n'est pas republiée ici ; le code de calcul est public.",
   "version": "1.0.0",
   "path": "https://raw.githubusercontent.com/pass-culture/data-gcp/master/data_gouv/schemas/beneficiary_coverage/1.0.0/schema.json",
   "homepage": "https://github.com/pass-culture/data-gcp/tree/master/data_gouv",
@@ -16,7 +16,7 @@
   ],
   "contributors": [
     {
-      "title": "pass Culture - Pôle données",
+      "title": "passe Culture - Pôle données",
       "email": "donnees@passculture.app",
       "role": "author"
     }
@@ -95,7 +95,7 @@
     {
       "name": "milestone_age",
       "title": "Âge atteint",
-      "description": "Âge (en années révolues) atteint par les jeunes au cours de la fenêtre de 12 mois. Un âge atteint de N ans correspond au taux de couverture « N-1+ » : 19 ans correspond au taux de couverture 18+, c'est-à-dire aux jeunes ayant bénéficié du pass Culture avant leurs 19 ans.",
+      "description": "Âge (en années révolues) atteint par les jeunes au cours de la fenêtre de 12 mois. Un âge atteint de N ans correspond au taux de couverture « N-1+ » : 19 ans correspond au taux de couverture 18+, c'est-à-dire aux jeunes ayant bénéficié du passe Culture avant leurs 19 ans.",
       "type": "integer",
       "example": "19",
       "constraints": {

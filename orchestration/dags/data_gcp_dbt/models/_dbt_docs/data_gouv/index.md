@@ -29,7 +29,7 @@ Every model reads the perturbed base `exp_base__*` (see [A single perturbed base
 
 ### Data protection
 
-Counts of people are protected with the [Cell Key Perturbation method](../references/statistical_confidentiality.md): a published count is 0 or >= 5, and nested counts are capped at their parent count. dbt tests on each model check the grain, the 0 or >= 5 rule, the nested caps and the code formats.
+Counts of people are protected with the [Cell Key Perturbation method](../references/statistical_confidentiality.md): a published count is 0 or >= 5, and nested counts are capped at their parent count. Rows whose counts are all 0 are left out: rows only exist for cells with at least one young person, so a published all-zero row would reveal a cell of 1 to 5 people perturbed to 0. A missing combination reads as 0 or a very small count; sums are unchanged. dbt tests on each model check the grain, the 0 or >= 5 rule, the nested caps and the code formats.
 
 ### Schemas
 

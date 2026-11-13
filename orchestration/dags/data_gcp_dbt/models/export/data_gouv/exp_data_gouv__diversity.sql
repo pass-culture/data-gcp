@@ -11,4 +11,8 @@ select
 from {{ ref("exp_base__diversity") }}
 -- from May 2023: first expirations of the credits granted since the national
 -- opening in May 2021 (24-month credits); earlier ones are pilot cohorts
-where {{ data_gouv_month_filter("deposit_expiration_month", "2023-05-01") }}
+-- a row whose counts are all 0 is a cell of 1 to 5 young people perturbed to 0:
+-- left out, so that a missing combination reads as 0 or a very small count
+where
+    {{ data_gouv_month_filter("deposit_expiration_month", "2023-05-01") }}
+    and total_expired_deposit_beneficiaries > 0

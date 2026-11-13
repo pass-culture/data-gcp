@@ -38,6 +38,7 @@ Le pass Culture respecte le secret statistique : aucune donnée publiée ne doit
 **Bénéficiaires** (ce jeu de données). Les effectifs sont protégés par la **méthode des clés aléatoires** (Cell Key Method), utilisée par l'INSEE et recommandée par Eurostat : un bruit est injecté dans toutes les cases à partir d'une clé aléatoire attachée à chaque individu. Les petits effectifs sont légèrement modifiés, tandis que les grands effectifs et les totaux restent quasiment exacts.
 
 - Une valeur publiée vaut toujours 0 ou au moins 5 : aucun effectif de 1 à 4 n'est publié.
+- Les lignes dont tous les effectifs valent 0 après perturbation ne sont pas publiées : une combinaison absente (mois, territoire, âge, catégorie…) correspond à 0 ou à un très petit effectif. Les totaux n'en sont pas modifiés.
 - Le bruit est au maximum de ±5 et de moyenne nulle : il se compense quand on additionne des lignes.
 - **Additionner les lignes (département, région, trimestre, année) avant de calculer un taux.** Un taux calculé sur une seule petite ligne peut être fortement bruité.
 - La somme des lignes d'un département ne correspond pas exactement à un total qui serait perturbé directement.

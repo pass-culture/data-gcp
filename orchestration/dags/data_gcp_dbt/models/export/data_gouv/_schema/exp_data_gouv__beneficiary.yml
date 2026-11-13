@@ -15,6 +15,10 @@ models:
               - micro_density_label
       - dbt_utils.expression_is_true:
           arguments:
+            # all-zero rows are not published (see the model)
+            expression: "total_beneficiaries > 0"
+      - dbt_utils.expression_is_true:
+          arguments:
             expression: "total_actual_beneficiaries <= total_beneficiaries"
       - dbt_utils.expression_is_true:
           arguments:

@@ -86,6 +86,7 @@ class MaterializedView(Enum):
     OFFER_METADATA = "offer_metadata_mv"
     ARTIST = "artist_mv"
     ARTIST_TOP_BY_CATEGORY = "artist_top_by_category_mv"
+    QPI_GTL_MAPPING = "qpi_gtl_mapping_mv"
 
 
 class SQLTableConfig:

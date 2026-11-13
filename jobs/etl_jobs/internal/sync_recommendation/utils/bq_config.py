@@ -31,6 +31,16 @@ BQ_TABLES_CONFIG: Dict[str, Dict] = {
         "cloud_sql_table_name": "enriched_user",
         "dataset_type": DatasetType.ML_RECO,
     },
+    "qpi_gtl_mapping": {
+        "columns": {
+            "ux_name": "character varying",
+            "backend_name": "character varying",
+            "gtl_label": "character varying",
+        },
+        "bigquery_table_name": "qpi_gtl_mapping",
+        "cloud_sql_table_name": "qpi_gtl_mapping",
+        "dataset_type": DatasetType.ML_RECO,
+    },
     "recommendable_offers_raw": {
         "columns": {
             "item_id": "character varying",

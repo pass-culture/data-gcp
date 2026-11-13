@@ -41,7 +41,7 @@ on:
         required: true
       CASSIS_API_KEY:
         required: false
-        description: "Cassis key with edit access to the analytics Cassis project; prod only (cassis dbt push)"
+        description: "Cassis key with edit access to the sandbox Cassis project (repo secret CASSIS_SANDBOX_API_KEY); prod only (cassis dbt push)"
 
 env:
   GCP_REGION: "europe-west1"
@@ -133,7 +133,7 @@ jobs:
           CASSIS_PROJECT_ID: ${{ vars.CASSIS_PROJECT_ID }}
         run: |
           if [ -z "$CASSIS_API_KEY" ] || [ -z "$CASSIS_PROJECT_ID" ]; then
-            echo "::notice::CASSIS_API_KEY or CASSIS_PROJECT_ID is not set: dbt artifacts not pushed to Cassis."
+            echo "::notice::secret CASSIS_SANDBOX_API_KEY or variable CASSIS_PROJECT_ID is not set: dbt artifacts not pushed to Cassis."
             exit 0
           fi
           uvx --no-build --from "cassis-cli==3.3.0" cassis dbt push target

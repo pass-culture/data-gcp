@@ -49,6 +49,11 @@ def load_encoder(encoder_name: str, gpu_count: int) -> SentenceTransformer:
         token=token,
         device=device,
         model_kwargs={"torch_dtype": precision},
+        # We only embed text: on a multimodal checkpoint (e.g. embeddinggemma-2),
+        # this skips instantiating/loading the vision and audio encoder weights
+        # entirely. config_kwargs values are ignored for a text-only encoder
+        # (e.g. embeddinggemma-300m) that has no such sub-configs.
+        config_kwargs={"vision_config": None, "audio_config": None},
     )
     encoder.max_seq_length = MAX_SEQ_LENGTH
     return encoder

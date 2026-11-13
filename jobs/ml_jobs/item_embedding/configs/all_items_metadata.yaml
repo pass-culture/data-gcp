@@ -6,8 +6,11 @@ features:
   - offer_label_concat
   - author_concat
   - offer_description
-encoder_name: "google/embeddinggemma-300m"
-prompt_name: "document"
+encoder_name: "google/embeddinggemma-2"
+prompt_name: "Clustering"
+preprocessors:
+  offer_name: "normalize_whitespace"
+  offer_description: "clean_description"
 labels:
   offer_name: "titre de l'offre"
   category_id: "catégorie"

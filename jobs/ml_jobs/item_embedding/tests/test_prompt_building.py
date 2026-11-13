@@ -44,6 +44,12 @@ class TestDefaultPrompt:
         vector = _vector(["offer_name", "category_id"], labels={"offer_name": "titre"})
         assert build_prompts(df, vector) == ["titre : Dune\ncategory_id : LIVRE"]
 
+    def test_integral_float_renders_without_decimal_point(self):
+        # pandas/pyarrow promotes a numeric column to float64 whenever any
+        # chunk has a null, so a present value like 2010 arrives as 2010.0.
+        df = pd.DataFrame({"year": [2010.0]})
+        assert build_prompts(df, _vector(["year"])) == ["year : 2010"]
+
 
 class TestTemplatePrompt:
     def test_renders_template(self):
@@ -77,10 +83,26 @@ class TestTemplatePrompt:
         assert build_prompts(df, vector) == [""]
 
     def test_template_referencing_undeclared_field_raises(self):
-        df = pd.DataFrame({"offer_name": ["Dune"]})
-        vector = _vector(["offer_name"], prompt_template="{offer_name} by {author}")
-        with pytest.raises(ValueError, match="unknown field"):
-            build_prompts(df, vector)
+        # The check now runs eagerly when the Vector is constructed (see
+        # src/config.py's model_validator), not lazily during build_prompts.
+        with pytest.raises(ValueError, match="prompt_template references field"):
+            _vector(["offer_name"], prompt_template="{offer_name} by {author}")
+
+    def test_integral_float_renders_without_decimal_point(self):
+        # pandas/pyarrow promotes a numeric column to float64 whenever any
+        # chunk has a null, so a present value like 2010 arrives as 2010.0.
+        df = pd.DataFrame({"offer_name": ["Dune"], "year": [2010.0]})
+        vector = _vector(
+            ["offer_name", "year"], prompt_template="{offer_name} ({year})"
+        )
+        assert build_prompts(df, vector) == ["Dune (2010)"]
+
+    def test_non_integral_float_keeps_decimal_point(self):
+        df = pd.DataFrame({"offer_name": ["Dune"], "rating": [3.5]})
+        vector = _vector(
+            ["offer_name", "rating"], prompt_template="{offer_name} ({rating})"
+        )
+        assert build_prompts(df, vector) == ["Dune (3.5)"]
 
     def test_multiline_template_joined_with_space(self):
         df = pd.DataFrame(

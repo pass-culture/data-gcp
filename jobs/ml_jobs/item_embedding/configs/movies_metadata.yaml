@@ -7,8 +7,8 @@ features:
   - allocine_genres_concat
   - countries_concat
   - production_year
-encoder_name: "google/embeddinggemma-300m"
-prompt_name: "document"
+encoder_name: "google/embeddinggemma-2"
+prompt_name: "Clustering"
 preprocessors:
   offer_name: "normalize_whitespace"
   offer_description: "clean_description"

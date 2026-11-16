@@ -58,8 +58,8 @@ select
     privacy_consent_type,
     privacy_consent_value,
     session_engaged,
-    nullif(geo_region, "") as geo_region,
-    concat(user_pseudo_id, "-", ga_session_id) as unique_session_id
+    concat(user_pseudo_id, "-", ga_session_id) as unique_session_id,
+    nullif(geo_region, "") as geo_region
 from {{ ref("int_firebase__institutional_event_flattened") }}
 where
     device_hostname = "pass.culture.fr"

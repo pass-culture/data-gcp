@@ -65,6 +65,9 @@ from src.linkage.product_linking import (
     get_products_to_remove_and_link_df,
     sanity_check_product_links,
 )
+from src.linkage.wiki_link_preservation import (
+    preserve_wiki_links_replaced_by_compatible_artists,
+)
 
 app = typer.Typer()
 
@@ -329,6 +332,18 @@ def link_new_products(
         preproc_linked_products_df=preproc_linked_products_df,
         artist_df=artist_df,
         product_artist_link_df=product_artist_link_df,
+    )
+
+    # 6bis. TEMPORARY: do not replace a Wikidata artist link by a compatible
+    # non-Wikidata artist (e.g. "Olivier Kempf" -> "Kempf") until product
+    # artist names are remediated.
+    delta_product_df, delta_artist_df = (
+        preserve_wiki_links_replaced_by_compatible_artists(
+            delta_product_df=delta_product_df,
+            delta_artist_df=delta_artist_df,
+            artist_df=artist_df,
+            wiki_df=wiki_df,
+        )
     )
 
     # 7. Sanity check for consistency

@@ -127,8 +127,6 @@ with
             base.image,
             base.offer_creation_date,
             base.author_concat,
-            -- base hash + the AlloCiné fields used in the movies prompt, so
-            -- AlloCiné-only changes also trigger a re-embed.
             format(
                 '%016x',
                 farm_fingerprint(
@@ -148,6 +146,7 @@ with
         left join product_metadata as prod on base.item_id = prod.item_id
         where
             starts_with(base.item_id, 'product')
+            and nullif(trim(base.offer_name), '') is not null
             and (
                 (
                     base.category_id = 'CINEMA'
@@ -166,12 +165,7 @@ with
             )
     )
 
--- to_embed compares against this vector's own merged table, not all_items_metadata's.
-select
-    movies.*,
-    (
-        past.item_id is null or movies.content_hash != coalesce(past.content_hash, '')
-    ) as to_embed
+select movies.*, {{ to_embed_condition("movies", "past") }} as to_embed
 from movies
 left join
     {{ ref("ml_semantic_embedding__movies_metadata") }} as past

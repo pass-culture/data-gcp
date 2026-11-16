@@ -1,6 +1,5 @@
 {{ config(materialized="view") }}
 
--- to_embed compares against this vector's own merged table, not all_items_metadata's.
 select
     base.item_id,
     base.subcategory_id,
@@ -11,9 +10,7 @@ select
     base.offer_creation_date,
     base.content_hash,
     base.author_concat,
-    (
-        past.item_id is null or base.content_hash != coalesce(past.content_hash, '')
-    ) as to_embed,
+    {{ to_embed_condition("base", "past") }} as to_embed,
     -- non-null and non-empty Titelive GTL levels joined as a flat comma-separated list.
     nullif(
         array_to_string(
@@ -42,3 +39,4 @@ where
     starts_with(base.item_id, 'product')
     and base.category_id = 'LIVRE'
     and base.subcategory_id = 'LIVRE_PAPIER'
+    and nullif(trim(base.offer_name), '') is not null

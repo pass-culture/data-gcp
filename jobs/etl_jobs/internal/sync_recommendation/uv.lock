@@ -8,7 +8,7 @@ resolution-markers = [
 
 [manifest]
 constraints = [
-    { name = "certifi", specifier = ">=2026.10.18" },
+    { name = "certifi", specifier = ">=2026.10.19" },
     { name = "cryptography", specifier = ">=50.0.0" },
     { name = "httplib2", specifier = ">=0.32.0" },
     { name = "idna", specifier = ">=3.15" },

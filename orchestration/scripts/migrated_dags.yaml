@@ -51,9 +51,11 @@ dags_in_paris:
     tables_to_copy: [apple_download_stats, google_download_stats] # delete+append by date window on raw tables -> copy history
   import_intraday_firebase_data:
     source_dataset: raw
+    file: dags/jobs/import/import_firebase.py # one file defines both firebase DAGs -> deploy it explicitly
     tables_to_copy: [firebase_events, firebase_pro_events, firebase_institutional_events, firebase_ios_performance, firebase_android_performance] # daily partitioned event/perf loads -> irreplaceable history to copy
   import_daily_firebase_data:
     source_dataset: raw
+    file: dags/jobs/import/import_firebase.py # same file as import_intraday_firebase_data
     tables_to_copy: [] # writes the same raw.firebase_* tables as import_intraday_firebase_data -> copy once via that entry
   import_gcs_seed:
     source_dataset: seed

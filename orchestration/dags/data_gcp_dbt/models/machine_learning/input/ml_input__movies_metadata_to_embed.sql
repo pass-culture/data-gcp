@@ -99,48 +99,80 @@ with
                 ''
             ) as directors_concat
         from {{ ref("int_applicative__product") }}
+    ),
+
+    movies as (
+        select
+            prod.production_year,
+            prod.product_title,
+            prod.original_title,
+            prod.product_type,
+            prod.visa,
+            prod.synopsis,
+            prod.backlink_url,
+            prod.poster_url,
+            prod.allocine_id,
+            prod.release_date,
+            prod.runtime,
+            prod.allocine_genres_concat,
+            prod.cast_concat,
+            prod.countries_concat,
+            prod.companies_concat,
+            prod.directors_concat,
+            base.item_id,
+            base.subcategory_id,
+            base.category_id,
+            base.offer_name,
+            base.offer_description,
+            base.image,
+            base.offer_creation_date,
+            base.author_concat,
+            -- base hash + the AlloCiné fields used in the movies prompt, so
+            -- AlloCiné-only changes also trigger a re-embed.
+            format(
+                '%016x',
+                farm_fingerprint(
+                    to_json_string(
+                        struct(
+                            base.content_hash,
+                            prod.allocine_genres_concat,
+                            prod.cast_concat,
+                            prod.countries_concat,
+                            prod.directors_concat,
+                            prod.production_year
+                        )
+                    )
+                )
+            ) as content_hash
+        from {{ ref("ml_input__all_items_metadata_to_embed") }} as base
+        left join product_metadata as prod on base.item_id = prod.item_id
+        where
+            starts_with(base.item_id, 'product')
+            and (
+                (
+                    base.category_id = 'CINEMA'
+                    and base.subcategory_id in (
+                        'SEANCE_CINE',
+                        'CINE_PLEIN_AIR',
+                        'EVENEMENT_CINE',
+                        'FESTIVAL_CINE'
+                    )
+                )
+                or (
+                    base.category_id = 'FILM'
+                    and base.subcategory_id
+                    in ('SUPPORT_PHYSIQUE_FILM', 'VOD', 'AUTRE_SUPPORT_NUMERIQUE')
+                )
+            )
     )
 
+-- to_embed compares against this vector's own merged table, not all_items_metadata's.
 select
-    prod.production_year,
-    prod.product_title,
-    prod.original_title,
-    prod.product_type,
-    prod.visa,
-    prod.synopsis,
-    prod.backlink_url,
-    prod.poster_url,
-    prod.allocine_id,
-    prod.release_date,
-    prod.runtime,
-    prod.allocine_genres_concat,
-    prod.cast_concat,
-    prod.countries_concat,
-    prod.companies_concat,
-    prod.directors_concat,
-    base.item_id,
-    base.subcategory_id,
-    base.category_id,
-    base.offer_name,
-    base.offer_description,
-    base.image,
-    base.offer_creation_date,
-    base.content_hash,
-    base.to_embed,
-    base.author_concat
-from {{ ref("ml_input__all_items_metadata_to_embed") }} as base
-left join product_metadata as prod on base.item_id = prod.item_id
-where
-    starts_with(base.item_id, 'product')
-    and (
-        (
-            base.category_id = 'CINEMA'
-            and base.subcategory_id
-            in ('SEANCE_CINE', 'CINE_PLEIN_AIR', 'EVENEMENT_CINE', 'FESTIVAL_CINE')
-        )
-        or (
-            base.category_id = 'FILM'
-            and base.subcategory_id
-            in ('SUPPORT_PHYSIQUE_FILM', 'VOD', 'AUTRE_SUPPORT_NUMERIQUE')
-        )
-    )
+    movies.*,
+    (
+        past.item_id is null or movies.content_hash != coalesce(past.content_hash, '')
+    ) as to_embed
+from movies
+left join
+    {{ ref("ml_semantic_embedding__movies_metadata") }} as past
+    on movies.item_id = past.item_id

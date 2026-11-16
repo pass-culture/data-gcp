@@ -15,8 +15,8 @@ Ce jeu de données en est la première étape : il porte sur les jeunes bénéfi
 | Fichier | Contenu | Granularité |
 |---|---|---|
 | `beneficiary.csv` | Nombre de bénéficiaires et de bénéficiaires actuels (crédit encore disponible), en stock à la fin de chaque mois | Mois × département × âge × QPV × densité |
-| `beneficiary_coverage.csv` | Nombre de bénéficiaires ayant atteint un âge donné (16 à 19 ans) sur 12 mois glissants : numérateur du taux de couverture | Mois × département × âge atteint |
-| `diversity.csv` | Bénéficiaires dont le crédit a expiré dans le mois, et parmi eux ceux ayant réservé dans au moins 3 catégories d'offres | Mois d'expiration × département × QPV × densité |
+| `beneficiary_coverage.csv` | Nombre de bénéficiaires ayant atteint un âge donné (de 16 à 19 ans inclus) sur 12 mois glissants : numérateur du taux de couverture | Mois × département × âge atteint |
+| `diversity.csv` | Bénéficiaires dont le crédit a expiré dans le mois, et parmi eux ceux ayant réservé dans au moins 3 catégories d'offres (3 ou plus) | Mois d'expiration × département × QPV × densité |
 | `diversity_by_category.csv` | Pour chaque catégorie d'offre, bénéficiaires dont le crédit a expiré dans le mois et ayant réservé dans cette catégorie | Mois d'expiration × département × QPV × densité × catégorie |
 
 Chaque ressource est décrite par un schéma de données (Table Schema) qui définit chaque colonne : voir l'onglet « Schéma » de la ressource ou le [dépôt du code](https://github.com/pass-culture/data-gcp/tree/master/data_gouv).
@@ -37,13 +37,13 @@ Le passe Culture respecte le secret statistique : aucune donnée publiée ne doi
 
 **Bénéficiaires** (ce jeu de données). Les effectifs sont protégés par la **méthode des clés aléatoires** (Cell Key Method), utilisée par l'INSEE et recommandée par Eurostat : un bruit est injecté dans toutes les cases à partir d'une clé aléatoire attachée à chaque individu. Les petits effectifs sont légèrement modifiés, tandis que les grands effectifs et les totaux restent quasiment exacts.
 
-- Une valeur publiée vaut toujours 0 ou au moins 5 : aucun effectif de 1 à 4 n'est publié.
+- Une valeur publiée vaut toujours 0 ou au moins 5 : aucun effectif de 1 à 4 (bornes incluses) n'est publié.
 - Les lignes dont tous les effectifs valent 0 après perturbation ne sont pas publiées : une combinaison absente (mois, territoire, âge, catégorie…) correspond à 0 ou à un très petit effectif. Les totaux n'en sont pas modifiés.
-- Le bruit est au maximum de ±5 et de moyenne nulle : il se compense quand on additionne des lignes.
+- Le bruit est au maximum de ±5 en valeur absolue (borne incluse : un effectif peut être modifié de -5 à +5) et de moyenne nulle : il se compense quand on additionne des lignes.
 - **Additionner les lignes (département, région, trimestre, année) avant de calculer un taux.** Un taux calculé sur une seule petite ligne peut être fortement bruité.
 - La somme des lignes d'un département ne correspond pas exactement à un total qui serait perturbé directement.
 
-**Partenaires culturels et retombées économiques** (prochaines publications). Pour préserver la confidentialité commerciale, aucune donnée n'est publiée pour une zone géographique qui, sur les 6 ou 48 derniers mois, compte moins de trois partenaires culturels actifs, ou dans laquelle un partenaire concentre plus de 85 % du chiffre d'affaires local.
+**Partenaires culturels et retombées économiques** (prochaines publications). Pour préserver la confidentialité commerciale, aucune donnée n'est publiée pour une zone géographique qui, sur les 6 ou 48 derniers mois, compte strictement moins de trois partenaires culturels actifs (0, 1 ou 2 partenaires ; avec exactement 3 partenaires, ce seuil est respecté), ou dans laquelle un partenaire concentre strictement plus de 85 % du chiffre d'affaires local.
 
 Détail de la méthode : [secret statistique](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/) (en anglais).
 
@@ -59,15 +59,15 @@ Détail de la méthode : [secret statistique](https://pass-culture.github.io/dat
 
 ## Lexique
 
-- **Crédit** : dotation octroyée à un bénéficiaire. 2019-2021 : 500 € à 18 ans (24 mois). Mai 2021 à février 2025 : 300 € à 18 ans (24 mois) ; 20 € à 15 ans, 30 € à 16 et 17 ans. Depuis mars 2025 : 150 € à 18 ans et 50 € à 17 ans (cumulables, valables jusqu'à la veille des 21 ans), plus une bonification de 50 € à 18 ans sous condition de ressources ou en situation de handicap.
+- **Crédit** : dotation octroyée à un bénéficiaire. 2019-2021 : 500 € à 18 ans (24 mois). Mai 2021 à février 2025 : 300 € à 18 ans (24 mois) ; 20 € à 15 ans, 30 € à 16 et 17 ans. Depuis mars 2025 : 150 € à 18 ans et 50 € à 17 ans (cumulables, valables jusqu'à la veille des 21 ans), plus une bonification de 50 € à 18 ans sous condition de ressources ou en situation de handicap, mise en œuvre depuis le 2 septembre 2026 et attribuée rétroactivement à compter du 1er mars 2025.
 - **Expiration** : au bout de 2 ans pour les crédits 18 ans antérieurs à mars 2025 ; à la veille des 21 ans pour les crédits 17-18 ans depuis mars 2025.
 - **QPV** : quartier prioritaire de la politique de la ville.
-- **Densité** : grille communale de densité de l'INSEE (7 niveaux, regroupés en « urbain » pour les niveaux 1 à 4 et « rural » pour les niveaux 5 à 7).
+- **Densité** : grille communale de densité de l'INSEE (7 niveaux, regroupés en « urbain » pour les niveaux 1 à 4 inclus et « rural » pour les niveaux 5 à 7 inclus).
 - **Catégorie d'offre** : catégorie renseignée par le partenaire culturel lors de la création de l'offre sur le portail passe Culture.
 
 ## Mise à jour et source
 
-Les données proviennent de l'entrepôt de données de la SAS passe Culture, alimenté par les données applicatives (inscriptions, crédits, réservations). Le jeu de données est mis à jour chaque semestre, avec les données jusqu'à fin juin et fin décembre. Les séries commencent en mai 2021, date de la généralisation du volet individuel à 18 ans (la phase d'expérimentation de 2019 à 2021 n'est pas publiée) ; les indicateurs à l'expiration du crédit (`diversity.csv`, `diversity_by_category.csv`) commencent en mai 2023, avec l'expiration des premiers crédits octroyés depuis la généralisation. Le code de production des données est public : [pass-culture/data-gcp](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv).
+Les données proviennent de l'entrepôt de données de l'opérateur passe Culture, alimenté par les données applicatives (inscriptions, crédits, réservations). Le jeu de données est mis à jour chaque semestre, avec les données jusqu'à fin juin et fin décembre. Les séries commencent en mai 2021, date de la généralisation du volet individuel à 18 ans (la phase d'expérimentation de 2019 à 2021 n'est pas publiée) ; les indicateurs à l'expiration du crédit (`diversity.csv`, `diversity_by_category.csv`) commencent en mai 2023, avec l'expiration des premiers crédits octroyés depuis la généralisation. Le code de production des données est public : [pass-culture/data-gcp](https://github.com/pass-culture/data-gcp/tree/master/orchestration/dags/data_gcp_dbt/models/export/data_gouv).
 
 Producteur : passe Culture, Pôle données.
 

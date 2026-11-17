@@ -8,8 +8,9 @@ from common.config import (
 )
 from common.utils import one_line_query
 
-
 # TODO: rename table in task_id
+
+
 def bigquery_job_task(dag, table, job_params, extra_params={}):
     return BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,
@@ -54,9 +55,10 @@ def bigquery_view_task(dag, table, job_params, extra_params={}, exists_ok=True):
     )
 
 
-def bigquery_federated_query_task(dag, task_id, job_params):
+def bigquery_federated_query_task(dag, task_id, job_params, location=None):
     return BigQueryInsertJobOperator(
         task_id=task_id,
+        location=location,
         configuration={
             "query": {
                 "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', ''' {one_line_query(job_params['sql'])} ''')""",

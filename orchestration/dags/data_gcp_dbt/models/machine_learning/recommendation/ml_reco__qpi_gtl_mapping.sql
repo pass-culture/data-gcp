@@ -1,13 +1,3 @@
--- Static mapping between the QPI ("Quiz de Préférences Initial") UX category
--- names shown to users during onboarding and the raw Titelive GTL labels they
--- correspond to. backend_name is the backend ("Nom BDD") identifier associated
--- to each UX name (ux_name and backend_name are 1:1). A backend_name can map
--- to several gtl_labels (e.g. "CULTURE" covers 4 labels), so this table has
--- one row per (ux_name, backend_name, gtl_label) tuple.
--- "Aucun" rows (LIVRES_AUCUN, MUSIQUES_AUCUN) carry an empty gtl_labels array,
--- so they surface as a single row with gtl_label null after the unnest below.
--- Downstream, recommendation_v2 resolves backend_name -> gtl_label via
--- qpi_gtl_mapping_mv to filter Vertex AI retrieval candidates on gtl_l2.
 with
     qpi_mapping as (
         select ux_name, backend_name, gtl_label
@@ -18,15 +8,34 @@ with
                     struct(
                         'Mangas ou BD' as ux_name,
                         'MANGAS' as backend_name,
-                        ['Bandes dessinées / Comics / Mangas'] as gtl_labels
+                        [
+                            'Manga / Manhwa / Man Hua',
+                            'BD généralités',
+                            'Bandes dessinées',
+                            'Comics',
+                            'Art / Illustration'
+                        ] as gtl_labels
                     ),
-                    struct('Romance', 'ROMANCE', ['Romance']),
+                    struct(
+                        'Romance',
+                        'ROMANCE',
+                        [
+                            'Romance autre',
+                            'Romance contemporaine',
+                            'Romance suspense',
+                            'Romance historique',
+                            'Romance paranormale',
+                            'Comédie romantique',
+                            'Romance Erotique',
+                            'Dark Romance'
+                        ]
+                    ),
                     struct(
                         'Fantasy ou SF',
                         'FANTASY',
-                        ['Science-fiction / Fantastique / Terreur']
+                        ['Fantasy', 'Fantastique / Terreur', 'Science-fiction']
                     ),
-                    struct('Thriller ou Polar', 'THRILLER', ['Thriller / Policier']),
+                    struct('Thriller ou Polar', 'THRILLER', ['Thriller', 'Policier']),
                     struct(
                         'Romans ou Classiques',
                         'ROMANS',
@@ -42,66 +51,114 @@ with
                         'Société ou Actualités',
                         'SOCIETE',
                         [
-                            'Biographie / Témoignage littéraire',
+                            'Littérature argumentative',
                             'Actualités & Reportages',
-                            'Littérature argumentative / politique / sciences sociales'
+                            'Sciences sociales  / Société',
+                            'Sciences politiques & Politique'
                         ]
                     ),
                     struct(
                         'Philo ou Psycho',
                         'PHILOSOPHIE',
-                        [
-                            'Vie quotidienne / Bien-être / Psychologie',
-                            'Philosophie / Sciences'
-                        ]
+                        ['Philosophie', 'Psychologie / Psychanalyse']
                     ),
                     struct(
                         'Culture, Arts ou Sport',
                         'CULTURE',
                         [
-                            'Musique / Art / Architecture',
-                            'Humour',
-                            'Sports',
-                            'Arts de la table / Gastronomie / maison'
+                            'Art / Illustration',
+                            'Art éphémère',
+                            "Arts de l'image",
+                            'Arts de la table / Gastronomie',
+                            'Arts du spectacle',
+                            'Arts et civilisations',
+                            'Sports'
                         ]
                     ),
                     struct(
                         'Histoire ou Voyages',
                         'HISTOIRE',
-                        [
-                            'Histoire / Archéologie',
-                            'Géographie / Tourisme / Voyages',
-                            'Nature & Plein air',
-                            'Animaux'
-                        ]
+                        ['Histoire', 'Archéologie', 'Géographie', 'Géographie du monde']
                     ),
                     struct('Aucun', 'LIVRES_AUCUN', cast([] as array<string>)),
 
                     -- MUSIQUE
-                    struct('Rap ou RnB', 'RAP', ['Rap / RnB / Hip-hop']),
-                    struct('Pop rock ou Variétés', 'POP', ['Pop / Rock / Variétés']),
+                    struct(
+                        'Rap ou RnB',
+                        'RAP',
+                        [
+                            'Compilations Rap',
+                            'Rap / Hip Hop',
+                            'Rap / Hip Hop américain',
+                            'Rap / Hip Hop francophone',
+                            'Rap / Hip Hop international',
+                            'Rap instrumental / DJing',
+                            'RNB francophone',
+                            'RNB international'
+                        ]
+                    ),
+                    struct(
+                        'Pop rock ou Variétés',
+                        'POP',
+                        [
+                            'Pop',
+                            'Pop 60s',
+                            'Pop francophone',
+                            'Pop internationale',
+                            'Pop rétro francophone',
+                            'Pop rétro internationale',
+                            'Variété européenne',
+                            'Variété francophone',
+                            'Variété internationale',
+                            'Variété rétro francophone',
+                            'Variété rétro internationale',
+                            'Variétés'
+                        ]
+                    ),
                     struct(
                         'Electro ou Techno',
                         'ELECTRO',
-                        ['Electro / techno / house music']
+                        ['Electro', 'Electro francophone / French Touch', 'Techno']
                     ),
-                    struct('Hard rock ou Metal', 'METAL', ['Hard-rock / Metal / Punk']),
+                    struct(
+                        'Hard rock ou Metal',
+                        'METAL',
+                        [
+                            'Hard Rock / Heavy Metal',
+                            'Metal / Fusion',
+                            'Metal / Fusion francophone',
+                            'Punk / Hardcore',
+                            'Punk / Hardcore francophone'
+                        ]
+                    ),
                     struct(
                         'Musique de Films ou Spectacles',
                         'FILMS',
-                        ['Musique de films', 'Comédies musicales']
+                        ['Comédies musicales / Spectacles', 'Musique de Films']
                     ),
                     struct(
                         'Jazz ou Musique du Monde',
                         'JAZZ',
                         [
-                            'Jazz / blues / Gospel / Lounge',
-                            'Musiques du monde',
-                            'Country / Folk'
+                            'Jazz',
+                            'Jazz / Blues',
+                            'Jazz Rock / Fusion / Funk',
+                            'Jazz contemporain / Cool',
+                            'Jazz manouche',
+                            'Jazz vocal',
+                            'Compilations Jazz / Blues'
                         ]
                     ),
                     struct(
-                        'Classique', 'CLASSIQUE', ['Classique / Baroque / Ancienne']
+                        'Classique',
+                        'CLASSIQUE',
+                        [
+                            'Musique Classique',
+                            'Musique ancienne',
+                            'Musique baroque',
+                            'Messes / Requiems / Passions',
+                            'Opéra / Opérette / Chant lyrique'
+                        ]
                     ),
                     struct('Aucun', 'MUSIQUES_AUCUN', cast([] as array<string>))
                 ]

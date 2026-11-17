@@ -6,7 +6,9 @@ from typing import TypedDict
 import pandas as pd
 
 from src.linkage.constants import (
+    ARTIST_NAME_SORTED_TO_MATCH_KEY,
     ARTIST_NAME_TO_FILTER,
+    ARTIST_NAME_TO_MATCH_KEY,
     PRODUCT_ID_KEY,
     TOTAL_OFFER_COUNT,
 )
@@ -428,6 +430,56 @@ def extract_artist_name(artist_name: str) -> str:
         return reordered_name
 
 
+def build_order_insensitive_name_key(name: str | None) -> str | None:
+    """
+    [PERMANENT] Build a word-order-insensitive key from an (already extracted) artist name.
+
+    Needed since Titelive lists contributors as "Lastname Firstname".
+
+    Tokens are split on whitespace, hyphens and dots, lowercased and sorted
+    alphabetically, so that "Lastname Firstname" and "Firstname Lastname" share
+    the same key (e.g. "verdon john" and "john verdon" -> "john verdon").
+    Mirrors `normalized_artist_name` in dbt `int_applicative__artist`.
+
+    Args:
+        name: The artist name (typically the output of `extract_artist_name`).
+
+    Returns:
+        The sorted-token key, or None if the name is empty / not a string.
+    """
+    if not isinstance(name, str):
+        return None
+    tokens = [token for token in re.split(r"[\s\-\.]+", name.lower()) if token]
+    if not tokens:
+        return None
+    return " ".join(sorted(tokens))
+
+
+def add_order_insensitive_name_key(
+    input_df: pd.DataFrame,
+    source_column: str = ARTIST_NAME_TO_MATCH_KEY,
+    target_column: str = ARTIST_NAME_SORTED_TO_MATCH_KEY,
+) -> pd.DataFrame:
+    """
+    [PERMANENT] Add a word-order-insensitive matching key column computed from `source_column`.
+
+    Args:
+        input_df: DataFrame containing `source_column`.
+        source_column: Column holding the extracted artist name.
+        target_column: Name of the column to create.
+
+    Returns:
+        The DataFrame with `target_column` added.
+    """
+    return input_df.assign(
+        **{
+            target_column: lambda df: df[source_column]
+            .map(build_order_insensitive_name_key)
+            .astype(object)
+        }
+    )
+
+
 def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
     """
     Extract and clean artist names from input DataFrame for matching purposes.
@@ -438,11 +490,13 @@ def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
                                an 'artist_name' column.
     Returns:
         pd.DataFrame: Filtered DataFrame with an additional 'artist_name_to_match' column
-                     containing cleaned artist names. Rows with null artist names or
-                     names in the filter list are excluded.
+                     containing cleaned artist names, and an 'artist_name_sorted_to_match'
+                     column (word-order-insensitive key used for joins). Rows with null
+                     artist names or names in the filter list are excluded.
     Notes:
         - Applies name cleaning via the clean_names pipeline
         - Extracts artist names using extract_artist_name function
+        - Builds the order-insensitive key via build_order_insensitive_name_key
         - Filters out rows where artist_name_to_match is null
         - Excludes rows where either artist_name or artist_name_to_match
           are in ARTIST_NAME_TO_FILTER list
@@ -457,6 +511,9 @@ def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
         .loc[lambda df: df.artist_name_to_match.notna()]
         .loc[lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)]
         .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
+        # [PERMANENT] Add the order-insensitive key used as join key downstream.
+        .pipe(add_order_insensitive_name_key)
+        .loc[lambda df: df[ARTIST_NAME_SORTED_TO_MATCH_KEY].notna()]
     )
 
 

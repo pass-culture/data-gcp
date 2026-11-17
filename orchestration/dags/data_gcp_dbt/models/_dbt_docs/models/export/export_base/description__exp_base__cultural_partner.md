@@ -13,7 +13,7 @@ The `exp_base__cultural_partner` table holds the monthly active and cumulative a
 
 ## Table description
 
-Partner lists are public: counts are **not perturbed** and **not under statistical secret**, in every tool. The business secret applies only to bookings and revenue measured on the venue geography.
+Partner counts are **out of scope of the statistical secret**, by rule and in every tool. The secret (INSEE rule: at least 3 businesses, none above 85% of the value) protects the economic values of a business, such as revenue and amounts, not counts of establishments, and partner lists are public. Venues are not people, so cell key perturbation does not apply either. The secret applies to bookings and revenue measured on the venue geography.
 
 A venue has one location, so cells are additive: every tool sums them.
 

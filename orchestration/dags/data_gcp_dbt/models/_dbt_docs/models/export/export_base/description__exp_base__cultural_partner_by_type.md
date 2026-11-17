@@ -7,7 +7,7 @@ description: Description of the `exp_base__cultural_partner_by_type` table, the 
 
 # Table: Cultural partners by venue type (export base)
 
-The `exp_base__cultural_partner_by_type` table holds the monthly active and cumulative activated cultural partners by venue type and venue geography, at the finest grain (municipality). Counts are not perturbed and not under statistical secret (partner lists are public).
+The `exp_base__cultural_partner_by_type` table holds the monthly active and cumulative activated cultural partners by venue type and venue geography, at the finest grain (municipality). Counts are out of scope of the statistical secret, which protects economic values of a business, not counts of establishments (see [exp_base__cultural_partner](description__exp_base__cultural_partner.md)).
 
 {% enddocs %}
 

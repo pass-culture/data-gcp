@@ -20,6 +20,6 @@ Each row represents the cultural partner indicators for a month and a partner de
 - Channel split: `individual = individual_only + dual_part`, `collective = collective_only + dual_part`, `global = individual_only + collective_only + dual_part` (also for the cumulative columns).
 - All months from `2022-01` are present, as in external_reporting. The bookable offer history starts on 2022-06-10: months before 2022-06 are zero and the 365-day window is truncated until 2023-05. The current month is computed up to today and changes until the month is closed.
 - Overseas collectivities outside any region (Saint-Pierre-et-Miquelon `975`, Saint-Martin `978`, Nouvelle-Calédonie `988`) and non-located partners (`980`) have `partner_region_code = '-1'`: they are counted in the national total but in no region.
-- Counts are not perturbed and not under statistical secrecy: partner lists are public.
+- Counts are out of scope of the statistical secret, which protects economic values of a business (revenue, amounts), not counts of establishments; partner lists are public.
 
 {% docs table__exp_vidoc__cultural_partner %}{% enddocs %}

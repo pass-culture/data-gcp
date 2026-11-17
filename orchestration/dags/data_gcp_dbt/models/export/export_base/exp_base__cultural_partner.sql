@@ -1,7 +1,9 @@
 {#
     Active and cumulative activated cultural partners (venues) by month and venue
-    geography, at the finest grain (municipality). Partner lists are public:
-    counts are not perturbed and not under statistical secret. Venue counts are
+    geography, at the finest grain (municipality). Counts of establishments are
+    out of scope of the statistical secret, which protects economic values of a
+    business (revenue, amounts), and partner lists are public; venues are not
+    people, so no cell key perturbation. Venue counts are
     additive across geographic cells (a venue has one location), so every tool
     sums these cells. EPN entities are not counted yet, as in metrics.
 #}

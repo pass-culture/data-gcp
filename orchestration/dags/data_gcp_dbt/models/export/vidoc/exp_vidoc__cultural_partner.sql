@@ -1,5 +1,5 @@
--- vidoc export of exp_base__cultural_partner (not perturbed, no statistical
--- secret), summed to the department.
+-- vidoc export of exp_base__cultural_partner (counts of establishments, out of
+-- scope of the statistical secret), summed to the department.
 select
     partition_month,
     partner_region_name,

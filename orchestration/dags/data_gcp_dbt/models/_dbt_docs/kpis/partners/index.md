@@ -7,7 +7,7 @@ description: "Active and activated cultural partners, and their bookings and rev
 
 Active and activated cultural partners, and their bookings and revenue from individual bookings by venue territory.
 
-**Data protection**: Partner counts are neither perturbed nor secret (lists of partners are public). Bookings and revenue by venue territory are under the **statistical secret** of external reporting: a secret department is hidden on every month. No category breakdown on the partner side: categories are read on the young people's side ([Usage](../usage/index.md)). See [Statistical confidentiality](../../references/statistical_confidentiality.md).
+**Data protection**: Partner counts are out of scope of the statistical secret, which protects economic values of a business, not counts of establishments (lists of partners are public). Bookings and revenue by venue territory are under the **statistical secret** of external reporting: a secret department is hidden on every month. No category breakdown on the partner side: categories are read on the young people's side ([Usage](../usage/index.md)). See [Statistical confidentiality](../../references/statistical_confidentiality.md).
 
 | KPI | Definition | VIDOC table(s) | data.gouv.fr | Tracking |
 |-----|-----------|-----------------|--------------|----------|

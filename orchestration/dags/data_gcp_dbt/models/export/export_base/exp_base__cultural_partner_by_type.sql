@@ -1,6 +1,6 @@
 {#
     Active and cumulative activated cultural partners by venue type, month and
-    venue geography (finest grain). Not perturbed, no statistical secret (see
+    venue geography (finest grain). Out of scope of the statistical secret (see
     exp_base__cultural_partner). A partner can match several types and tag_*
     rows are labels (subsets of a type): never sum over partner_type, use
     exp_base__cultural_partner for totals.

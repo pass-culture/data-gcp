@@ -161,6 +161,27 @@ class TestCreateArtistsTables:
         assert row["action"] == Action.remove
         assert row["comment"] == Comment.removed_linked
 
+    def test_deduplicates_product_links_across_linked_and_unlinked_paths(self):
+        preproc_linked_products_df = pd.DataFrame(
+            {
+                PRODUCT_ID_KEY: ["prod-2", "prod-2"],
+                ARTIST_ID_KEY: ["new-artist-id", "new-artist-id"],
+                ARTIST_TYPE_KEY: ["music", "music"],
+            }
+        )
+
+        delta_product_df, _ = create_artists_tables(
+            preproc_unlinked_products_df=self._preproc_unlinked_products_df(),
+            exploded_artist_alias_df=self._exploded_artist_alias_df(),
+            preproc_linked_products_df=preproc_linked_products_df,
+        )
+
+        assert len(delta_product_df) == 1
+        row = delta_product_df.iloc[0]
+        assert row[PRODUCT_ID_KEY] == "prod-2"
+        assert row[ARTIST_ID_KEY] == "new-artist-id"
+        assert row["comment"] == Comment.linked_to_existing_artist
+
 
 def _wiki_row(
     alias, wiki_artist_name, raw_alias, score, gkg, wikidata_id, **category_flags

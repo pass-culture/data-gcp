@@ -11,6 +11,7 @@ from src.common.constants import (
 from src.linkage.constants import (
     ACTION_KEY,
     ARTIST_DESCRIPTION_KEY,
+    ARTIST_NAME_SORTED_TO_MATCH_KEY,
     ARTIST_NAME_TO_MATCH_KEY,
     ARTIST_TYPE_KEY,
     ARTIST_WIKI_ID_KEY,
@@ -24,6 +25,8 @@ from src.linkage.constants import (
     Comment,
 )
 from src.linkage.preprocessing_utils import (
+    add_order_insensitive_name_key,
+    build_order_insensitive_name_key,
     extract_artist_name,
     prepare_artist_names_for_matching,
 )
@@ -78,16 +81,17 @@ def match_artist_on_offer_names(
             by=[
                 OFFER_CATEGORY_ID_KEY,
                 ARTIST_TYPE_KEY,
-                ARTIST_NAME_TO_MATCH_KEY,
+                ARTIST_NAME_SORTED_TO_MATCH_KEY,
                 N_PRODUCTS_LINKED_COLUMN,
             ],
             ascending=False,
         )
+        # [PERMANENT] Keep one artist per order-insensitive name key.
         .drop_duplicates(
             subset=[
                 OFFER_CATEGORY_ID_KEY,
                 ARTIST_TYPE_KEY,
-                ARTIST_NAME_TO_MATCH_KEY,
+                ARTIST_NAME_SORTED_TO_MATCH_KEY,
             ],
             keep="first",
         )
@@ -97,12 +101,15 @@ def match_artist_on_offer_names(
         f"...Done {len(preproc_products_to_link_df)} products and {len(preproc_filtered_artist_alias_df)} artist_aliases after preprocessing."
     )
 
-    # Match artists with products to link on preproc offer_names
+    # [PERMANENT] Match artists with products to link on preproc offer_names
+    # (word-order-insensitive: "verdon john" matches "john verdon")
     logger.info("Matching products on preprocessed offer names...")
     preproc_matched_df = preproc_products_to_link_df.merge(
-        preproc_filtered_artist_alias_df.drop(columns=[ARTIST_NAME_KEY]),
+        preproc_filtered_artist_alias_df.drop(
+            columns=[ARTIST_NAME_KEY, ARTIST_NAME_TO_MATCH_KEY]
+        ),
         how="left",
-        on=[ARTIST_NAME_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
+        on=[ARTIST_NAME_SORTED_TO_MATCH_KEY, ARTIST_TYPE_KEY, OFFER_CATEGORY_ID_KEY],
     )
     preproc_linked_products_df = preproc_matched_df.loc[lambda df: df.artist_id.notna()]
     preproc_unlinked_products_df = (
@@ -138,14 +145,12 @@ def create_artists_tables(
             with exploded aliases for new artists to be created.
         products_to_remove_df (pd.DataFrame, optional): DataFrame containing products to be removed
             from the linked products table. Defaults to empty DataFrame.
-        raw_linked_products_df (pd.DataFrame, optional): DataFrame containing raw products that
-            have been linked to existing artists. Defaults to empty DataFrame.
         preproc_linked_products_df (pd.DataFrame, optional): DataFrame containing preprocessed
             products that have been linked to existing artists. Defaults to empty DataFrame.
         artist_df (pd.DataFrame, optional): DataFrame containing existing artists to avoid
             duplicating when creating new artists. Defaults to empty DataFrame with ARTIST_ID_KEY column.
     Returns:
-        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing:
+        tuple[pd.DataFrame, pd.DataFrame]: A tuple containing:
             - delta_product_df: DataFrame with product changes including action tracking
               (add/remove) and comments describing the operation type.
             - delta_artist_df: DataFrame with new artists to be added, deduplicated
@@ -162,22 +167,32 @@ def create_artists_tables(
     if artist_df is None:
         artist_df = pd.DataFrame(columns=[ARTIST_ID_KEY])
 
-    delta_product_artist_link_df = pd.concat(
+    # [PERMANENT] Deduplicate on PRODUCTS_KEYS (offer_product_id, artist_id, artist_type),
+    # needed since a product can now have several artist names (Titelive contributors):
+    # - In preproc_linked_products_df: multiple raw artist_name variants for the same product
+    #   can normalize to the same artist_name_to_match and match the same existing artist_id.
+    # - Across preproc_linked_products_df and preproc_unlinked_products_df: a product with
+    #   multiple artist name variants can match an existing artist_id both via alias matching
+    #   (Comment.linked_to_existing_artist) and via Wikidata matching (Comment.linked_to_new_artist).
+    added_links_df = pd.concat(
         [
-            products_to_remove_df.filter(PRODUCTS_KEYS).assign(
-                **{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
-            ),
-            preproc_linked_products_df.filter(PRODUCTS_KEYS).assign(
+            preproc_linked_products_df.filter(PRODUCTS_KEYS)
+            .assign(
                 **{
                     ACTION_KEY: Action.add,
                     COMMENT_KEY: Comment.linked_to_existing_artist,
                 }
-            ),
-            preproc_unlinked_products_df.merge(
-                exploded_artist_alias_df,
+            )
+            .drop_duplicates(),
+            # [PERMANENT] Join new artists on the order-insensitive key.
+            preproc_unlinked_products_df.pipe(add_order_insensitive_name_key)
+            .merge(
+                exploded_artist_alias_df.pipe(add_order_insensitive_name_key).drop(
+                    columns=[ARTIST_NAME_TO_MATCH_KEY]
+                ),
                 how="left",
                 on=[
-                    ARTIST_NAME_TO_MATCH_KEY,
+                    ARTIST_NAME_SORTED_TO_MATCH_KEY,
                     ARTIST_TYPE_KEY,
                     OFFER_CATEGORY_ID_KEY,
                 ],
@@ -188,6 +203,16 @@ def create_artists_tables(
             )
             .drop_duplicates(),
         ]
+    ).drop_duplicates(subset=PRODUCTS_KEYS, keep="first")
+
+    delta_product_artist_link_df = pd.concat(
+        [
+            products_to_remove_df.filter(PRODUCTS_KEYS).assign(
+                **{ACTION_KEY: Action.remove, COMMENT_KEY: Comment.removed_linked}
+            ),
+            added_links_df,
+        ],
+        ignore_index=True,
     )
     delta_artist_df = (
         exploded_artist_alias_df.sort_values(
@@ -232,7 +257,9 @@ def perform_wikidata_category_matching(
         pd.DataFrame: DataFrame containing all artist clusters after category matching,
             including unmatched clusters (with NaN wikidata_id).
     """
-    # 1. Preprocess to use wikidata matching functions
+    # [PERMANENT] 1. Preprocess to use wikidata matching functions.
+    # The join key `alias` is word-order-insensitive (sorted tokens) on both
+    # sides, so that "Grafton Sue" matches the Wikidata alias "Sue Grafton".
     wiki_df = (
         wiki_df.rename(
             columns={
@@ -241,12 +268,19 @@ def perform_wikidata_category_matching(
         )
         .assign(
             alias_name_to_match=lambda df: df.raw_alias.apply(extract_artist_name),
-            alias=lambda df: df.alias_name_to_match,
         )
         .loc[lambda df: (df.alias_name_to_match != "") & df.alias_name_to_match.notna()]
+        .assign(
+            alias=lambda df: df.alias_name_to_match.map(
+                build_order_insensitive_name_key
+            ),
+        )
+        .loc[lambda df: df.alias.notna()]
     )
     new_artist_clusters_df = new_artist_clusters_df.assign(
-        alias=lambda df: df[ARTIST_NAME_TO_MATCH_KEY]
+        alias=lambda df: df[ARTIST_NAME_TO_MATCH_KEY].map(
+            build_order_insensitive_name_key
+        )
     )
     matched_namesakes_df = (
         match_namesakes_per_category(new_artist_clusters_df, wiki_df)

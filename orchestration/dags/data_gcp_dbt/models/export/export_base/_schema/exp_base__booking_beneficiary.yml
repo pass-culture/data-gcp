@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: exp_base__booking_beneficiary
+    description: "{{ doc('description__exp_base__booking_beneficiary') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - territory_level
+              - territory_code
+              - offer_category_id
+      - dbt_utils.expression_is_true:
+          arguments:
+            # a masked row has no figure
+            expression: "not is_low_count or (total_used_bookings is null and total_used_amount is null)"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: territory_level
+        description: "{{ doc('column__territory_level') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DEP', 'REG', 'GROUP', 'NAT']
+      - name: territory_code
+        description: "{{ doc('column__territory_code') }}"
+        data_tests:
+          - not_null
+      - name: territory_name
+        description: "{{ doc('column__territory_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: territory_group
+        description: "{{ doc('column__territory_group') }}"
+      - name: offer_category_id
+        description: "{{ doc('column__offer_category_id') }}"
+        data_tests:
+          - not_null
+      - name: is_low_count
+        description: "{{ doc('column__exp_base__booking_beneficiary__is_low_count') }}"
+        data_tests:
+          - not_null
+      - name: total_used_bookings
+        description: "{{ doc('column__booking_individual__total_used_bookings') }}"
+      - name: total_used_amount
+        description: "{{ doc('column__booking_individual__total_used_amount') }}"

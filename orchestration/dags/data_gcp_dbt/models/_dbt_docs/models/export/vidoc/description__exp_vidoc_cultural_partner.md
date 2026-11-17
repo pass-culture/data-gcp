@@ -6,7 +6,7 @@ description: Key indicators from the `exp_vidoc_cultural_partner` model.
 {% docs description__exp_vidoc_cultural_partner %}
 
 The `exp_vidoc_cultural_partner` model provides the monthly number of active and cumulatively activated cultural partners (venues), by channel (individual, collective, both).
-It is designed to be exported to the ministry for vidoc visualisation. It uses the same metrics table (`metrics_cultural_partner__activation`) and definitions as `external_reporting__cultural_partner`.
+It is designed to be exported to the ministry for vidoc visualisation. It sums the cells of [exp_base__cultural_partner](../export_base/description__exp_base__cultural_partner.md), as `external_reporting__cultural_partner`.
 
 {% enddocs %}
 

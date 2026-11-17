@@ -11,9 +11,9 @@
     not re-plan every segment (the segments are views in CI).
 
     is_secret_applicable selects the KPIs subject to the statistical secret: the
-    ones measured on the cultural partner (venue) geography. KPIs measured on the
-    school geography (suffixed `_etablissements` in eac_offer_booking) are never
-    masked.
+    bookings and amounts measured on the cultural partner (venue) geography. KPIs
+    measured on the school geography (suffixed `_etablissements` in
+    eac_offer_booking) and partner counts (public lists) are never masked.
 #}
 {% set models = {
     "eac_coverage": {"aggregation": "stock", "is_secret_applicable": "false"},
@@ -23,7 +23,7 @@
     },
     "eac_cultural_partner": {
         "aggregation": "stock",
-        "is_secret_applicable": "true",
+        "is_secret_applicable": "false",
     },
     "eac_domain": {"aggregation": "flow", "is_secret_applicable": "false"},
     "eac_format": {"aggregation": "flow", "is_secret_applicable": "false"},

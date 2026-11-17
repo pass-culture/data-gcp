@@ -145,7 +145,7 @@ dbt_test_monthly = PythonOperator(
 dbt_test_monthly_15 = PythonOperator(
     task_id="dbt_test_monthly_15",
     python_callable=partial(
-        run_dbt_quality_tests, select="tag:monthly_15", exclude="audit"
+        run_dbt_quality_tests, select="tag:monthly_15", exclude="audit tag:weekly"
     ),
     dag=dag,
     trigger_rule="all_success",

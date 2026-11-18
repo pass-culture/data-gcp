@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import yaml
-from src.config import Vector, load_vector_config
+from src.config import CONFIGS_PATH, Vector, load_vector_config
 
 
 class TestVector:
@@ -38,6 +38,42 @@ class TestVector:
                 features=["a"],
                 encoder_name="model",
                 preprocessors={"a": "does_not_exist"},
+            )
+
+    def test_preprocessors_key_not_in_features_raises(self):
+        with pytest.raises(ValueError, match="preprocessors key"):
+            Vector(
+                name="test",
+                features=["a"],
+                encoder_name="model",
+                preprocessors={"b": "normalize_whitespace"},
+            )
+
+    def test_labels_key_not_in_features_raises(self):
+        with pytest.raises(ValueError, match="labels key"):
+            Vector(
+                name="test",
+                features=["a"],
+                encoder_name="model",
+                labels={"b": "label b"},
+            )
+
+    def test_prompt_template_field_not_in_features_raises(self):
+        with pytest.raises(ValueError, match="prompt_template references field"):
+            Vector(
+                name="test",
+                features=["a"],
+                encoder_name="model",
+                prompt_template="{a} by {author}",
+            )
+
+    def test_prompt_template_field_on_later_line_not_in_features_raises(self):
+        with pytest.raises(ValueError, match="prompt_template references field"):
+            Vector(
+                name="test",
+                features=["a"],
+                encoder_name="model",
+                prompt_template="{a}\nby {author}",
             )
 
 
@@ -80,3 +116,12 @@ class TestLoadVectorConfig:
         with patch("src.config.CONFIGS_PATH", tmp_path):
             with pytest.raises(ValueError, match="must define a single vector"):
                 load_vector_config("list")
+
+
+class TestRealConfigs:
+    def test_every_real_config_loads_and_validates(self):
+        config_names = [p.stem for p in CONFIGS_PATH.glob("*.yaml")]
+        assert config_names, "expected at least one config in configs/"
+        for name in config_names:
+            vector = load_vector_config(name)
+            assert vector.name == name

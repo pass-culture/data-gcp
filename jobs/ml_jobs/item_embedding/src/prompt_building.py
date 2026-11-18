@@ -6,17 +6,24 @@ This is part of the logic behind the ``prepare`` step (``cli/prepare.py``),
 run after the preprocessors in the same step. It knows nothing about encoders.
 """
 
-from string import Formatter
-
 import pandas as pd
 from loguru import logger
-from src.config import Vector
+from src.config import Vector, _template_line_fields
 from src.preprocessing import _is_missing
 
 
-def _template_line_fields(line: str) -> list[str]:
-    """Field names referenced by the ``{placeholder}``s on one template line."""
-    return [name for _, name, _, _ in Formatter().parse(line) if name is not None]
+def _stringify(value: object) -> str:
+    """Render a feature value as prompt text.
+
+    Integral floats (``2010.0``) render as ``"2010"`` instead of ``"2010.0"``
+    -- pandas/pyarrow promotes a numeric column to float64 whenever any chunk
+    has a null, so a plain ``str()``/``astype(str)`` would leak a spurious
+    ``.0`` onto every value in that chunk. Non-integral floats and all other
+    types render via plain ``str()``.
+    """
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
 
 
 def _build_prompts_from_template(df: pd.DataFrame, vector: Vector) -> list[str]:
@@ -29,34 +36,25 @@ def _build_prompts_from_template(df: pd.DataFrame, vector: Vector) -> list[str]:
     kept. Surviving lines are joined with a single space, so a row whose every
     feature is null yields an empty prompt. Null values render as ``""`` (not
     the literal ``"None"``).
-
-    Raises:
-        ValueError: If the template references a field not in vector.features.
     """
-    lines = vector.prompt_template.split("\n")
+    line_fields = [
+        (line, _template_line_fields(line))
+        for line in vector.prompt_template.split("\n")
+    ]
 
     def render(row: pd.Series) -> str:
         values = {
-            feature: ("" if _is_missing(row[feature]) else row[feature])
+            feature: ("" if _is_missing(row[feature]) else _stringify(row[feature]))
             for feature in vector.features
         }
         rendered_lines = []
-        for line in lines:
-            fields = _template_line_fields(line)
-            all_known_and_empty = (
-                bool(fields)
-                and all(field in values for field in fields)
-                and all(values[field] == "" for field in fields)
+        for line, fields in line_fields:
+            all_known_and_empty = bool(fields) and all(
+                values[field] == "" for field in fields
             )
             if all_known_and_empty:
                 continue
-            try:
-                rendered_lines.append(line.format(**values))
-            except KeyError as e:
-                raise ValueError(
-                    f"Vector '{vector.name}': prompt_template references unknown "
-                    f"field {e}; declared features: {vector.features}"
-                ) from e
+            rendered_lines.append(line.format(**values))
         return " ".join(part for part in rendered_lines if part)
 
     return df.apply(render, axis=1).tolist()
@@ -86,7 +84,7 @@ def build_prompts(df: pd.DataFrame, vector: Vector) -> list[str]:
             label = vector.labels.get(feature, feature)
             mask = df[feature].notna() & (df[feature].astype(str).str.strip() != "")
             formatted = pd.Series("", index=df.index)
-            formatted[mask] = label + " : " + df[feature][mask].astype(str)
+            formatted[mask] = label + " : " + df[feature][mask].map(_stringify)
             parts.append(formatted)
 
         # Join non-null parts per row with a newline (null features omitted).

@@ -67,6 +67,43 @@ VIDOC_MODELS = {
 }
 
 
+# Lot 2.1 (diversity and credit use at expiration: FI2.3, FI2.4, FI3.1, FI3.2):
+# columns exported to the dev and staging buckets only, so that the VIDOC team
+# can build the dashboards before the prod release. Move them into VIDOC_MODELS
+# once the indicators are validated.
+VIDOC_PREVIEW_COLUMNS = {
+    "diversity": [
+        "total_1plus_category_booked_beneficiaries",
+        "total_2plus_category_booked_beneficiaries",
+        "total_4plus_category_booked_beneficiaries",
+        "total_5plus_category_booked_beneficiaries",
+        "total_spent_share_0_beneficiaries",
+        "total_spent_share_0_25_beneficiaries",
+        "total_spent_share_25_50_beneficiaries",
+        "total_spent_share_50_75_beneficiaries",
+        "total_spent_share_75_90_beneficiaries",
+        "total_spent_share_90_100_beneficiaries",
+        "total_deposit_amount_at_expiration",
+        "total_actual_amount_spent_at_expiration",
+        "total_distinct_venue_booked_at_expiration",
+    ],
+}
+
+
+def merge_preview_columns(
+    models: Dict[str, List[str]],
+    preview_columns: Dict[str, List[str]],
+    env_short_name: str,
+) -> Dict[str, List[str]]:
+    """Add the preview columns to the exported models, outside prod only."""
+    if env_short_name == "prod":
+        return models
+    return {
+        name: columns + [c for c in preview_columns.get(name, []) if c not in columns]
+        for name, columns in models.items()
+    }
+
+
 def generate_table_configs(models: Dict[str, List[str]]) -> List[Dict[str, Any]]:
     """
     dbt model `exp_vidoc__<name>` is aliased in BigQuery to
@@ -86,4 +123,6 @@ def generate_table_configs(models: Dict[str, List[str]]) -> List[Dict[str, Any]]
     ]
 
 
-TABLES_CONFIGS = generate_table_configs(VIDOC_MODELS)
+TABLES_CONFIGS = generate_table_configs(
+    merge_preview_columns(VIDOC_MODELS, VIDOC_PREVIEW_COLUMNS, ENV_SHORT_NAME)
+)

@@ -98,8 +98,15 @@ def build_artist_alias(
     product_df: pd.DataFrame,
     product_artist_link_df: pd.DataFrame,
     artist_df: pd.DataFrame,
+    *,
+    include_product_name_aliases: bool = True,
 ) -> pd.DataFrame:
-    """Combine artist names from artist_df and product_df to create a comprehensive alias dataframe."""
+    """Combine artist names from artist_df and product_df to create a comprehensive alias dataframe.
+
+    Set `include_product_name_aliases` to False to only use artist names (remediation):
+    product names would otherwise become aliases of the artist currently linked, and
+    re-link the product to it even when that link is wrong.
+    """
     artist_alias_from_artist_names_df = (
         product_artist_link_df.merge(
             artist_df.assign(
@@ -120,6 +127,8 @@ def build_artist_alias(
         .loc[:, ALIAS_MERGE_COLUMNS]
         .drop_duplicates()
     )
+    if not include_product_name_aliases:
+        return artist_alias_from_artist_names_df.reset_index(drop=True)
 
     # Use artist names from products when we have a clear 1:1 mapping between product and artist
     safe_product_df = product_df.loc[

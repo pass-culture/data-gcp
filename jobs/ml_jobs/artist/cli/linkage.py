@@ -65,6 +65,13 @@ from src.linkage.product_linking import (
     get_products_to_remove_and_link_df,
     sanity_check_product_links,
 )
+from src.linkage.remediation import (
+    exclude_unchanged_links,
+    get_links_to_remediate_df,
+)
+from src.linkage.wiki_link_preservation import (
+    preserve_wiki_links_replaced_by_compatible_artists,
+)
 
 app = typer.Typer()
 
@@ -230,20 +237,15 @@ def embed_offer_names(
     )
 
 
-@app.command("link-new-products")
-def link_new_products(
-    # Input files
-    artist_filepath: str = typer.Option(),
-    artist_music_platform_filepath: str = typer.Option(),
-    product_artist_link_filepath: str = typer.Option(),
-    product_filepath: str = typer.Option(),
-    wiki_base_path: str = typer.Option(),
-    wiki_file_name: str = typer.Option(),
-    # Output files
-    output_delta_artist_file_path: str = typer.Option(),
-    output_delta_product_artist_link_filepath: str = typer.Option(),
-) -> None:
-    # 1. Load data
+def _load_product_linking_inputs(
+    artist_filepath: str,
+    artist_music_platform_filepath: str,
+    product_artist_link_filepath: str,
+    product_filepath: str,
+    wiki_base_path: str,
+    wiki_file_name: str,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Load (product_df, product_artist_link_df, artist_df, artist_with_wiki_ids_df, wiki_df)."""
     product_artist_link_df = pd.read_parquet(product_artist_link_filepath).astype(
         {PRODUCT_ID_KEY: int}
     )
@@ -269,18 +271,26 @@ def link_new_products(
     wiki_df = load_wikidata(
         wiki_base_path=wiki_base_path, wiki_file_name=wiki_file_name
     ).reset_index(drop=True)
-    artist_alias_df = build_artist_alias(
-        product_df=product_df,
-        product_artist_link_df=product_artist_link_df,
-        artist_df=artist_df,
+    return (
+        product_df,
+        product_artist_link_df,
+        artist_df,
+        artist_with_wiki_ids_df,
+        wiki_df,
     )
 
-    # 2. Split products between to remove and to link
-    products_to_remove_df, products_to_link_df = get_products_to_remove_and_link_df(
-        product_df, product_artist_link_df
-    )
 
-    # 3. Match products to link with artists on both raw and preprocessed offer names
+def _link_products_to_artists(
+    products_to_remove_df: pd.DataFrame,
+    products_to_link_df: pd.DataFrame,
+    artist_alias_df: pd.DataFrame,
+    product_artist_link_df: pd.DataFrame,
+    artist_df: pd.DataFrame,
+    artist_with_wiki_ids_df: pd.DataFrame,
+    wiki_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Match products to link with existing or new artists and build the deltas."""
+    # Match products to link with artists on both raw and preprocessed offer names
     preproc_linked_products_df, preproc_unlinked_products_df = (
         match_artist_on_offer_names(
             products_to_link_df=products_to_link_df,
@@ -289,7 +299,7 @@ def link_new_products(
         )
     )
 
-    # [PERMANENT] 4. Create new artist clusters by offer_category and artist type.
+    # [PERMANENT] Create new artist clusters by offer_category and artist type.
     # Clusters are built on the word-order-insensitive key so that
     # "Grafton Sue" and "Sue Grafton" end up in the same new artist.
     new_artist_clusters_df = (
@@ -314,15 +324,15 @@ def link_new_products(
         f"Created {len(new_artist_clusters_df)} new artist clusters from {len(preproc_unlinked_products_df)} unlinked products."
     )
 
-    # 5. Match new artist clusters with existing artists on Wikidata
+    # Match new artist clusters with existing artists on Wikidata
     exploded_artist_alias_df = match_artists_with_wikidata(
         new_artist_clusters_df=new_artist_clusters_df,
         wiki_df=wiki_df,
         artist_with_wiki_ids_df=artist_with_wiki_ids_df,
     )
 
-    # 6. Create new artists and artist aliases
-    delta_product_df, delta_artist_df = create_artists_tables(
+    # Create new artists and artist aliases
+    return create_artists_tables(
         preproc_unlinked_products_df=preproc_unlinked_products_df,
         exploded_artist_alias_df=exploded_artist_alias_df,
         products_to_remove_df=products_to_remove_df,
@@ -330,14 +340,138 @@ def link_new_products(
         artist_df=artist_df,
     )
 
-    # 7. Sanity check for consistency
+
+@app.command("link-new-products")
+def link_new_products(
+    # Input files
+    artist_filepath: str = typer.Option(),
+    artist_music_platform_filepath: str = typer.Option(),
+    product_artist_link_filepath: str = typer.Option(),
+    product_filepath: str = typer.Option(),
+    wiki_base_path: str = typer.Option(),
+    wiki_file_name: str = typer.Option(),
+    # Output files
+    output_delta_artist_file_path: str = typer.Option(),
+    output_delta_product_artist_link_filepath: str = typer.Option(),
+) -> None:
+    # 1. Load data
+    product_df, product_artist_link_df, artist_df, artist_with_wiki_ids_df, wiki_df = (
+        _load_product_linking_inputs(
+            artist_filepath=artist_filepath,
+            artist_music_platform_filepath=artist_music_platform_filepath,
+            product_artist_link_filepath=product_artist_link_filepath,
+            product_filepath=product_filepath,
+            wiki_base_path=wiki_base_path,
+            wiki_file_name=wiki_file_name,
+        )
+    )
+    artist_alias_df = build_artist_alias(
+        product_df=product_df,
+        product_artist_link_df=product_artist_link_df,
+        artist_df=artist_df,
+    )
+
+    # 2. Split products between to remove and to link
+    products_to_remove_df, products_to_link_df = get_products_to_remove_and_link_df(
+        product_df, product_artist_link_df
+    )
+
+    # 3. Link products to existing or new artists
+    delta_product_df, delta_artist_df = _link_products_to_artists(
+        products_to_remove_df=products_to_remove_df,
+        products_to_link_df=products_to_link_df,
+        artist_alias_df=artist_alias_df,
+        product_artist_link_df=product_artist_link_df,
+        artist_df=artist_df,
+        artist_with_wiki_ids_df=artist_with_wiki_ids_df,
+        wiki_df=wiki_df,
+    )
+
+    # 4. Sanity check for consistency
     sanity_check_product_links(
         delta_product_df,
         delta_artist_df,
         artist_df,
     )
 
-    # 8. Save files
+    # 5. Save files
+    delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
+    delta_product_df.to_parquet(output_delta_product_artist_link_filepath, index=False)
+
+
+@app.command("remediate-product-links")
+def remediate_product_links(
+    # Input files
+    artist_filepath: str = typer.Option(),
+    artist_music_platform_filepath: str = typer.Option(),
+    product_artist_link_filepath: str = typer.Option(),
+    product_filepath: str = typer.Option(),
+    wiki_base_path: str = typer.Option(),
+    wiki_file_name: str = typer.Option(),
+    # Output files
+    output_delta_artist_file_path: str = typer.Option(),
+    output_delta_product_artist_link_filepath: str = typer.Option(),
+) -> None:
+    """Re-evaluate every existing product-artist link against current product artist names."""
+    # 1. Load data
+    product_df, product_artist_link_df, artist_df, artist_with_wiki_ids_df, wiki_df = (
+        _load_product_linking_inputs(
+            artist_filepath=artist_filepath,
+            artist_music_platform_filepath=artist_music_platform_filepath,
+            product_artist_link_filepath=product_artist_link_filepath,
+            product_filepath=product_filepath,
+            wiki_base_path=wiki_base_path,
+            wiki_file_name=wiki_file_name,
+        )
+    )
+    # Product names are not used as aliases: they would re-link a product to the
+    # artist it is currently (possibly wrongly) linked to.
+    artist_alias_df = build_artist_alias(
+        product_df=product_df,
+        product_artist_link_df=product_artist_link_df,
+        artist_df=artist_df,
+        include_product_name_aliases=False,
+    )
+
+    # 2. Split existing links between kept and to remove, and product artist names to (re)link
+    products_to_remove_df, products_to_link_df = get_links_to_remediate_df(
+        product_df, product_artist_link_df, artist_df, wiki_df=wiki_df
+    )
+
+    # 3. Link products to existing or new artists
+    delta_product_df, delta_artist_df = _link_products_to_artists(
+        products_to_remove_df=products_to_remove_df,
+        products_to_link_df=products_to_link_df,
+        artist_alias_df=artist_alias_df,
+        product_artist_link_df=product_artist_link_df,
+        artist_df=artist_df,
+        artist_with_wiki_ids_df=artist_with_wiki_ids_df,
+        wiki_df=wiki_df,
+    )
+
+    # 4. Drop links removed then re-added to the same artist, and already existing links
+    delta_product_df = exclude_unchanged_links(delta_product_df, product_artist_link_df)
+
+    # 5. TEMPORARY: do not replace a Wikidata artist link by a compatible
+    # non-Wikidata artist (e.g. "Olivier Kempf" -> "Kempf") until product
+    # artist names are remediated.
+    delta_product_df, delta_artist_df = (
+        preserve_wiki_links_replaced_by_compatible_artists(
+            delta_product_df=delta_product_df,
+            delta_artist_df=delta_artist_df,
+            artist_df=artist_df,
+            wiki_df=wiki_df,
+        )
+    )
+
+    # 6. Sanity check for consistency
+    sanity_check_product_links(
+        delta_product_df,
+        delta_artist_df,
+        artist_df,
+    )
+
+    # 7. Save files
     delta_artist_df.to_parquet(output_delta_artist_file_path, index=False)
     delta_product_df.to_parquet(output_delta_product_artist_link_filepath, index=False)
 

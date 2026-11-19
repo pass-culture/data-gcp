@@ -1,5 +1,5 @@
 FROM apache/airflow:slim-2.11.2-python3.12
-# TEST - to revert: dummy change to trigger the image build in on_cd__workflow
+# TEST - to revert
 ARG AIRFLOW_USER_HOME=/opt/airflow
 ARG GCLOUD_VERSION=google-cloud-cli-538.0.0-linux-x86_64.tar.gz
 

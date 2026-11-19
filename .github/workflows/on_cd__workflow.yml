@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - hotfix/build-image-use-airflow-cd-sa
       - production
 
 permissions:

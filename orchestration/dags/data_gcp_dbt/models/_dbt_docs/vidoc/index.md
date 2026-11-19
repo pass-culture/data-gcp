@@ -28,10 +28,10 @@ The first lot 2 indicators are sent to the **dev and staging** S3 buckets only, 
 |---|---|---|---|
 | FI2.3 | Average number of distinct venues booked at expiration | `total_distinct_venue_booked_at_expiration`, `total_expired_deposit_beneficiaries` | [Distinct venues booked](../kpis/diversity/distinct_venues_booked.md) |
 | FI2.4 | Share of young people who booked in at least N categories (1 to 5) | `total_1plus_category_booked_beneficiaries` … `total_5plus_category_booked_beneficiaries`, `total_expired_deposit_beneficiaries` | [Diversity depth](../kpis/diversity/diversity_category_depth.md) |
-| FI3.1 | Young people by share of credit spent | `total_spent_share_0_beneficiaries`, `_0_25`, `_25_50`, `_50_75`, `_75_90`, `_90_100` | [Spent share distribution](../kpis/usage/credit_spent_share_distribution.md) |
+| FI3.1 | Young people by share of credit spent | `total_spent_share_0_beneficiaries`, then `_0_10` … `_80_90`, `_90_100` (10-point steps) | [Spent share distribution](../kpis/usage/credit_spent_share_distribution.md) |
 | FI3.2 | Average amount granted, spent, and spending rate | `total_deposit_amount_at_expiration`, `total_actual_amount_spent_at_expiration`, `total_expired_deposit_beneficiaries` | [Credit amounts at expiration](../kpis/usage/credit_amount_at_expiration.md) |
 
-Counts of young people are perturbed (cell key method) and must be summed before dividing. Amounts and the number of venues are not perturbed: they are empty on rows with fewer than 5 young people, so averages must leave those rows out of the numerator **and** the denominator.
+Counts of young people are perturbed (cell key method) and must be summed before dividing. Amounts and the number of venues are not perturbed: they are empty on rows with fewer than 5 young people before perturbation, so averages must leave those rows out of the numerator **and** the denominator.
 
 ### Open data
 

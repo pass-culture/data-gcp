@@ -26,7 +26,7 @@ The credit amount depends on the generation (500 € before the 2023 reform, the
 Same definition as the external reporting KPIs `montant_moyen_octroye_a_l_expiration_du_credit` and `montant_moyen_depense_a_l_expiration_du_credit` (read from `metrics_beneficiary__expired_cohorts`, same values).
 
 
-The amounts are not perturbed: they are **null** when `total_expired_deposit_beneficiaries` is below 5. Exclude those rows from the denominator too, otherwise the averages are underestimated.
+The amounts are not perturbed: they are **null** when the row has fewer than 5 beneficiaries before perturbation (the published `total_expired_deposit_beneficiaries` can then read 5 or more). Exclude those rows from the denominator too, otherwise the averages are underestimated.
 
 ```sql
 SELECT

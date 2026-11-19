@@ -94,10 +94,29 @@ if ENV_SHORT_NAME != "prod":
 else:
     MLFLOW_URL = "https://mlflow.passculture.team/"
 
-APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
-    "pc-backend-tst.europe-west1.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro",
-)
+
+APPLICATIVE_EXTERNAL_CONNECTION_IDS_EU9 = {
+    "tst": "pc-backend-tst.europe-west9.pcapi-tst-pg-pcapi-tst-eu9-ba7a837d689180e6-replica-big-query-eu9-ro",
+    "stg": "pc-backend-stg.europe-west9.pcapi-stg-pg-pcapi-stg-eu9-2d4e3ae70a0de694-replica-big-query-eu9-ro",
+}
+
+
+def _default_applicative_connection_id() -> str:
+    """Return the applicative replica connection depending on the datacenter.
+    This function will be removed once all projects are migrated to the new datacenter.
+    """
+    if (
+        GCP_PROJECT_ID.startswith("pc-data-")
+        and ENV_SHORT_NAME in APPLICATIVE_EXTERNAL_CONNECTION_IDS_EU9
+    ):
+        return APPLICATIVE_EXTERNAL_CONNECTION_IDS_EU9[ENV_SHORT_NAME]
+    return os.environ.get(
+        "APPLICATIVE_EXTERNAL_CONNECTION_ID",
+        "pc-backend-tst.europe-west1.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro",
+    )
+
+
+APPLICATIVE_EXTERNAL_CONNECTION_ID = _default_applicative_connection_id()
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 
 DATA_GCS_BUCKET_NAME = os.environ.get(

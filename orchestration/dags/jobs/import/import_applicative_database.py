@@ -19,10 +19,6 @@ from dependencies.applicative_database.import_applicative_database import (
     SEQUENTIAL_TABLES,
 )
 
-# TEMPORARY DEMO ONLY: force the legacy EU1 region to prove the DC mismatch.
-# Remove DEMO_LOCATION from all tasks below once the infra is ready in europe-west9.
-DEMO_LOCATION = "europe-west1"
-
 default_dag_args = {
     "start_date": datetime.datetime(2020, 12, 1),
     "retries": 6,
@@ -53,7 +49,6 @@ with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_g
             dag,
             task_id=f"import_sequential_to_raw_{table}",
             job_params=params,
-            location=DEMO_LOCATION,
         )
         seq_tasks.append(task)
 
@@ -71,7 +66,6 @@ with TaskGroup(
             dag,
             task_id=f"import_parallel_to_raw_{table}",
             job_params=params,
-            location=DEMO_LOCATION,
         )
         parallel_tasks.append(task)
 
@@ -83,7 +77,7 @@ with TaskGroup(
 ) as historical_applicative_group:
     historical_tasks = []
     for table, params in HISTORICAL_APPLICATIVE_TABLES.items():
-        task = bigquery_job_task(dag, table, dict(params, location=DEMO_LOCATION))
+        task = bigquery_job_task(dag, table, params)
         historical_tasks.append(task)
 
 end = EmptyOperator(task_id="end", dag=dag)

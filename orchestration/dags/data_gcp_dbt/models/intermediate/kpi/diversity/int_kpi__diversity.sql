@@ -1,4 +1,5 @@
 {% set min_category_counts = get_min_category_counts() %}
+{# spent share buckets: 0, then 10% steps (]0-10] ... ]90-100]) #}
 {% set spent_share_buckets = get_spent_share_buckets() %}
 
 with

@@ -4,9 +4,10 @@ from common.config import ENV_SHORT_NAME
 
 S3_SECRET_NAME = f"dbt_export_s3_config_snum_{ENV_SHORT_NAME}"
 
-# Columns of the lot 1 vidoc KPIs (see _dbt_docs/kpis): only these are
-# exported, so that new columns can be added to the exp_vidoc__* models without
-# being sent to the S3 bucket.
+# Columns exported to the prod bucket: the validated vidoc KPIs (see
+# _dbt_docs/kpis), so that new columns can be added to the exp_vidoc__* models
+# without being sent to prod. The dev and staging buckets get all the columns of
+# these tables, for the VIDOC team to build the next indicators.
 VIDOC_MODELS = {
     "diversity": [
         "deposit_expiration_month",
@@ -67,67 +68,23 @@ VIDOC_MODELS = {
 }
 
 
-# Lot 2.1 (diversity and credit use at expiration: FI2.3, FI2.4, FI3.1, FI3.2):
-# columns exported to the dev and staging buckets only, so that the VIDOC team
-# can build the dashboards before the prod release. Move them into VIDOC_MODELS
-# once the indicators are validated.
-VIDOC_PREVIEW_COLUMNS = {
-    "diversity": [
-        "total_1plus_category_booked_beneficiaries",
-        "total_2plus_category_booked_beneficiaries",
-        "total_4plus_category_booked_beneficiaries",
-        "total_5plus_category_booked_beneficiaries",
-        "total_spent_share_0_beneficiaries",
-        "total_spent_share_0_10_beneficiaries",
-        "total_spent_share_10_20_beneficiaries",
-        "total_spent_share_20_30_beneficiaries",
-        "total_spent_share_30_40_beneficiaries",
-        "total_spent_share_40_50_beneficiaries",
-        "total_spent_share_50_60_beneficiaries",
-        "total_spent_share_60_70_beneficiaries",
-        "total_spent_share_70_80_beneficiaries",
-        "total_spent_share_80_90_beneficiaries",
-        "total_spent_share_90_100_beneficiaries",
-        "total_deposit_amount_at_expiration",
-        "total_actual_amount_spent_at_expiration",
-        "total_distinct_venue_booked_at_expiration",
-    ],
-}
-
-
-def merge_preview_columns(
-    models: Dict[str, List[str]],
-    preview_columns: Dict[str, List[str]],
-    env_short_name: str,
-) -> Dict[str, List[str]]:
-    """Add the preview columns to the exported models, outside prod only."""
-    if env_short_name == "prod":
-        return models
-    return {
-        name: columns + [c for c in preview_columns.get(name, []) if c not in columns]
-        for name, columns in models.items()
-    }
-
-
 def generate_table_configs(models: Dict[str, List[str]]) -> List[Dict[str, Any]]:
     """
     dbt model `exp_vidoc__<name>` is aliased in BigQuery to
     `export_vidoc_{env}.<name>` (see `generate_alias_name` macro), then its
-    `columns` are exported to `s3://<bucket>/exp_vidoc__<name>/` (bucket
-    resolved from the S3 secret).
+    `columns` (all of them outside prod) are exported to
+    `s3://<bucket>/exp_vidoc__<name>/` (bucket resolved from the S3 secret).
     """
     return [
         {
             "dbt_model": f"exp_vidoc__{name}",
             "bigquery_dataset_name": f"export_vidoc_{ENV_SHORT_NAME}",
             "bigquery_table_name": name,
-            "columns": columns,
+            "columns": columns if ENV_SHORT_NAME == "prod" else ["*"],
             "s3_prefix": f"exp_vidoc__{name}",
         }
         for name, columns in models.items()
     ]
 
 
-TABLES_CONFIGS = generate_table_configs(
-    merge_preview_columns(VIDOC_MODELS, VIDOC_PREVIEW_COLUMNS, ENV_SHORT_NAME)
-)
+TABLES_CONFIGS = generate_table_configs(VIDOC_MODELS)

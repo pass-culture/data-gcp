@@ -22,7 +22,7 @@ The KPIs computed from these tables are defined in [KPIs](../kpis/index.md).
 
 ### Lot 2.1: diversity and credit use at expiration (dev and staging)
 
-The first lot 2 indicators are sent to the **dev and staging** S3 buckets only, in the `diversity` table, until the VIDOC team validates them (`VIDOC_PREVIEW_COLUMNS` in the `export_vidoc` DAG). Prod keeps the lot 1 columns.
+The first lot 2 indicators are sent to the **dev and staging** S3 buckets only, in the `diversity` table, until the VIDOC team validates them: dev and staging get all the columns of the exported tables, prod only the validated ones (`VIDOC_MODELS` in the `export_vidoc` DAG).
 
 | Sheet | Indicator | Columns of `diversity` | Definition |
 |---|---|---|---|

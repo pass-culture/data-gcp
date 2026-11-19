@@ -23,6 +23,7 @@ ARTIST_NAME_TO_MATCH_KEY = "artist_name_to_match"
 # alphabetically) so that "Verdon John" (Titelive) matches "John Verdon".
 ARTIST_NAME_SORTED_TO_MATCH_KEY = "artist_name_sorted_to_match"
 ARTIST_TYPE_KEY = "artist_type"
+RAW_ALIAS_KEY = "raw_alias"
 OFFER_CATEGORY_ID_KEY = "offer_category_id"
 ARTIST_DESCRIPTION_KEY = "artist_description"
 IMG_KEY = "img"

@@ -20,14 +20,15 @@ from src.linkage.constants import (
     ARTIST_TYPE_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
+    RAW_ALIAS_KEY,
     Action,
 )
 from src.linkage.preprocessing_utils import prepare_artist_names_for_matching
 
-RAW_ALIAS_KEY = "raw_alias"
 
-
-def _anti_join(df: pd.DataFrame, to_exclude_df: pd.DataFrame) -> pd.DataFrame:
+def anti_join_on_products_keys(
+    df: pd.DataFrame, to_exclude_df: pd.DataFrame
+) -> pd.DataFrame:
     """Rows of `df` whose PRODUCTS_KEYS are not in `to_exclude_df`."""
     return (
         df.merge(
@@ -129,7 +130,7 @@ def get_links_to_remediate_df(
     matched_product_ids = matched_df.loc[:, merge_columns].drop_duplicates()
 
     products_to_remove_df = (
-        _anti_join(linked_products, matched_links_df)
+        anti_join_on_products_keys(linked_products, matched_links_df)
         .loc[:, PRODUCTS_KEYS]
         .drop_duplicates()
         .reset_index(drop=True)
@@ -174,8 +175,8 @@ def exclude_unchanged_links(
 
     return pd.concat(
         [
-            _anti_join(removed_df, added_df),
-            _anti_join(added_df, product_artist_link_df),
+            anti_join_on_products_keys(removed_df, added_df),
+            anti_join_on_products_keys(added_df, product_artist_link_df),
             other_df,
         ],
         ignore_index=True,

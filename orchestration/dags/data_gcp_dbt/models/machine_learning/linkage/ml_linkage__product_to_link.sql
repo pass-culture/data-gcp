@@ -87,10 +87,27 @@ with
             and titelive.json_raw is not null
     ),
 
+    -- [PERMANENT] LIVRE_PAPIER products present in the current Titelive
+    -- snapshot. Only these use Titelive contributors as artist source.
+    titelive_book_products as (
+        select distinct product.id as offer_product_id
+        from {{ ref("int_applicative__product") }} as product
+        inner join
+            {{ ref("snapshot_raw__titelive_products") }} as titelive
+            on product.ean = titelive.ean
+        where
+            product.subcategoryid = "LIVRE_PAPIER"
+            and titelive.dbt_valid_to is null
+            and titelive.json_raw is not null
+    ),
+
     -- [PERMANENT] Product authors:
-    -- - LIVRE_PAPIER: all Titelive contributors, typed by their Titelive role
-    -- (a book can now be linked to several artists).
-    -- - Other subcategories: legacy single `author` field, typed as "author".
+    -- - LIVRE_PAPIER in Titelive: all Titelive contributors, typed by their
+    -- Titelive role (a book can now be linked to several artists). A book in
+    -- Titelive without an author contributor gets no "author" row: its
+    -- existing author link is then removed on purpose.
+    -- - Other products (including LIVRE_PAPIER not in Titelive): legacy single
+    -- `author` field, typed as "author", so that their links are kept.
     product_author as (
         select
             offer_author.offer_product_id,
@@ -117,7 +134,12 @@ with
             offer_author.author as artist_name,
             sum(offer_author.total_booking_count) as total_booking_count
         from offer_author
-        where offer_author.offer_subcategory_id != "LIVRE_PAPIER"
+        left join
+            titelive_book_products
+            on offer_author.offer_product_id = titelive_book_products.offer_product_id
+        where
+            offer_author.offer_subcategory_id != "LIVRE_PAPIER"
+            or titelive_book_products.offer_product_id is null
         group by
             offer_author.offer_product_id,
             offer_author.author,

@@ -1,9 +1,9 @@
 {% docs column__offer_id %} Unique identifier for the offer. {% enddocs %}
-{% docs column__offer_product_id %} Identifier for the product associated with the offer. {% enddocs %}
+{% docs column__offer_product_id %} Identifier of the product (`mrt_global__product.product_id`) the offer is attached to; NULL when no product is attached. Almost only synchronized offers (`is_synchronised`) on books, CDs, vinyls and movies carry one. An offer with an EAN but no `offer_product_id` is not attached to a product, which does not mean the product does not exist: look the EAN up in `mrt_global__product.product_ean`. {% enddocs %}
 {% docs column__offer_product_humanized_id %} Human-readable identifier for the product associated with the offer. {%
 enddocs %}
 {% docs column__offer_id_at_providers %} Identifier for the offer at external providers. {% enddocs %}
-{% docs column__offer_is_synchronised %} Indicates whether the offer is synchronized with API systems and has a product_id. {% enddocs %}
+{% docs column__offer_is_synchronised %} Indicates whether the offer is synchronized from a provider's API (Titelive, cinema software...) rather than created by hand. Synchronized offers on books, CDs and vinyls are almost all attached to a product (`offer_product_id`); manual ones mostly are not, even when they have an EAN. {% enddocs %}
 {% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by thecultural partner and displayed in app.{% enddocs %}
 
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}

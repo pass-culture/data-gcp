@@ -1,16 +1,16 @@
 """[TEMPORARY / REMEDIATION] Safeguard against losing quality (Wikidata) artist links.
 
-Not part of the permanent incremental linkage: remove it, or move it to the
-dedicated remediation pipeline of the linkage DAG.
+Only used by `remediate-product-links`, not by the incremental
+`link-new-products`.
 
-While product artist names are being remediated with new data sources,
-`link-new-products` replaces many links to artists having a wikidata_id with
-links to non-Wikidata artists that are the same person written differently
+While product artist names are being remediated with new data sources, the
+remediation replaces many links to artists having a wikidata_id with links to
+non-Wikidata artists that are the same person written differently
 ("Olivier Kempf" -> "Kempf/Olivier", "Pierre Kalmar" -> "P. Kalmar").
 
 This module cancels such swaps when both names are compatible, and only in
-that situation. Remove it (and its call in cli/linkage.py) once the product
-artist names are reliable.
+that situation. Remove it (and its call in `remediate_product_links` in
+cli/linkage.py) once the product artist names are reliable.
 """
 
 import re
@@ -27,10 +27,10 @@ from src.linkage.constants import (
     ARTIST_TYPE_KEY,
     PRODUCT_ID_KEY,
     PRODUCTS_KEYS,
+    RAW_ALIAS_KEY,
     Action,
 )
-
-RAW_ALIAS_KEY = "raw_alias"
+from src.linkage.remediation import anti_join_on_products_keys
 
 # Tokens carrying no identity information.
 IGNORED_TOKENS = frozenset(
@@ -178,20 +178,6 @@ def _build_wiki_artist_names_df(
     )
 
 
-def _anti_join(df: pd.DataFrame, to_exclude_df: pd.DataFrame) -> pd.DataFrame:
-    """[TEMPORARY] Rows of `df` whose PRODUCTS_KEYS are not in `to_exclude_df`."""
-    return (
-        df.merge(
-            to_exclude_df.loc[:, PRODUCTS_KEYS].drop_duplicates(),
-            how="left",
-            on=PRODUCTS_KEYS,
-            indicator=True,
-        )
-        .loc[lambda d: d["_merge"] == "left_only"]
-        .drop(columns="_merge")
-    )
-
-
 def preserve_wiki_links_replaced_by_compatible_artists(
     delta_product_df: pd.DataFrame,
     delta_artist_df: pd.DataFrame,
@@ -275,10 +261,10 @@ def preserve_wiki_links_replaced_by_compatible_artists(
     filtered_delta_product_df = pd.concat(
         [
             delta_product_df.loc[lambda df: df[ACTION_KEY] == Action.remove].pipe(
-                _anti_join, kept_removed_links_df
+                anti_join_on_products_keys, kept_removed_links_df
             ),
             delta_product_df.loc[lambda df: df[ACTION_KEY] == Action.add].pipe(
-                _anti_join, cancelled_added_links_df
+                anti_join_on_products_keys, cancelled_added_links_df
             ),
             delta_product_df.loc[
                 lambda df: ~df[ACTION_KEY].isin([Action.remove, Action.add])

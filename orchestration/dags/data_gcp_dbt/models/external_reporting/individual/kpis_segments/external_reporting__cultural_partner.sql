@@ -58,7 +58,7 @@ with
             {% for kpi_name in type_kpi_names %}
                 0 as {{ kpi_name }}{% if not loop.last %},{% endif %}
             {% endfor %}
-        from {{ ref("metrics_cultural_partner__activation") }}
+        from {{ ref("exp_base__cultural_partner") }}
         {% if is_incremental() %}
             where
                 partition_month
@@ -76,7 +76,7 @@ with
                 ) as {{ type_kpi_names[loop.index0] }}
                 {% if not loop.last %},{% endif %}
             {% endfor %}
-        from {{ ref("metrics_cultural_partner__activation_by_type") }}
+        from {{ ref("exp_base__cultural_partner_by_type") }}
         {% if is_incremental() %}
             where
                 partition_month

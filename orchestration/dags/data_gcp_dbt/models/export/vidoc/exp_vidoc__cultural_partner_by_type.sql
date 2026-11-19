@@ -30,7 +30,7 @@ select
     sum(
         total_cumulative_activated_partners_dual_part
     ) as total_cumulative_activated_partners_dual_part
-from {{ ref("metrics_cultural_partner__activation_by_type") }}
+from {{ ref("exp_base__cultural_partner_by_type") }}
 group by
     partition_month,
     partner_region_name,

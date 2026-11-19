@@ -24,7 +24,11 @@ with
             any_value(session_number) as session_number,
             any_value(user_id) as user_id,
             min(event_timestamp) as first_event_timestamp,
-            date(min(event_timestamp)) as first_event_date,
+            {{
+                firebase_session_start_date(
+                    "session_id", "date(min(event_timestamp))", timezone="UTC"
+                )
+            }} as first_event_date,
             any_value(traffic_campaign) as traffic_campaign,
             any_value(traffic_medium) as traffic_medium,
             any_value(traffic_source) as traffic_source,
@@ -106,7 +110,9 @@ with
 
 select *
 from visits
--- incremental run only update partition of run day
+-- A visit is dated by its session start (see firebase_session_start_date) and kept
+-- only when it starts in the partitions rewritten: no copy of it can land in another
+-- partition. Events received more than 3 days after the start are dropped.
 {% if is_incremental() %}
     where
         first_event_date

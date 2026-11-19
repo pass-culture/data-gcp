@@ -15,8 +15,8 @@ on:
         default: "dev"
         options:
           - dev
-          - stg
-          - prd
+          - staging
+          - production
 
 permissions:
   contents: write

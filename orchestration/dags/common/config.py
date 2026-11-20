@@ -98,6 +98,7 @@ else:
 APPLICATIVE_EXTERNAL_CONNECTION_IDS_EU9 = {
     "tst": "pc-backend-tst.europe-west9.pcapi-tst-pg-pcapi-tst-eu9-ba7a837d689180e6-replica-big-query-eu9-ro",
     "stg": "pc-backend-stg.europe-west9.pcapi-stg-pg-pcapi-stg-eu9-2d4e3ae70a0de694-replica-big-query-eu9-ro",
+    "prd": "pc-backend-prd.europe-west9.pcapi-prd-pg-pcapi-prd-eu9-868d1bac7d27461b-replica-big-query-eu9-ro",
 }
 
 

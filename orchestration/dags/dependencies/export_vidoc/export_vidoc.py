@@ -4,9 +4,10 @@ from common.config import ENV_SHORT_NAME
 
 S3_SECRET_NAME = f"dbt_export_s3_config_snum_{ENV_SHORT_NAME}"
 
-# Columns of the lot 1 vidoc KPIs (see _dbt_docs/kpis): only these are
-# exported, so that new columns can be added to the exp_vidoc__* models without
-# being sent to the S3 bucket.
+# Columns exported to the prod bucket: the validated vidoc KPIs (see
+# _dbt_docs/kpis), so that new columns can be added to the exp_vidoc__* models
+# without being sent to prod. The dev and staging buckets get all the columns of
+# these tables, for the VIDOC team to build the next indicators.
 VIDOC_MODELS = {
     "diversity": [
         "deposit_expiration_month",
@@ -71,15 +72,15 @@ def generate_table_configs(models: Dict[str, List[str]]) -> List[Dict[str, Any]]
     """
     dbt model `exp_vidoc__<name>` is aliased in BigQuery to
     `export_vidoc_{env}.<name>` (see `generate_alias_name` macro), then its
-    `columns` are exported to `s3://<bucket>/exp_vidoc__<name>/` (bucket
-    resolved from the S3 secret).
+    `columns` (all of them outside prod) are exported to
+    `s3://<bucket>/exp_vidoc__<name>/` (bucket resolved from the S3 secret).
     """
     return [
         {
             "dbt_model": f"exp_vidoc__{name}",
             "bigquery_dataset_name": f"export_vidoc_{ENV_SHORT_NAME}",
             "bigquery_table_name": name,
-            "columns": columns,
+            "columns": columns if ENV_SHORT_NAME == "prod" else ["*"],
             "s3_prefix": f"exp_vidoc__{name}",
         }
         for name, columns in models.items()

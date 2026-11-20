@@ -34,13 +34,23 @@ models:
         description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
       - name: total_spent_share_0_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
-      - name: total_spent_share_0_25_beneficiaries
+      - name: total_spent_share_0_10_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
-      - name: total_spent_share_25_50_beneficiaries
+      - name: total_spent_share_10_20_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
-      - name: total_spent_share_50_75_beneficiaries
+      - name: total_spent_share_20_30_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
-      - name: total_spent_share_75_90_beneficiaries
+      - name: total_spent_share_30_40_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_40_50_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_50_60_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_60_70_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_70_80_beneficiaries
+        description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+      - name: total_spent_share_80_90_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
       - name: total_spent_share_90_100_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"

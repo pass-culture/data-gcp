@@ -242,7 +242,7 @@ The number of beneficiaries who booked across at least N distinct categories (no
 {% enddocs %}
 
 {% docs column__metrics__total_spent_share_beneficiaries %}
-The number of beneficiaries whose credit expired during the month and who spent a share of all credits received within the bucket in the column name (`total_spent_share_<min>_<max>_beneficiaries`): `0`, `]0-25]`, `]25-50]`, `]50-75]`, `]75-90]`, `]90-100]` (%). The last bucket has no strict 100% so that beneficiaries with a few cents left are counted with those who spent everything. Defined as a share of the credits received, it stays comparable across credit amounts.
+The number of beneficiaries whose credit expired during the month and who spent a share of all credits received within the bucket in the column name (`total_spent_share_<min>_<max>_beneficiaries`): `0`, then 10-point steps `]0-10]`, `]10-20]`, …, `]90-100]` (%). The last bucket has no strict 100% so that beneficiaries with a few cents left are counted with those who spent everything. Defined as a share of the credits received, it stays comparable across credit amounts.
 {% enddocs %}
 
 {% docs column__metrics__total_distinct_venue_booked_at_expiration %}

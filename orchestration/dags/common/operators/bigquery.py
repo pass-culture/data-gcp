@@ -8,9 +8,8 @@ from common.config import (
 )
 from common.utils import one_line_query
 
+
 # TODO: rename table in task_id
-
-
 def bigquery_job_task(dag, table, job_params, extra_params={}):
     return BigQueryInsertJobOperator(
         project_id=GCP_PROJECT_ID,

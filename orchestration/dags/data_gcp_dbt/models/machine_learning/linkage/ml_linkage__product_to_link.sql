@@ -1,5 +1,5 @@
 with
-    -- [PERMANENT] Offer-level authors. offer_subcategory_id is kept to route
+    -- Offer-level authors. offer_subcategory_id is kept to route
     -- LIVRE_PAPIER products to Titelive contributors and other products to the
     -- legacy `author` field (see product_author).
     offer_author as (
@@ -14,7 +14,7 @@ with
         group by offer_product_id, author, offer_category_id, offer_subcategory_id
     ),
 
-    -- [PERMANENT] Mapping between Titelive contributor role ids and the
+    -- Mapping between Titelive contributor role ids and the
     -- artist_type used in the linkage. Only roles relevant for artist pages are
     -- kept; contributors with an unmapped role are dropped by the inner join
     -- in titelive_book_contributors.
@@ -50,7 +50,7 @@ with
             )
     ),
 
-    -- [PERMANENT] New data source for books: one row per (product, contributor,
+    -- New data source for books: one row per (product, contributor,
     -- role) extracted from the current Titelive snapshot of LIVRE_PAPIER
     -- products. Contributors can be at the root of the payload or under
     -- article[0], and `role` can be either an object or an array of objects.
@@ -87,7 +87,7 @@ with
             and titelive.json_raw is not null
     ),
 
-    -- [PERMANENT] LIVRE_PAPIER products present in the current Titelive
+    -- LIVRE_PAPIER products present in the current Titelive
     -- snapshot. Only these use Titelive contributors as artist source.
     titelive_book_products as (
         select distinct product.id as offer_product_id
@@ -101,7 +101,7 @@ with
             and titelive.json_raw is not null
     ),
 
-    -- [PERMANENT] Product authors:
+    -- Product authors:
     -- - LIVRE_PAPIER in Titelive: all Titelive contributors, typed by their
     -- Titelive role (a book can now be linked to several artists). A book in
     -- Titelive without an author contributor gets no "author" row: its
@@ -195,7 +195,7 @@ with
             artist_type,
             total_booking_count
         from product_author
-        -- [PERMANENT] Titelive contributors may have an empty name.
+        -- Titelive contributors may have an empty name.
         where artist_name is not null and artist_name != ""
         union all
         select

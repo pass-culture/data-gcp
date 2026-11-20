@@ -66,7 +66,7 @@ _ADDED_ARTIST_ID_KEY = "added_artist_id"
 
 
 def _tokenize(name: str | None) -> tuple[str, ...]:
-    """[TEMPORARY] Lowercase, strip accents and parentheses, drop IGNORED_TOKENS."""
+    """Lowercase, strip accents and parentheses, drop IGNORED_TOKENS."""
     if not isinstance(name, str):
         return ()
     normalized = (
@@ -286,7 +286,7 @@ def preserve_wiki_links_replaced_by_compatible_artists(
     ].reset_index(drop=True)
 
     logger.info(
-        "[TEMPORARY] Preserved Wikidata artist links replaced by compatible "
+        "Preserved Wikidata artist links replaced by compatible "
         f"non-Wikidata artists: {kept_removed_links_df.drop_duplicates().shape[0]} "
         f"removals and {cancelled_added_links_df.drop_duplicates().shape[0]} additions "
         f"cancelled, {len(delta_artist_df) - len(filtered_delta_artist_df)} new artists dropped."

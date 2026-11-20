@@ -19,8 +19,8 @@ ARTIST_NAME_TO_FILTER = ARTIST_LINKAGE_CONFIG["preprocessing"]["artist_names_to_
 ID_KEY = "id"  # apparently unused anywhere in the codebase currently
 PRODUCT_ID_KEY = "offer_product_id"
 ARTIST_NAME_TO_MATCH_KEY = "artist_name_to_match"
-# [PERMANENT] Word-order-insensitive matching key (tokens of artist_name_to_match sorted
-# alphabetically) so that "Verdon John" (Titelive) matches "John Verdon".
+# Word-order-insensitive matching key: tokens of artist_name_to_match sorted
+# alphabetically, so "Verdon John" (Titelive) matches "John Verdon".
 ARTIST_NAME_SORTED_TO_MATCH_KEY = "artist_name_sorted_to_match"
 ARTIST_TYPE_KEY = "artist_type"
 RAW_ALIAS_KEY = "raw_alias"

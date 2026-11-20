@@ -299,9 +299,8 @@ def _link_products_to_artists(
         )
     )
 
-    # [PERMANENT] Create new artist clusters by offer_category and artist type.
-    # Clusters are built on the word-order-insensitive key so that
-    # "Grafton Sue" and "Sue Grafton" end up in the same new artist.
+    # Create new artist clusters by offer_category and artist type, using the
+    # word-order-insensitive key so "Grafton Sue" and "Sue Grafton" merge.
     new_artist_clusters_df = (
         preproc_unlinked_products_df.groupby(
             [OFFER_CATEGORY_ID_KEY, ARTIST_TYPE_KEY, ARTIST_NAME_SORTED_TO_MATCH_KEY]

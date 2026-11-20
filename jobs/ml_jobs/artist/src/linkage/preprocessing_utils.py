@@ -432,7 +432,7 @@ def extract_artist_name(artist_name: str) -> str:
 
 def build_order_insensitive_name_key(name: str | None) -> str | None:
     """
-    [PERMANENT] Build a word-order-insensitive key from an (already extracted) artist name.
+    Build a word-order-insensitive key from an (already extracted) artist name.
 
     Needed since Titelive lists contributors as "Lastname Firstname".
 
@@ -461,7 +461,7 @@ def add_order_insensitive_name_key(
     target_column: str = ARTIST_NAME_SORTED_TO_MATCH_KEY,
 ) -> pd.DataFrame:
     """
-    [PERMANENT] Add a word-order-insensitive matching key column computed from `source_column`.
+    Add a word-order-insensitive matching key column computed from `source_column`.
 
     Args:
         input_df: DataFrame containing `source_column`.
@@ -511,7 +511,7 @@ def prepare_artist_names_for_matching(input_df: pd.DataFrame) -> pd.DataFrame:
         .loc[lambda df: df.artist_name_to_match.notna()]
         .loc[lambda df: ~df.artist_name.isin(ARTIST_NAME_TO_FILTER)]
         .loc[lambda df: ~df.artist_name_to_match.isin(ARTIST_NAME_TO_FILTER)]
-        # [PERMANENT] Add the order-insensitive key used as join key downstream.
+        # Add the order-insensitive key used as join key downstream.
         .pipe(add_order_insensitive_name_key)
         .loc[lambda df: df[ARTIST_NAME_SORTED_TO_MATCH_KEY].notna()]
     )

@@ -19,7 +19,7 @@ from scripts.utils import (
 
 
 def get_endpoint():
-    if os.environ["ENV_SHORT_NAME"] == "prod":
+    if os.environ["ENV_SHORT_NAME"] in ("prod", "prd"):
         return "https://omogen-api-pr.phm.education.gouv.fr/adage-api/v1"
 
     elif os.environ["ENV_SHORT_NAME"] == "stg":
@@ -42,7 +42,7 @@ ENDPOINT = get_endpoint()
 project_name = os.environ["GCP_PROJECT_ID"]
 
 
-if os.environ["ENV_SHORT_NAME"] == "dev":
+if os.environ["ENV_SHORT_NAME"] in ("dev", "tst"):
     API_KEY = access_secret(project_name, "adage_import_api_key")
 elif os.environ["ENV_SHORT_NAME"] == "stg":
     API_KEY = access_secret(project_name, "adage_import_api_key_stg")

@@ -6,7 +6,9 @@ PROJECT_NAME = os.environ.get("GCP_PROJECT_ID")
 ENVIRONMENT_SHORT_NAME = os.environ.get("ENV_SHORT_NAME")
 SEED_DATASET = f"seed_{ENVIRONMENT_SHORT_NAME}"
 DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = (
-    f"de-bigquery-data-import-{ENVIRONMENT_SHORT_NAME}"
+    f"de-bigquery-data-import-eu-{ENVIRONMENT_SHORT_NAME}"
+    if (PROJECT_NAME or "").startswith("pc-data-")
+    else f"de-bigquery-data-import-{ENVIRONMENT_SHORT_NAME}"
 )
 BIGQUERY_IMPORT_BUCKET_FOLDER = "bigquery_imports/seed"
 

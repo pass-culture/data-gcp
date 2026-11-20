@@ -59,6 +59,7 @@ def main(
             stats = campaigns_stats_df
             stats["version"] = np.nan
         stats = stats.assign(operating_system=operating_system)
+        stats["version"] = stats["version"].astype("string")
         pandas_gbq.to_gbq(
             stats,
             destination_table=f"raw_{env_short_name}.batch_campaigns_stats",

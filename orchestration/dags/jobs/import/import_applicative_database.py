@@ -46,7 +46,9 @@ with TaskGroup(group_id="sequential_tasks_group", dag=dag) as sequential_tasks_g
     seq_tasks = []
     for table, params in SEQUENTIAL_TABLES.items():
         task = bigquery_federated_query_task(
-            dag, task_id=f"import_sequential_to_raw_{table}", job_params=params
+            dag,
+            task_id=f"import_sequential_to_raw_{table}",
+            job_params=params,
         )
         seq_tasks.append(task)
 
@@ -61,7 +63,9 @@ with TaskGroup(
     parallel_tasks = []
     for table, params in PARALLEL_TABLES.items():
         task = bigquery_federated_query_task(
-            dag, task_id=f"import_parallel_to_raw_{table}", job_params=params
+            dag,
+            task_id=f"import_parallel_to_raw_{table}",
+            job_params=params,
         )
         parallel_tasks.append(task)
 

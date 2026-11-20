@@ -9,7 +9,7 @@ resolution-markers = [
 
 [manifest]
 constraints = [
-    { name = "certifi", specifier = ">=2026.10.18" },
+    { name = "certifi", specifier = ">=2026.10.19" },
     { name = "cryptography", specifier = ">=50.0.0" },
     { name = "pyasn1", specifier = ">=0.6.4" },
     { name = "setuptools", specifier = ">=83.0.0" },

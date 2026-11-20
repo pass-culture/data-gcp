@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = "==3.12.*"
 
 [manifest]
@@ -1168,7 +1168,6 @@ wheels = [
 name = "data-gcp"
 version = "0.1.1"
 source = { virtual = "." }
-default-groups = ["airflow", "dbt", "dev", "docs"]
 
 [package.dev-dependencies]
 airflow = [

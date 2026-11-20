@@ -191,3 +191,15 @@ Number of months between partition_month and the last consolidated month (month 
 {% docs column__external_reporting_scholar_year_month %}
 Rank of partition_month in its scholar year: 0 = September ... 11 = August. With d = months_ago - X, d >= 0 and scholar_year_month + d <= 11 keeps the months of the scholar year of month X, up to X.
 {% enddocs %}
+
+{% docs column__territory_level %}
+Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group METRO, DROM or COM) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.
+{% enddocs %}
+
+{% docs column__territory_code %}
+Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.
+{% enddocs %}
+
+{% docs column__territory_name %}
+Name of the territory at its level (department, region, territory group code, or France).
+{% enddocs %}

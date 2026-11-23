@@ -21,22 +21,24 @@ Unlike the [venue territory KPIs](../partners/individual_bookings_venue_territor
 
 Rows with `offer_category_id = 'ALL'` hold the territory total; the other rows the categories. Never sum the two together. Each level (`DEP`, `REG`, `GROUP`, `NAT`) has its own rows: filter on it, never sum departments.
 
+The share of a category divides it by the `ALL` row of the same month and territory. Don't divide by the sum of the category rows: masked categories are NULL and the `ALL` row has its own mask, so that sum is not the territory total.
+
 ```sql
 SELECT
-    t.partition_month,
-    c.offer_category_id,
-    c.total_used_bookings AS used_bookings,
-    c.total_used_amount AS amount_spent,
-    SAFE_DIVIDE(c.total_used_bookings, t.total_used_bookings) AS category_share
-FROM `booking_beneficiary` AS c
-JOIN `booking_beneficiary` AS t
-    ON t.partition_month = c.partition_month
-    AND t.territory_level = c.territory_level
-    AND t.territory_code = c.territory_code
-    AND t.offer_category_id = 'ALL'
-WHERE c.territory_level = 'NAT'
-    AND c.offer_category_id != 'ALL'
-ORDER BY t.partition_month, used_bookings DESC
+    partition_month,
+    offer_category_id,
+    total_used_bookings AS used_bookings,
+    total_used_amount AS amount_spent,
+    SAFE_DIVIDE(
+        total_used_bookings,
+        MAX(IF(offer_category_id = 'ALL', total_used_bookings, NULL)) OVER (
+            PARTITION BY partition_month, territory_level, territory_code
+        )
+    ) AS category_share
+FROM `booking_beneficiary`
+WHERE territory_level = 'NAT'
+QUALIFY offer_category_id != 'ALL'
+ORDER BY partition_month, used_bookings DESC
 ```
 
 ### Available dimensions

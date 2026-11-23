@@ -75,6 +75,10 @@ SSH_HOOK_MAX_RETRIES = int(os.environ.get("SSH_HOOK_MAX_RETRIES", "20"))
 
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
+# Region of our BigQuery datasets: the new datacenter (pc-data-* projects) is in Paris.
+BIGQUERY_LOCATION = (
+    "europe-west9" if GCP_PROJECT_ID.startswith("pc-data-") else GCP_REGION
+)
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 

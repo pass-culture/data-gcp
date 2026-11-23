@@ -9,6 +9,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 from common import macros
 from common.callback import on_failure_base_callback
 from common.config import (
+    BIGQUERY_LOCATION,
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
@@ -17,6 +18,7 @@ from common.config import (
 from common.operators.bigquery import bigquery_job_task
 from common.utils import get_airflow_schedule
 from dependencies.firebase.import_firebase import (
+    BIGQUERY_TMP_DATASET_BY_LOCATION,
     SQL_PATH,
     import_perf_tables,
     import_tables,
@@ -71,6 +73,78 @@ def check_table_exists(**kwargs):
     return f"default_{job_name}"
 
 
+def prepare_job_params(job_params, dag_type, yyyymmdd):
+    """Return (query job params, final job params, staging table prefix).
+
+    BigQuery cannot query across regions. When the source is not in the region of
+    our datasets, the query writes into a staging table located in the source region;
+    it is then copied to our region and loaded into the final table
+    (see add_copy_and_load_tasks). Otherwise staging table prefix is None.
+    """
+    # suffixed with the run date so a run never overwrites the staging table of
+    # another run still in progress (daily retries span more than a day)
+    staging_table_prefix = f"{job_params['destination_table']}_{dag_type}"
+
+    # force this to include custom yyyymmdd
+    if job_params.get("partition_prefix", None) is not None:
+        job_params["destination_table"] = (
+            f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
+        )
+    final_job_params = job_params
+
+    source_location = job_params.get("source_location", BIGQUERY_LOCATION)
+    if source_location == BIGQUERY_LOCATION:
+        return job_params, final_job_params, None
+
+    query_job_params = dict(
+        job_params,
+        destination_dataset=BIGQUERY_TMP_DATASET_BY_LOCATION[source_location],
+        destination_table=f"{staging_table_prefix}_" + "{{ ds_nodash }}",
+        location=source_location,
+        time_partitioning=None,
+        clustering_fields=None,
+        schemaUpdateOptions=None,
+    )
+    return query_job_params, final_job_params, staging_table_prefix
+
+
+def add_copy_and_load_tasks(
+    dag, job_name_table, query_job_params, final_job_params, staging_table_prefix
+):
+    """Copy the staging table to our region, then load it into the final table."""
+    staging_table = query_job_params["destination_table"]
+    copy_task = BigQueryInsertJobOperator(
+        dag=dag,
+        task_id=f"copy_{job_name_table}",
+        project_id=GCP_PROJECT_ID,
+        # cross-region copy jobs must run in the source location
+        location=query_job_params["location"],
+        configuration={
+            "copy": {
+                "sourceTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": query_job_params["destination_dataset"],
+                    "tableId": staging_table,
+                },
+                "destinationTable": {
+                    "projectId": GCP_PROJECT_ID,
+                    "datasetId": BIGQUERY_TMP_DATASET,
+                    "tableId": staging_table,
+                },
+                "writeDisposition": "WRITE_TRUNCATE",
+            }
+        },
+    )
+    load_task = bigquery_job_task(
+        dag=dag,
+        table=f"load_{job_name_table}",
+        job_params=dict(final_job_params, sql=f"{SQL_PATH}/raw/load_from_tmp.sql"),
+        extra_params={"tmp_table_prefix": staging_table_prefix},
+    )
+    copy_task >> load_task
+    return copy_task, load_task
+
+
 for dag_type, params in dags.items():
     dag_id = f"import_{dag_type}_firebase_data"
     prefix = params["prefix"]
@@ -97,31 +171,9 @@ for dag_type, params in dags.items():
 
     import_tables_temp = copy.deepcopy(import_tables)
     for job_name_table, job_params in import_tables_temp.items():
-        # Source exported in another region: query into a staging table in the
-        # source region, then copy it to our region and load it into the final table.
-        source_location = job_params.get("source_location", None)
-        # suffixed with the run date so a run never overwrites the staging table of
-        # another run still in progress (daily retries span more than a day)
-        staging_table_prefix = f"{job_params['destination_table']}_{dag_type}"
-        staging_table = f"{staging_table_prefix}_" + "{{ ds_nodash }}"
-        final_job_params = job_params
-
-        # force this to include custom yyyymmdd
-        if job_params.get("partition_prefix", None) is not None:
-            job_params["destination_table"] = (
-                f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
-            )
-
-        if source_location is not None:
-            job_params = dict(
-                job_params,
-                destination_dataset=job_params["source_tmp_dataset"],
-                destination_table=staging_table,
-                location=source_location,
-                time_partitioning=None,
-                clustering_fields=None,
-                schemaUpdateOptions=None,
-            )
+        job_params, final_job_params, staging_table_prefix = prepare_job_params(
+            job_params, dag_type, yyyymmdd
+        )
 
         if dag_type == "intraday":
             table_id = f"events{prefix}" + "{{ yyyymmdd(ds) }}"
@@ -161,56 +213,23 @@ for dag_type, params in dags.items():
             task_id=f"end_{job_name_table}", dag=dag, trigger_rule="one_success"
         )
 
-        if source_location is None:
-            start >> check_table_task >> [default_task, fallback_task] >> end_job >> end
+        start >> check_table_task >> [default_task, fallback_task] >> end_job
+
+        if staging_table_prefix is None:
+            end_job >> end
             continue
 
-        copy_task = BigQueryInsertJobOperator(
-            dag=dag,
-            task_id=f"copy_{job_name_table}",
-            project_id=GCP_PROJECT_ID,
-            # cross-region copy jobs must run in the source location
-            location=source_location,
-            configuration={
-                "copy": {
-                    "sourceTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": job_params["destination_dataset"],
-                        "tableId": staging_table,
-                    },
-                    "destinationTable": {
-                        "projectId": GCP_PROJECT_ID,
-                        "datasetId": BIGQUERY_TMP_DATASET,
-                        "tableId": staging_table,
-                    },
-                    "writeDisposition": "WRITE_TRUNCATE",
-                }
-            },
+        copy_task, load_task = add_copy_and_load_tasks(
+            dag, job_name_table, job_params, final_job_params, staging_table_prefix
         )
-
-        load_task = bigquery_job_task(
-            dag=dag,
-            table=f"load_{job_name_table}",
-            job_params=dict(final_job_params, sql=f"{SQL_PATH}/raw/load_from_tmp.sql"),
-            extra_params={"tmp_table_prefix": staging_table_prefix},
-        )
-
-        (
-            start
-            >> check_table_task
-            >> [default_task, fallback_task]
-            >> end_job
-            >> copy_task
-            >> load_task
-            >> end
-        )
+        end_job >> copy_task
+        load_task >> end
 
     import_perf_tables_temp = copy.deepcopy(import_perf_tables)
     for job_name_table, job_params in import_perf_tables_temp.items():
-        if job_params.get("partition_prefix", None) is not None:
-            job_params["destination_table"] = (
-                f"{job_params['destination_table']}{job_params['partition_prefix']}{yyyymmdd}"
-            )
+        job_params, final_job_params, staging_table_prefix = prepare_job_params(
+            job_params, dag_type, yyyymmdd
+        )
 
         loading_task = bigquery_job_task(
             dag=dag,
@@ -219,4 +238,14 @@ for dag_type, params in dags.items():
             extra_params={"dag_type": dag_type},
         )
 
-        start >> loading_task >> end
+        start >> loading_task
+
+        if staging_table_prefix is None:
+            loading_task >> end
+            continue
+
+        copy_task, load_task = add_copy_and_load_tasks(
+            dag, job_name_table, job_params, final_job_params, staging_table_prefix
+        )
+        loading_task >> copy_task
+        load_task >> end

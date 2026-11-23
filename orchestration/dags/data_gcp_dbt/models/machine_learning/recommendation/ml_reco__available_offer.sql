@@ -125,7 +125,7 @@ with
             and offer.offer_is_bookable = true
             and offer.offer_validation = 'APPROVED'
             and offer.offer_publication_date is not null
-            and offer.offer_publication_date <= current_date
+            and offer.offer_publication_date <= current_date + interval 1 day
             and offer.last_stock_price is not null
             and not (
                 offer.offer_subcategory_id = 'LIVRE_PAPIER'

@@ -11,18 +11,35 @@ set -euo pipefail
 echo 'CC=gcc' | sudo tee -a /etc/environment
 """,
     "setup_airflow_user": """
-# Ensure airflow user exists, create home dir, and set permissions
+# The `airflow` account is provisioned by the Guest Agent from the SSH key
+# Airflow pushes to instance metadata, and the Guest Agent reconciles that
+# account's group membership to this list on every metadata poll - so a bare
+# `usermod -aG docker` below gets silently reverted shortly after boot unless
+# `docker` is also listed here.
+sudo groupadd -f docker
+sudo tee /etc/default/instance_configs.cfg > /dev/null <<'EOF'
+[Accounts]
+groups = adm,dip,docker,lxd,plugdev,video
+EOF
+sudo systemctl restart google-guest-agent || true
+
+# Ensure airflow user exists and is in the docker group first - this must
+# not be skipped by a failure below, since Airflow's own SSH-driven tasks
+# (fetch_install_code, create_vector_database) start writing into
+# /home/airflow concurrently with this startup script and can delete a temp
+# file (e.g. an in-flight mlflow artifact upload) out from under a recursive
+# chown, which under `set -e` would otherwise abort the script before this
+# point and silently skip the docker group setup entirely.
 if ! id -u airflow >/dev/null 2>&1; then
   sudo useradd -m -s /bin/bash airflow
 fi
-
-sudo mkdir -p /home/airflow
-sudo chown -R airflow:airflow /home/airflow
 sudo usermod -aG docker airflow 2>/dev/null || true
+
+# Best-effort home dir permissions fixup - not allowed to abort the script.
+sudo mkdir -p /home/airflow
+sudo chown -R airflow:airflow /home/airflow || true
 """,
     "install_docker": """
-sudo systemctl restart google-guest-agent || true
-
 # Install Docker Engine from Docker's official apt repo (docker.io is unofficial).
 # https://docs.docker.com/engine/install/ubuntu/
 sudo apt-get update -qq
@@ -86,8 +103,8 @@ set -e
     # --- Main Entrypoints ---
     "cpu_startup": """
 {% include 'preamble' %}
-{% include 'install_docker' %}
 {% include 'setup_airflow_user' %}
+{% include 'install_docker' %}
 
 {% if enable_monitoring %}
 {% include 'ops_agent_basic' %}
@@ -95,12 +112,11 @@ set -e
 """,
     "gpu_startup": """
 {% include 'preamble' %}
+{% include 'setup_airflow_user' %}
 
 # Required for Triton's JIT compilation of custom CUDA kernels
 sudo apt-get update -qq
 sudo apt-get install -y -qq build-essential python3.10-dev
-
-{% include 'setup_airflow_user' %}
 
 {% if enable_monitoring %}
 {% include 'ops_agent_dcgm' %}

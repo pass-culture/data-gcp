@@ -1,8 +1,9 @@
+import logging
 from datetime import datetime, timedelta
 from functools import partial
 
 from airflow import DAG
-from airflow.models import Param
+from airflow.models import DagRun, Param
 from airflow.operators.bash import BashOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, ShortCircuitOperator
@@ -23,7 +24,11 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import delayed_waiting_operator, get_airflow_schedule
+from common.utils import (
+    delayed_waiting_operator,
+    get_airflow_schedule,
+    get_last_execution_date,
+)
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -66,9 +71,18 @@ TABLE_TO_DBT_MODEL = {
     "artist_top_by_category": "exp_reco_cloudsql__artist_top_by_category",
 }
 
-# Any terminal state of the dbt task unblocks the sync: if dbt fails, we still
-# sync the data currently available in BigQuery.
+DBT_DAG_ID = "dbt_run_dag"
+# Same window as delayed_waiting_operator's default (window_days=1).
+DBT_RUN_WINDOW = timedelta(days=1)
+# Sensors wait for any terminal state; tables whose dbt model did not succeed
+# are then excluded from the sync by choose_tables_to_export.
 DBT_TERMINAL_STATES = ["success", "failed", "upstream_failed", "skipped"]
+DBT_NOT_REFRESHED_STATES = {"failed", "upstream_failed", "skipped"}
+
+# The Cloud SQL import heavily slows down the recommendation API: it must run
+# at night. If dbt is not ready by then, the sync fails and nothing is synced.
+SYNC_START_DEADLINE_TZ = "Europe/Paris"
+SYNC_START_DEADLINE_HOUR = 6
 
 TABLES_TO_PROCESS = list(TABLE_TO_VIEW.keys())
 MATERIALIZED_VIEWS = list(TABLE_TO_VIEW.values())
@@ -86,22 +100,65 @@ def get_schedule(dag_id: str):
     return get_airflow_schedule(schedule)
 
 
+def sync_start_deadline(context) -> datetime:
+    """06:00 Europe/Paris on the day the scheduled run is triggered."""
+    return (
+        context["data_interval_end"]
+        .in_timezone(SYNC_START_DEADLINE_TZ)
+        .replace(hour=SYNC_START_DEADLINE_HOUR, minute=0, second=0, microsecond=0)
+    )
+
+
+def get_tables_with_failed_dbt_model(logical_date: datetime) -> set[str]:
+    """Tables whose dbt model was not refreshed by the latest dbt_run_dag run."""
+    dbt_logical_date = get_last_execution_date(
+        DBT_DAG_ID,
+        upper_date_limit=logical_date,
+        lower_date_limit=logical_date - DBT_RUN_WINDOW,
+    )
+    if dbt_logical_date is None:
+        logging.warning("No %s run found, no table excluded.", DBT_DAG_ID)
+        return set()
+
+    dbt_dag_run = DagRun.find(dag_id=DBT_DAG_ID, execution_date=dbt_logical_date)[0]
+    failed_tables = set()
+    for table, dbt_model in TABLE_TO_DBT_MODEL.items():
+        ti = dbt_dag_run.get_task_instance(f"data_transformation.{dbt_model}")
+        state = ti.state if ti else None
+        if state in DBT_NOT_REFRESHED_STATES:
+            logging.warning(
+                "dbt model %s is in state %s: table %s will not be synced.",
+                dbt_model,
+                state,
+                table,
+            )
+            failed_tables.add(table)
+    return failed_tables
+
+
 def _selected_tables(context) -> list[str]:
     return context["params"].get("tables") or TABLES_TO_PROCESS
 
 
+def _tables_to_sync(context) -> list[str]:
+    return context["ti"].xcom_pull(task_ids="branch_export_tables", key="tables")
+
+
 def choose_tables_to_export(**context):
-    selected_tables = _selected_tables(context)
-    return [f"export_tables.export_{table}" for table in selected_tables]
+    failed_tables = get_tables_with_failed_dbt_model(context["logical_date"])
+    tables = [t for t in _selected_tables(context) if t not in failed_tables]
+    logging.info("Tables to sync: %s", tables)
+    # Shared with the import/refresh steps so they all use the same list.
+    context["ti"].xcom_push(key="tables", value=tables)
+    return [f"export_tables.export_{table}" for table in tables]
 
 
 def choose_tables_to_import(**context):
-    selected_tables = _selected_tables(context)
-    return [f"import_tables.import_{table}" for table in selected_tables]
+    return [f"import_tables.import_{table}" for table in _tables_to_sync(context)]
 
 
 def is_view_selected(view: str, **context) -> bool:
-    return VIEW_TO_TABLE[view] in _selected_tables(context)
+    return VIEW_TO_TABLE[view] in _tables_to_sync(context)
 
 
 with DAG(
@@ -148,20 +205,19 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
 
-    # Wait for the dbt models feeding the exported tables to be refreshed by
-    # today's dbt_run_dag run, so the sync does not export stale data.
+    # Wait for the dbt models feeding the exported tables to reach a terminal
+    # state in today's dbt_run_dag run, so the sync does not export stale
+    # data. Fails the whole sync if they are not ready by the deadline.
     with TaskGroup("wait_for_dbt", dag=dag) as wait_for_dbt:
         for dbt_model in TABLE_TO_DBT_MODEL.values():
             delayed_waiting_operator(
                 dag,
-                external_dag_id="dbt_run_dag",
+                external_dag_id=DBT_DAG_ID,
                 external_task_id=f"data_transformation.{dbt_model}",
                 allowed_states=DBT_TERMINAL_STATES,
                 failed_states=[],
                 skip_manually_triggered=True,
-                # Safety net: if dbt never runs, skip waiting and sync anyway.
-                timeout=int(timedelta(hours=8).total_seconds()),
-                soft_fail=True,
+                deadline_fn=sync_start_deadline,
                 retries=0,
             )
 
@@ -172,8 +228,6 @@ with DAG(
         retries=2,
         labels={"job_type": "long_task", "dag_name": DAG_ID},
         preemptible=False,
-        # Sensors may be soft-failed (skipped) on timeout: still run the sync.
-        trigger_rule=TriggerRule.NONE_FAILED,
     )
 
     fetch_install_code = InstallDependenciesOperator(

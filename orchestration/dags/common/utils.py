@@ -3,10 +3,13 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
+from typing import Callable, Optional
 
 import requests
+from airflow.exceptions import AirflowFailException
 from airflow.models import DagRun
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.utils import timezone as airflow_timezone
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
 from common.access_gcp_secrets import create_key_if_not_exists
@@ -157,9 +160,28 @@ class _DelayedWaitExternalTaskSensor(ExternalTaskSensor):
     `AttributeError: 'NoneType' object has no attribute 'isoformat'`
     instead of just rescheduling. Guard against that here by treating a
     None execution date as "poke again later".
+
+    If deadline_fn is set, the sensor fails (without retry) as soon as the
+    external task is still not ready once the deadline returned by
+    deadline_fn(context) has passed.
     """
 
+    def __init__(
+        self,
+        *,
+        deadline_fn: Optional[Callable[[dict], datetime]] = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.deadline_fn = deadline_fn
+
     def poke(self, context):
+        if self._is_external_task_ready(context):
+            return True
+        self._fail_if_deadline_passed(context)
+        return False
+
+    def _is_external_task_ready(self, context) -> bool:
         logical_date = context.get("logical_date")
         if (
             logical_date is not None
@@ -172,6 +194,16 @@ class _DelayedWaitExternalTaskSensor(ExternalTaskSensor):
             )
             return False
         return super().poke(context)
+
+    def _fail_if_deadline_passed(self, context) -> None:
+        if self.deadline_fn is None:
+            return
+        deadline = self.deadline_fn(context)
+        if airflow_timezone.utcnow() >= deadline:
+            raise AirflowFailException(
+                f"{self.external_dag_id}.{self.external_task_id} not ready "
+                f"before deadline {deadline.isoformat()}."
+            )
 
 
 class _ManualSkipExternalTaskSensor(_DelayedWaitExternalTaskSensor):
@@ -200,6 +232,7 @@ def delayed_waiting_operator(
     offset_hours: int = 0,
     window_hours: int = 0,
     skip_manually_triggered: bool = False,
+    deadline_fn: Optional[Callable[[dict], datetime]] = None,
     pool: str = "default_pool",
     **kwargs,
 ):
@@ -242,6 +275,10 @@ def delayed_waiting_operator(
         offset_hours (int): Shift the window back in hours.
         window_hours (int): Width of the window in hours.
         skip_manually_triggered (bool): Skip waiting for manual DAG runs if True.
+        deadline_fn (callable): Optional, receives the task context and returns
+            an aware datetime. Once it has passed and the external task is still
+            not ready, the sensor fails without retry. Ignored for manual runs
+            skipped by skip_manually_triggered.
         pool (str): Airflow pool to use.
         **kwargs: Additional arguments passed to the ExternalTaskSensor.
     """
@@ -312,6 +349,7 @@ def delayed_waiting_operator(
         mode="reschedule",
         dag=dag,
         pool=pool,
+        deadline_fn=deadline_fn,
         **kwargs,
     )
 

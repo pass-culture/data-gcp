@@ -26,7 +26,7 @@ Owners come from `.github/CODEOWNERS`. Outside the user's own area, keep changes
 - The root uv project (Python 3.12) serves `orchestration/` and the linters. Install with `uv sync` from the root.
 - Every job under `jobs/` is its own uv project, excluded from the root workspace, with its own Python version.
   Run `uv` commands from the job folder.
-- Change dependencies with `uv add` / `uv remove`, never by editing `uv.lock`. Security bumps: `vulnerability-fix` skill.
+- Change dependencies with `uv add` / `uv remove`, never by editing `uv.lock`. Security bumps: `vulnerability-fix` (one job) or `dependency-vulnerability-pr` (all jobs of a folder).
 
 ## Validate before finishing
 
@@ -73,8 +73,8 @@ Shared skills live in `.agents/skills/`:
 
 - `data-pr-workflow`: branch, commit and PR conventions.
 - `pr-review`: review a PR and rate it /10.
-- `vulnerability-fix`: fix vulnerable packages in one `uv.lock`.
-- `dependency-vulnerability-pr`: triage Dependabot alerts into safe and breaking PRs.
+- `vulnerability-fix`: fix vulnerable packages in one `uv.lock`, run the tests, report a confidence level.
+- `dependency-vulnerability-pr`: one subagent per job of a folder (`ml_jobs` by default), two PRs split by confidence.
 - `test-dag-from-diff`: upload test copies of changed DAGs to dev/stg Airflow.
 - `yaml-doc-test`: write dbt schema YAML and docs for mart models.
 - `sql-commenter`: comment BigQuery/dbt SQL without changing logic.

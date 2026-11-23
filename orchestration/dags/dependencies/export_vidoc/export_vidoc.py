@@ -20,6 +20,15 @@ VIDOC_MODELS = {
         "micro_density_label",
         "total_expired_deposit_beneficiaries",
         "total_3plus_category_booked_beneficiaries",
+        # lot 2.1: FI2.3, FI2.4, FI3.1, FI3.2
+        *[f"total_{n}plus_category_booked_beneficiaries" for n in (1, 2, 4, 5)],
+        *[
+            f"total_spent_share_{bucket}_beneficiaries"
+            for bucket in ["0"] + [f"{low}_{low + 10}" for low in range(0, 100, 10)]
+        ],
+        "total_deposit_amount_at_expiration",
+        "total_actual_amount_spent_at_expiration",
+        "total_distinct_venue_booked_at_expiration",
     ],
     "diversity_by_category": [
         "deposit_expiration_month",

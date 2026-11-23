@@ -1,13 +1,15 @@
 ---
 title: Cumulative number of activated cultural partners
-description: How to calculate the cumulative number of cultural partners that have had at least one bookable offer.
+description: How to calculate the cumulative number of cultural partners that have created an offer that became bookable.
 ---
 
 ## Cumulative number of activated cultural partners
 
 ### Definition
 
-A cultural partner (venue) is **activated** at a given month if it has had at least one **bookable** offer for at least one day between the start of the bookable offer history (**2022-06-10**) and the last day of the month. Creating an offer is not enough: the offer must have been bookable.
+A cultural partner (venue) is **activated** at a given month if it has **created an offer that has been bookable** (with stock available) for at least one day, individual and/or collective, between the start of the bookable offer history (**2022-06-10**) and the last day of the month. An offer that was created but never bookable does not count.
+
+It is the second step of the partner funnel: **registered** (the venue exists) → **activated** (created an offer that became bookable) → **active** (had a bookable offer in the last 12 months, see [active cultural partners](active_cultural_partners.md)).
 
 The count is cumulative: once activated, a partner stays counted in every following month, even if it is no longer active.
 

@@ -68,9 +68,23 @@ with
             s.is_in_qpv,
             s.macro_density_label,
             s.micro_density_label,
-            s.total_deposit_amount_at_expiration,
-            s.total_actual_amount_spent_at_expiration,
-            s.total_distinct_venue_booked_at_expiration,
+            -- sums are not perturbed: hidden when the cell has fewer than 5 young
+            -- people before perturbation, which the perturbed count does not show
+            if(
+                s.total_expired_deposit_beneficiaries >= 5,
+                s.total_deposit_amount_at_expiration,
+                null
+            ) as total_deposit_amount_at_expiration,
+            if(
+                s.total_expired_deposit_beneficiaries >= 5,
+                s.total_actual_amount_spent_at_expiration,
+                null
+            ) as total_actual_amount_spent_at_expiration,
+            if(
+                s.total_expired_deposit_beneficiaries >= 5,
+                s.total_distinct_venue_booked_at_expiration,
+                null
+            ) as total_distinct_venue_booked_at_expiration,
             {% for c in nested_counts %}
                 {{ apply_perturbation("s." ~ c.column, c.column, "pt_" ~ loop.index) }},
             {% endfor %}
@@ -102,8 +116,7 @@ with
 
 -- Nested cohorts (N+ categories, spent share buckets ⊂ expired): perturbations are
 -- independent, so cap each perturbed numerator at the perturbed denominator to keep
--- shares <= 100%. Sums are not perturbed: they are hidden when the perturbed count is
--- below 5
+-- shares <= 100%
 select
     deposit_expiration_month,
     region_name,
@@ -117,21 +130,9 @@ select
     {% for c in nested_counts %}
         least({{ c.column }}, total_expired_deposit_beneficiaries) as {{ c.column }},
     {% endfor %}
-    if(
-        total_expired_deposit_beneficiaries >= 5,
-        total_deposit_amount_at_expiration,
-        null
-    ) as total_deposit_amount_at_expiration,
-    if(
-        total_expired_deposit_beneficiaries >= 5,
-        total_actual_amount_spent_at_expiration,
-        null
-    ) as total_actual_amount_spent_at_expiration,
-    if(
-        total_expired_deposit_beneficiaries >= 5,
-        total_distinct_venue_booked_at_expiration,
-        null
-    ) as total_distinct_venue_booked_at_expiration
+    total_deposit_amount_at_expiration,
+    total_actual_amount_spent_at_expiration,
+    total_distinct_venue_booked_at_expiration
 from perturbed
 -- a cell whose counts are all 0 had 1 to 5 young people (rows only exist for
 -- cells with at least one): left out, so that a missing combination reads as 0

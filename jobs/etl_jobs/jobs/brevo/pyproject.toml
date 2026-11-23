@@ -59,6 +59,7 @@ constraint-dependencies = [
     "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, GHSA-537c-gmf6-5ccf,
     "setuptools >= 83.0.0", # GHSA-5rjg-fvgr-3xxf, GHSA-h35f-9h28-mq5c,
     "idna >= 3.15", # GHSA-65pc-fj4g-8rjx,
+    "anyio >= 4.14.2", # GHSA-5p39-cfhj-2xmp, GHSA-82r6-8w77-94w6
     "pyasn1 >= 0.6.4", # GHSA-8ppf-4f7h-5ppj, GHSA-hm4w-wwcw-mr6r, GHSA-m4p7-r5rc-7g4j, GHSA-jr27-m4p2-rc6r,
     "urllib3 >= 2.7.0", # CVE-2026-44432, CVE-2026-44431, PYSEC-2026-141, PYSEC-2026-142
 ]

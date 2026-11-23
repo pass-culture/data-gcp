@@ -22,6 +22,12 @@ models:
             expression: "total_actual_beneficiaries <= total_beneficiaries"
       - dbt_utils.expression_is_true:
           arguments:
+            # credits are usable until the day before the 21st birthday at most
+            expression: "total_actual_beneficiaries = 0"
+          config:
+            where: "age_at_calculation >= 21"
+      - dbt_utils.expression_is_true:
+          arguments:
             # cell key perturbation: a published count is 0 or >= 5
             expression: "coalesce(total_beneficiaries, 0) not between 1 and 4 and coalesce(total_actual_beneficiaries, 0) not between 1 and 4"
     columns:

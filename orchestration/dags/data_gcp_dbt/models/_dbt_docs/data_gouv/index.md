@@ -1,13 +1,13 @@
 ---
 title: data.gouv.fr exports
-description: pass Culture datasets published as open data on data.gouv.fr, their tables, schemas and publication process.
+description: passe Culture datasets published as open data on data.gouv.fr, their tables, schemas and publication process.
 ---
 
 ## data.gouv.fr exports
 
-pass Culture publishes open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`: indicators on the young beneficiaries of the individual part of the pass Culture (outside school time), by month and territory of residence. The collective part (school time) is not covered.
+passe Culture publishes open data on [data.gouv.fr](https://www.data.gouv.fr), tagged `culture`: indicators on the young beneficiaries of the individual part of the passe Culture (outside school time), by month and territory of residence. The collective part (school time) is not covered.
 
-Only pass Culture data is published. The INSEE population estimates used as the coverage rate denominator are not republished; their computation is public in [data-insee-population](https://github.com/pass-culture/data-insee-population).
+Only passe Culture data is published. The INSEE population estimates used as the coverage rate denominator are not republished; their computation is public in [data-insee-population](https://github.com/pass-culture/data-insee-population).
 
 ### Resources
 
@@ -18,13 +18,13 @@ Only pass Culture data is published. The INSEE population estimates used as the 
 | `diversity` | Beneficiaries whose credit expired in the month, and those who booked in 3+ categories | [exp_data_gouv__diversity](../models/export/data_gouv/description__exp_data_gouv__diversity.md) | [Diversity rate (3+ categories)](../kpis/diversity/diversity_3plus_categories.md) |
 | `diversity_by_category` | Same population, by offer category booked | [exp_data_gouv__diversity_by_category](../models/export/data_gouv/description__exp_data_gouv__diversity_by_category.md) | [Booking share by category](../kpis/diversity/booking_share_by_category.md) |
 
-Every model reads the perturbed base `exp_base__*` (see [A single perturbed base](../references/statistical_confidentiality.md#a-single-perturbed-base-for-every-export)), so the published figures are the ones pass Culture uses in all its reporting.
+Every model reads the perturbed base `exp_base__*` (see [A single perturbed base](../references/statistical_confidentiality.md#a-single-perturbed-base-for-every-export)), so the published figures are the ones passe Culture uses in all its reporting.
 
 ### Format
 
 - **First month**: May 2021 for `beneficiary` and `beneficiary_coverage` (national opening of the individual credit at 18; the 2019-2021 pilot is not published), May 2023 for `diversity` and `diversity_by_category` (first expirations of the credits granted since May 2021). Set in the models with `data_gouv_month_filter`.
 - **Months**: published each semester, up to the end of June and the end of December. The tables keep every closed month (the current month is excluded); the cut-off is applied by `data_gouv/export_csv.py --last-month`.
-- **Geography**: INSEE COG codes as strings, so that data.gouv.fr detects them (`region_code` zero-padded, e.g. `01` for Guadeloupe). Codes are empty for non-localised beneficiaries (label `non localisé` kept so that totals stay complete) and `region_code` is empty for overseas collectivities (975, 978, 986, 987, 988).
+- **Geography**: INSEE COG codes as strings, so that data.gouv.fr detects them (`region_code` zero-padded, e.g. `01` for Guadeloupe). Codes are empty for non-localised beneficiaries (label `non localisé` kept so that totals stay complete) and overseas collectivities (975, 977, 978, 986, 987, 988) have an empty `region_code` and the region label `Collectivités d'outre-mer`.
 - **CSV**: UTF-8, comma separator, ISO dates (first day of the month), lowercase booleans; an empty cell means "unknown", never zero.
 
 ### Data protection

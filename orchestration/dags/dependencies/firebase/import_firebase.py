@@ -5,12 +5,19 @@ SQL_PATH = "dependencies/firebase/sql"
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING = {
     "dev": ["app.passculture.test", "app.passculture.testing"],
+    "tst": ["app.passculture.test", "app.passculture.testing"],
     "stg": ["app.passculture.staging", "app.passculture", "app.passculture.webapp"],
     "prod": ["app.passculture", "app.passculture.webapp"],
+    "prd": ["app.passculture", "app.passculture.webapp"],
 }[ENV_SHORT_NAME]
 
 ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
     "dev": [
+        "localhost",
+        "pro.testing.passculture.team",
+        "pro-test.testing.passculture.team",
+    ],
+    "tst": [
         "localhost",
         "pro.testing.passculture.team",
         "pro-test.testing.passculture.team",
@@ -22,6 +29,7 @@ ENV_SHORT_NAME_APP_INFO_ID_MAPPING_PRO = {
         "pro.staging.passculture.team",
     ],
     "prod": ["passculture.pro"],
+    "prd": ["passculture.pro"],
 }[ENV_SHORT_NAME]
 
 
@@ -31,9 +39,11 @@ GCP_PROJECT_NATIVE_DEFAULT_ENV = [
 
 GCP_PROJECT_NATIVE_ENV = {
     "dev": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-testing.analytics_451612566"],
+    "tst": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-testing.analytics_451612566"],
     "stg": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["pc-native-staging.analytics_450776578"],
     # keep double run for native while we are migrating to new project.
     "prod": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["passculture-native.analytics_267263535"],
+    "prd": GCP_PROJECT_NATIVE_DEFAULT_ENV + ["passculture-native.analytics_267263535"],
 }[ENV_SHORT_NAME]
 
 
@@ -41,8 +51,10 @@ GCP_PROJECT_PRO_DEFAULT_ENV = ["pc-pro-production.analytics_397565568"]
 
 GCP_PROJECT_PRO_ENV = {
     "dev": ["pc-pro-testing.analytics_397508951"] + GCP_PROJECT_PRO_DEFAULT_ENV,
+    "tst": ["pc-pro-testing.analytics_397508951"] + GCP_PROJECT_PRO_DEFAULT_ENV,
     "stg": ["pc-pro-staging.analytics_397573615"] + GCP_PROJECT_PRO_DEFAULT_ENV,
     "prod": GCP_PROJECT_PRO_DEFAULT_ENV,
+    "prd": GCP_PROJECT_PRO_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 
 # The institutional website GA4 export lives in europe-west9 while our datasets are in
@@ -59,28 +71,36 @@ GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV = [
 
 GCP_PROJECT_INSTITUTIONAL_ENV = {
     "dev": GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV,
+    "tst": GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV,
     "stg": GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV,
     "prod": GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV,
+    "prd": GCP_PROJECT_INSTITUTIONAL_DEFAULT_ENV,
 }[ENV_SHORT_NAME]
 
 GCP_PROJECT_PERFORMANCE_ENV = {
     "dev": "pc-native-testing.firebase_performance",
+    "tst": "pc-native-testing.firebase_performance",
     "stg": "pc-native-testing.firebase_performance",
     "prod": "pc-native-production.firebase_performance",
+    "prd": "pc-native-production.firebase_performance",
 }[ENV_SHORT_NAME]
 
 
 PERFORMANCE_SUFFIX_IOS = {
     "dev": "test_IOS",
+    "tst": "test_IOS",
     "stg": "test_IOS",
     "prod": "IOS",
+    "prd": "IOS",
 }[ENV_SHORT_NAME]
 
 
 PERFORMANCE_SUFFIX_ANDROID = {
     "dev": "testing_ANDROID",
+    "tst": "testing_ANDROID",
     "stg": "testing_ANDROID",
     "prod": "webapp_ANDROID",
+    "prd": "webapp_ANDROID",
 }[ENV_SHORT_NAME]
 
 import_firebase_pro_tables = {

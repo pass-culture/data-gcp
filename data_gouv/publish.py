@@ -279,7 +279,13 @@ def main():
 
     dataset_id = upload(api, args) if args.csv_dir else args.dataset
     if args.publish:
-        dataset = api.call("PUT", f"/datasets/{dataset_id}/", json={"private": False})
+        # a PUT without temporal_coverage clears it: send the current one back
+        current = api.call("GET", f"/datasets/{dataset_id}/")
+        dataset = api.call(
+            "PUT",
+            f"/datasets/{dataset_id}/",
+            json={"private": False, "temporal_coverage": current["temporal_coverage"]},
+        )
         print(f"published {dataset['page']} (private={dataset['private']})")
 
 

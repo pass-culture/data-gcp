@@ -1,0 +1,35 @@
+The `mrt_institutional__event` table exposes event-level Google Analytics data from the pass.culture.fr website for audience, acquisition, navigation, engagement, and publication-download analysis.
+
+The table contains one row per recorded event. It keeps raw session and first-touch source/medium values for flexible acquisition analysis; no channel taxonomy is applied. `session_id` is the GA4 session identifier, and `unique_session_id` combines it with `user_pseudo_id`.
+
+The model is restricted to the production hostname and partitioned by event date. Event-level uniqueness is not asserted because the GA4 export does not provide a unique event key.
+
+## Table description
+
+| name                 | data_type | description                                                                                                                                                                                         |
+| -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| event_date           | DATE      | The date when the event occurred, used for partitioning the data.                                                                                                                                   |
+| event_timestamp      | TIMESTAMP | The exact timestamp when the event was recorded.                                                                                                                                                    |
+| user_pseudo_id       | STRING    | Firebase pseudonymous identifier of the app instance (the device, or the browser for web tracking), used for tracking purposes. One person can have several, and people sharing a device share one. |
+| session_id           | INT64     | Google Analytics session identifier. It is unique only when combined with `user_pseudo_id`; use `unique_session_id` as the composite session key.                                                   |
+| unique_session_id    | STRING    | A unique identifier for the session, ensuring no duplicates.                                                                                                                                        |
+| session_number       | INT64     | The number of the session during which the visit occurred, indicating the sequence of user sessions.                                                                                                |
+| event_name           | STRING    | The name of the event. For screen views, it concatenates the event name with the Firebase screen name.                                                                                              |
+| page_title           | STRING    | Title of the page on which the event occurred.                                                                                                                                                      |
+| engagement_time_msec | INT64     | Time in milliseconds the page was in the foreground since the previous engagement event.                                                                                                            |
+| percent_scrolled     | INT64     | Percentage of the page scrolled, set on scroll events. Always 90: GA4 sends the scroll event once the user reaches 90% of the page.                                                                 |
+| session_engaged      | STRING    | '1' when the session is engaged (lasted more than 10 seconds, had 2+ page views or a key event), '0' otherwise.                                                                                     |
+| source               | STRING    | Source of the marketing campaign that generated the session (utm_source).                                                                                                                           |
+| medium               | STRING    | Medium of the marketing campaign that generated the session (utm_medium).                                                                                                                           |
+| campaign             | STRING    | Name of the marketing campaign that generated the session (utm_campaign).                                                                                                                           |
+| user_traffic_source  | STRING    | Source of the marketing campaign that first acquired the user (first-touch attribution).                                                                                                            |
+| user_traffic_medium  | STRING    | Medium of the marketing campaign that first acquired the user (first-touch attribution).                                                                                                            |
+| file_name            | STRING    | Path of the downloaded file, set on file_download events.                                                                                                                                           |
+| file_extension       | STRING    | Extension of the downloaded file, set on file_download events.                                                                                                                                      |
+| link_text            | STRING    | Text of the clicked link, set on file_download events.                                                                                                                                              |
+| link_url             | STRING    | URL of the clicked link, set on outbound click and file_download events.                                                                                                                            |
+| link_domain          | STRING    | Domain of the clicked outbound link.                                                                                                                                                                |
+| outbound             | STRING    | Equals 'true' when the clicked link leads to another domain.                                                                                                                                        |
+| device_category      | STRING    | The category of the user's device, such as mobile, tablet, or desktop.                                                                                                                              |
+| geo_country          | STRING    | Country of the user.                                                                                                                                                                                |
+| geo_region           | STRING    | Region of the user, as geolocated by Google Analytics from the IP address.                                                                                                                          |

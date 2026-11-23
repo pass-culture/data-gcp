@@ -62,4 +62,4 @@ ORDER BY partition_month
 
 ### Data protection
 
-Partner counts are **not perturbed** and **not under statistical secrecy**, as in external_reporting: lists of cultural partners are public.
+Partner counts are **out of scope of the statistical secret**, in every tool: the secret protects economic values of a business (revenue, amounts), not counts of establishments, and lists of cultural partners are public. Venues are not people, so no cell key perturbation either.

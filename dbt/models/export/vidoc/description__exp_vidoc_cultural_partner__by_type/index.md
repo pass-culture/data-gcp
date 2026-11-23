@@ -1,4 +1,4 @@
-The `exp_vidoc_cultural_partner_by_type` model provides the monthly number of active and cumulatively activated cultural partners (venues), by partner type. It is designed to be exported to the ministry for vidoc visualisation. It reads `metrics_cultural_partner__activation_by_type`; `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
+The `exp_vidoc_cultural_partner_by_type` model provides the monthly number of active and cumulatively activated cultural partners (venues), by partner type. It is designed to be exported to the ministry for vidoc visualisation. It sums the cells of [exp_base\_\_cultural_partner_by_type](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/export_base/description__exp_base__cultural_partner_by_type.md) to the department; `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
 
 ## Table Description
 

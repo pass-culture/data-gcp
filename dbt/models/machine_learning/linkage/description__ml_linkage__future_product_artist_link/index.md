@@ -6,8 +6,8 @@ This table is used to validate that the future state of the artists and product 
 
 ## Table description
 
-| name             | data_type | description                                           |
-| ---------------- | --------- | ----------------------------------------------------- |
-| offer_product_id |           | Identifier for the product associated with the offer. |
-| artist_id        |           | Unique identifier of the artist.                      |
-| artist_type      |           | Whether the artist is a performer or an author.       |
+| name             | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| offer_product_id |           | Identifier of the product (`mrt_global__product.product_id`) the offer is attached to; NULL when no product is attached. Almost only synchronized offers (`is_synchronised`) on books, CDs, vinyls and movies carry one. An offer with an EAN but no `offer_product_id` is not attached to a product, which does not mean the product does not exist: look the EAN up in `mrt_global__product.product_ean`. |
+| artist_id        |           | Unique identifier of the artist.                                                                                                                                                                                                                                                                                                                                                                            |
+| artist_type      |           | Whether the artist is a performer or an author.                                                                                                                                                                                                                                                                                                                                                             |

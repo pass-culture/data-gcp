@@ -2,7 +2,7 @@
 
 ### Definition
 
-For beneficiaries whose credit expired in the month, split by the share of all the credits they received that they spent: `0` (no booking), `]0-25]`, `]25-50]`, `]50-75]`, `]75-90]`, `]90-100]` %. The last bucket includes beneficiaries with a few cents left.
+For beneficiaries whose credit expired in the month, split by the share of all the credits they received that they spent: `0` (no booking), then 10-point steps: `]0-10]`, `]10-20]`, …, `]80-90]`, `]90-100]` %. The last bucket includes beneficiaries with a few cents left.
 
 ### Published in
 
@@ -16,17 +16,22 @@ For beneficiaries whose credit expired in the month, split by the share of all t
 SELECT
     deposit_expiration_month,
     SAFE_DIVIDE(SUM(total_spent_share_0_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_0,
-    SAFE_DIVIDE(SUM(total_spent_share_0_25_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_0_25,
-    SAFE_DIVIDE(SUM(total_spent_share_25_50_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_25_50,
-    SAFE_DIVIDE(SUM(total_spent_share_50_75_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_50_75,
-    SAFE_DIVIDE(SUM(total_spent_share_75_90_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_75_90,
+    SAFE_DIVIDE(SUM(total_spent_share_0_10_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_0_10,
+    SAFE_DIVIDE(SUM(total_spent_share_10_20_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_10_20,
+    SAFE_DIVIDE(SUM(total_spent_share_20_30_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_20_30,
+    SAFE_DIVIDE(SUM(total_spent_share_30_40_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_30_40,
+    SAFE_DIVIDE(SUM(total_spent_share_40_50_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_40_50,
+    SAFE_DIVIDE(SUM(total_spent_share_50_60_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_50_60,
+    SAFE_DIVIDE(SUM(total_spent_share_60_70_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_60_70,
+    SAFE_DIVIDE(SUM(total_spent_share_70_80_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_70_80,
+    SAFE_DIVIDE(SUM(total_spent_share_80_90_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_80_90,
     SAFE_DIVIDE(SUM(total_spent_share_90_100_beneficiaries), SUM(total_expired_deposit_beneficiaries)) AS share_90_100
 FROM `diversity`
 GROUP BY deposit_expiration_month
 ORDER BY deposit_expiration_month
 ```
 
-For a lighter display, the buckets can be merged into 4: `0`, `< 50` (`0_25 + 25_50`), `50-90` (`50_75 + 75_90`), `> 90`.
+For a lighter display, the buckets can be merged into 4: `0`, `< 50` (`0_10` to `40_50`), `50-90` (`50_60` to `80_90`), `> 90` (`90_100`).
 
 ### Available dimensions
 
@@ -34,4 +39,4 @@ Same as the [diversity rate](https://pass-culture.github.io/data-gcp/dbt/kpis/di
 
 ### Data protection and caveats
 
-Each bucket is perturbed independently and capped at `total_expired_deposit_beneficiaries`: the sum of the 6 buckets can differ from the total by a few units in a row. Compute shares on aggregated sums; for exact 100 % stacked charts, divide by the sum of the buckets instead of the total.
+Each bucket is perturbed independently and capped at `total_expired_deposit_beneficiaries`: the sum of the 11 buckets can differ from the total by a few units in a row. Compute shares on aggregated sums; for exact 100 % stacked charts, divide by the sum of the buckets instead of the total.

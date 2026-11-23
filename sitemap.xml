@@ -121,6 +121,10 @@
          <lastmod>2026-11-23</lastmod>
     </url>
     <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__product/</loc>
+         <lastmod>2026-11-23</lastmod>
+    </url>
+    <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/glossary/applicative_database/column__recredit/</loc>
          <lastmod>2026-11-23</lastmod>
     </url>
@@ -565,6 +569,14 @@
          <lastmod>2026-11-23</lastmod>
     </url>
     <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__cultural_partner/</loc>
+         <lastmod>2026-11-23</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__cultural_partner_by_type/</loc>
+         <lastmod>2026-11-23</lastmod>
+    </url>
+    <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__diversity/</loc>
          <lastmod>2026-11-23</lastmod>
     </url>
@@ -950,6 +962,10 @@
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/intermediate/finance/description__int_finance__venue_pricing_point_link/</loc>
+         <lastmod>2026-11-23</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/intermediate/firebase/description__int_firebase__institutional_event/</loc>
          <lastmod>2026-11-23</lastmod>
     </url>
     <url>
@@ -1365,6 +1381,10 @@
          <lastmod>2026-11-23</lastmod>
     </url>
     <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__product/</loc>
+         <lastmod>2026-11-23</lastmod>
+    </url>
+    <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__special_event/</loc>
          <lastmod>2026-11-23</lastmod>
     </url>
@@ -1402,6 +1422,10 @@
     </url>
     <url>
          <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/global/description__mrt_global__venue_tag/</loc>
+         <lastmod>2026-11-23</lastmod>
+    </url>
+    <url>
+         <loc>https://pass-culture.github.io/data-gcp/dbt/models/mart/institutional/description__mrt_institutional__event/</loc>
          <lastmod>2026-11-23</lastmod>
     </url>
     <url>

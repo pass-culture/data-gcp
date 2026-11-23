@@ -12,7 +12,7 @@ For beneficiaries whose credit expired in the month, average number of distinct 
 
 ### Calculation
 
-`total_distinct_venue_booked_at_expiration` is not perturbed: it is **null** when `total_expired_deposit_beneficiaries` is below 5. Exclude those rows from the denominator.
+`total_distinct_venue_booked_at_expiration` is not perturbed: it is **null** when the row has fewer than 5 beneficiaries before perturbation (the published `total_expired_deposit_beneficiaries` can then read 5 or more). Exclude those rows from the denominator.
 
 ```
 SELECT

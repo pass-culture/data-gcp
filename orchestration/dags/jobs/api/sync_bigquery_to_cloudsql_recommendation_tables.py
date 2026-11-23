@@ -23,7 +23,7 @@ from common.operators.gce import (
     SSHGCEOperator,
     StartGCEOperator,
 )
-from common.utils import get_airflow_schedule
+from common.utils import delayed_waiting_operator, get_airflow_schedule
 
 from jobs.crons import SCHEDULE_DICT
 
@@ -52,6 +52,23 @@ TABLE_TO_VIEW = {
     "artist": "artist_mv",
     "artist_top_by_category": "artist_top_by_category_mv",
 }
+
+# dbt models (run by dbt_run_dag) backing each exported BigQuery table.
+# iris_france is a seed source, not refreshed by dbt_run_dag.
+TABLE_TO_DBT_MODEL = {
+    "enriched_user": "ml_reco__user_statistics",
+    "recommendable_offers_raw": "ml_reco__recommendable_offer",
+    "non_recommendable_items_data": "ml_reco__user_booked_item",
+    "venue_h3_mapping": "ml_reco__venue_h3_mapping",
+    "similar_artist": "exp_reco_cloudsql__similar_artist",
+    "offer_metadata": "exp_reco_cloudsql__offer_metadata",
+    "artist": "exp_reco_cloudsql__artist",
+    "artist_top_by_category": "exp_reco_cloudsql__artist_top_by_category",
+}
+
+# Any terminal state of the dbt task unblocks the sync: if dbt fails, we still
+# sync the data currently available in BigQuery.
+DBT_TERMINAL_STATES = ["success", "failed", "upstream_failed", "skipped"]
 
 TABLES_TO_PROCESS = list(TABLE_TO_VIEW.keys())
 MATERIALIZED_VIEWS = list(TABLE_TO_VIEW.values())
@@ -131,6 +148,23 @@ with DAG(
 ) as dag:
     start = EmptyOperator(task_id="start", dag=dag)
 
+    # Wait for the dbt models feeding the exported tables to be refreshed by
+    # today's dbt_run_dag run, so the sync does not export stale data.
+    with TaskGroup("wait_for_dbt", dag=dag) as wait_for_dbt:
+        for dbt_model in TABLE_TO_DBT_MODEL.values():
+            delayed_waiting_operator(
+                dag,
+                external_dag_id="dbt_run_dag",
+                external_task_id=f"data_transformation.{dbt_model}",
+                allowed_states=DBT_TERMINAL_STATES,
+                failed_states=[],
+                skip_manually_triggered=True,
+                # Safety net: if dbt never runs, skip waiting and sync anyway.
+                timeout=int(timedelta(hours=8).total_seconds()),
+                soft_fail=True,
+                retries=0,
+            )
+
     gce_instance_start = StartGCEOperator(
         task_id="gce_start_task",
         instance_name="{{ params.instance_name }}",
@@ -138,6 +172,8 @@ with DAG(
         retries=2,
         labels={"job_type": "long_task", "dag_name": DAG_ID},
         preemptible=False,
+        # Sensors may be soft-failed (skipped) on timeout: still run the sync.
+        trigger_rule=TriggerRule.NONE_FAILED,
     )
 
     fetch_install_code = InstallDependenciesOperator(
@@ -255,6 +291,7 @@ with DAG(
     # Set dependencies
     (
         start
+        >> wait_for_dbt
         >> gce_instance_start
         >> fetch_install_code
         >> branch_export_tables

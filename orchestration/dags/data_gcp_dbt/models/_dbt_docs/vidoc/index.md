@@ -5,7 +5,7 @@ description: Tables exported to VIDOC, the Ministry of Culture dashboard, and ho
 
 ## VIDOC exports
 
-VIDOC is the Ministry of Culture dashboard. pass Culture feeds it with the `exp_vidoc__*` tables (BigQuery dataset `export_vidoc_{env}`). The lot 1 tables are also sent to the ministry S3 bucket by the `export_vidoc` DAG, which only sends the lot 1 columns.
+VIDOC is the Ministry of Culture dashboard. pass Culture feeds it with the `exp_vidoc__*` tables (BigQuery dataset `export_vidoc_{env}`). The lot 1 tables are also sent to the ministry S3 bucket by the `export_vidoc` DAG, which only sends the columns validated by VIDOC (lot 1, then lot 2.1).
 
 The KPIs computed from these tables are defined in [KPIs](../kpis/index.md).
 
@@ -20,9 +20,9 @@ The KPIs computed from these tables are defined in [KPIs](../kpis/index.md).
 | Collective (EAC) | [student_coverage](../models/export/vidoc/description__exp_vidoc_student__coverage.md), [institution_activity](../models/export/vidoc/description__exp_vidoc_institution__activity.md), [booking_collective](../models/export/vidoc/description__exp_vidoc_booking_collective.md), [booking_collective_venue](../models/export/vidoc/description__exp_vidoc_booking_collective_venue.md), [booking_collective_by_domain](../models/export/vidoc/description__exp_vidoc_booking_collective_by_domain.md), [booking_collective_by_format](../models/export/vidoc/description__exp_vidoc_booking_collective_by_format.md), [offer_collective_bookable](../models/export/vidoc/description__exp_vidoc_offer_collective_bookable.md) | 2 | – |
 | Tops | [top_offer](../models/export/vidoc/description__exp_vidoc__top_offer.md), [top_offer_category](../models/export/vidoc/description__exp_vidoc__top_offer_category.md), [top_offer_labelled](../models/export/vidoc/description__exp_vidoc__top_offer_labelled.md), [top_venue](../models/export/vidoc/description__exp_vidoc__top_venue.md), [top_venue_labelled](../models/export/vidoc/description__exp_vidoc__top_venue_labelled.md) | – | – |
 
-### Lot 2.1: diversity and credit use at expiration (dev and staging)
+### Lot 2.1: diversity and credit use at expiration
 
-The first lot 2 indicators are sent to the **dev and staging** S3 buckets only, in the `diversity` table, until the VIDOC team validates them: dev and staging get all the columns of the exported tables, prod only the validated ones (`VIDOC_MODELS` in the `export_vidoc` DAG).
+The first lot 2 indicators are sent in the `diversity` table. VIDOC validated them in dev and staging, so prod sends them too. Dev and staging get all the columns of the exported tables, prod only the validated ones (`VIDOC_MODELS` in the `export_vidoc` DAG).
 
 | Sheet | Indicator | Columns of `diversity` | Definition |
 |---|---|---|---|

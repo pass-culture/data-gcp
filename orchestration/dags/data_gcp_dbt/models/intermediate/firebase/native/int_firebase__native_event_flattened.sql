@@ -114,7 +114,9 @@ with
                         "isHeadline",
                         "items_0",
                         "itemType",
-                        "index",
+                        "id",
+                        "playlistId",
+                        "originId",
                         "artistId",
                         "theme_setting",
                         "system_theme",
@@ -135,6 +137,31 @@ with
                 {{ extract_params_int_value(["geoLocated"], alias=false) }},
                 {{ extract_params_int_value(["geo_located"], alias=false) }}
             ) as geo_located,
+            -- numeric params can be sent as string, int or double depending on the app version
+            coalesce(
+                {{ extract_params_string_value(["index"], alias=false) }},
+                cast({{ extract_params_int_value(["index"], alias=false) }} as string),
+                cast(
+                    cast(
+                        (
+                            select event_params.value.double_value
+                            from unnest(event_params) as event_params
+                            where event_params.key = "index"
+                        ) as int64
+                    ) as string
+                )
+            ) as index,  -- noqa: RF04
+            coalesce(
+                {{ extract_params_int_value(["playlistIndex"], alias=false) }},
+                cast(
+                    (
+                        select event_params.value.double_value
+                        from unnest(event_params) as event_params
+                        where event_params.key = "playlistIndex"
+                    ) as int64
+                ),
+                safe_cast({{ extract_params_string_value(["playlistIndex"], alias=false) }} as int64)
+            ) as playlist_index,
             coalesce(
                 {{ extract_params_string_value(["callId"], alias=false) }},
                 {{ extract_params_string_value(["call_id"], alias=false) }}

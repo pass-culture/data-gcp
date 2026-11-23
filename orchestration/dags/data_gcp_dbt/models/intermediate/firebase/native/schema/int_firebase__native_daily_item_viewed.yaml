@@ -1,0 +1,111 @@
+version: 2
+
+models:
+  - name: int_firebase__native_daily_item_viewed
+    description: >-
+      One row per item (offer, venue, artist) displayed to a user of the native app, built from 'ViewItem' events.
+      Current events carry one item each (`id`, `index`, `playlistId`, `playlistIndex`, `originId`, `eventTimestamp`);
+      legacy events carry a list of 'position:item_id' pairs per playlist, which is split into one row per item.
+      The app sends the current event again when the user scrolls back to an item: these repeats (same session, page,
+      playlist, position and item) are deduplicated, keeping the last one.
+    columns:
+      - name: event_date
+        description: '{{ doc("column__native_daily_item_viewed_event_date") }}'
+        data_type: DATE
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day)"
+
+      - name: origin
+        description: '{{ doc("column__native_daily_item_viewed_origin") }}'
+        data_type: STRING
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["home", "search", "offer", "venue", "venueMap", "artist"]
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day) and item_displayed_timestamp is not null"
+
+      - name: traffic_source
+        description: '{{ doc("column__traffic_source") }}'
+        data_type: STRING
+
+      - name: traffic_medium
+        description: '{{ doc("column__traffic_medium") }}'
+        data_type: STRING
+
+      - name: traffic_campaign
+        description: '{{ doc("column__traffic_campaign") }}'
+        data_type: STRING
+
+      - name: module_id
+        description: '{{ doc("column__native_daily_item_viewed_module_id") }}'
+        data_type: STRING
+        data_tests:
+          # every item belongs to a playlist, except offers in search results
+          - not_null:
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day) and item_displayed_timestamp is not null and origin != 'search'"
+
+      - name: home_entry_id
+        description: '{{ doc("column__native_daily_item_viewed_home_entry_id") }}'
+        data_type: STRING
+
+      - name: item_type
+        description: '{{ doc("column__native_daily_item_viewed_item_type") }}'
+        data_type: STRING
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["offer", "venue", "artist"]
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day) and item_displayed_timestamp is not null"
+
+      - name: unique_session_id
+        description: '{{ doc("column__unique_session_id") }}'
+        data_type: STRING
+
+      - name: user_id
+        description: '{{ doc("column__user_id") }}'
+        data_type: STRING
+
+      - name: item_index
+        description: '{{ doc("column__native_daily_item_viewed_item_index") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day)"
+
+      - name: viewed_item_id
+        description: '{{ doc("column__native_daily_item_viewed_viewed_item_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day)"
+
+      - name: playlist_index
+        description: '{{ doc("column__native_daily_item_viewed_playlist_index") }}'
+        data_type: INT64
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day) and item_displayed_timestamp is not null and origin != 'search'"
+
+      - name: origin_id
+        description: '{{ doc("column__native_daily_item_viewed_origin_id") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day) and item_displayed_timestamp is not null"
+
+      - name: reco_call_id
+        description: '{{ doc("column__reco_call_id") }}'
+        data_type: STRING
+
+      - name: item_displayed_timestamp
+        description: '{{ doc("column__native_daily_item_viewed_item_displayed_timestamp") }}'
+        data_type: TIMESTAMP

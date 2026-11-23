@@ -28,10 +28,18 @@ whole directory - both were the direct cause of a production incident.
 ### Why only `docker`
 
 The Google guest agent has its own stock default group list for SSH-key
--provisioned accounts - `adm,dip,docker,lxd,plugdev,video`, see the docs
-below - and `instance_configs.cfg`'s `groups =` *replaces* that default
-rather than appending to it, for *every* account the guest agent manages on
-this VM, not just `airflow`.
+-provisioned accounts, and `instance_configs.cfg`'s `groups =` *replaces*
+that default rather than appending to it, for *every* account the guest
+agent manages on this VM, not just `airflow`:
+
+| group | grants | kept? |
+|---|---|---|
+| `adm` | read `/var/log`, `journalctl` without sudo | no |
+| `dip` | PPP/dial-up networking | no |
+| `docker` | talk to `/var/run/docker.sock` | **yes** |
+| `lxd` | talk to the LXD daemon socket | no |
+| `plugdev` | access removable/USB devices | no |
+| `video` | `/dev/video*` (webcam-type devices) | no |
 
 Checked against everything that actually drives `airflow` over SSH here -
 this directory, the shared job-management/polling code
@@ -39,17 +47,24 @@ this directory, the shared job-management/polling code
 `../../triggers/gce.py`'s `DeferrableSSHJobMonitorTrigger`, which
 backgrounds a job the way `nohup` would and polls its status from files
 under `~/airflow_jobs/<job_id>/`), and the DAGs inspected: only `docker` is
-ever touched (`install_docker.sh.j2`, the `usermod` below). The rest of the
-default - reading `/var/log`/`journalctl` (`adm`), dial-up (`dip`), the LXD
-socket (`lxd`), USB (`plugdev`), `/dev/video*` (`video`) - is unused by any
-of it (`mkdir`/`echo`/`cat`/`tail`/`kill -0`/`cp`/`rm -rf` on files `airflow`
-already owns needs no supplementary group). Not a guarantee no DAG anywhere
-could ever need one of these, only that nothing found so far does.
+ever touched (`install_docker.sh.j2`, the `usermod` below) - the other five
+grants above are unused by any of it (`mkdir`/`echo`/`cat`/`tail`/`kill -0`/
+`cp`/`rm -rf` on files `airflow` already owns needs no supplementary group).
+Not a guarantee no DAG anywhere could ever need one of these, only that
+nothing found so far does.
 
 Also not neutral the other way: Google's own guest-agent security hardening
 work calls out `adm`, `docker`, and `lxd` specifically as groups it should
 *stop* auto-granting by default, since they're a privilege-escalation
 surface for any account that gets this treatment.
+
+This config doesn't affect `ops_agent_basic.sh.j2`/`ops_agent_dcgm.sh.j2`
+either, despite those monitoring CPU/GPU/RAM/network/process stats: per
+Google's own `ops-agent` systemd unit files, none of its three services
+(`google-cloud-ops-agent[-fluent-bit|-opentelemetry-collector].service`)
+set `User=`, so systemd runs all of them as root - already unrestricted,
+and provisioned by their own apt package, not by the guest agent's
+SSH-key account mechanism `[Accounts] groups =` governs.
 
 One real trade-off: since this config is shared by every guest-agent
 account on the VM, a human SSHing in to debug also loses passwordless `adm`

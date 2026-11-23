@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
+from airflow.exceptions import AirflowFailException
 from airflow.sensors.external_task import ExternalTaskSensor
 from dags.common.utils import delayed_waiting_operator
 
@@ -276,6 +277,77 @@ class TestDelayedWaitingOperatorExecutionDateLogic:
         result = operator.poke(context)
 
         assert result is False
+
+    @patch("dags.common.utils.get_last_execution_date")
+    def test_poke_fails_when_not_ready_after_deadline(
+        self, mock_get_last_execution_date, test_dag
+    ):
+        """
+        With a deadline_fn, a sensor still not ready once the deadline has
+        passed fails without retry (AirflowFailException).
+        """
+        mock_get_last_execution_date.return_value = None
+        operator = delayed_waiting_operator(
+            dag=test_dag,
+            external_dag_id="external_dag_id",
+            deadline_fn=lambda context: datetime(2025, 1, 2, 5, 0, tzinfo=UTC),
+        )
+        context = {
+            "dag_run": MagicMock(run_id="scheduled__20250102"),
+            "logical_date": datetime(2025, 1, 2, 2, 0, tzinfo=UTC),
+        }
+
+        with patch(
+            "dags.common.utils.airflow_timezone.utcnow",
+            return_value=datetime(2025, 1, 2, 5, 1, tzinfo=UTC),
+        ):
+            with pytest.raises(AirflowFailException):
+                operator.poke(context)
+
+        with patch(
+            "dags.common.utils.airflow_timezone.utcnow",
+            return_value=datetime(2025, 1, 2, 4, 59, tzinfo=UTC),
+        ):
+            assert operator.poke(context) is False
+
+    @patch("dags.common.utils.get_last_execution_date")
+    def test_poke_succeeds_after_deadline_when_ready(
+        self, mock_get_last_execution_date, test_dag
+    ):
+        """The deadline only applies while the external task is not ready."""
+        mock_get_last_execution_date.return_value = datetime(
+            2025, 1, 2, 0, 0, tzinfo=UTC
+        )
+        operator = delayed_waiting_operator(
+            dag=test_dag,
+            external_dag_id="external_dag_id",
+            deadline_fn=lambda context: datetime(2025, 1, 2, 5, 0, tzinfo=UTC),
+        )
+        context = {
+            "dag_run": MagicMock(run_id="scheduled__20250102"),
+            "logical_date": datetime(2025, 1, 2, 2, 0, tzinfo=UTC),
+        }
+
+        with (
+            patch(
+                "dags.common.utils.airflow_timezone.utcnow",
+                return_value=datetime(2025, 1, 2, 6, 0, tzinfo=UTC),
+            ),
+            patch.object(ExternalTaskSensor, "poke", return_value=True),
+        ):
+            assert operator.poke(context) is True
+
+    @patch("dags.common.utils.get_last_execution_date")
+    def test_manual_run_ignores_deadline(self, mock_get_last_execution_date, test_dag):
+        operator = delayed_waiting_operator(
+            dag=test_dag,
+            external_dag_id="external_dag_id",
+            skip_manually_triggered=True,
+            deadline_fn=lambda context: datetime(2000, 1, 1, tzinfo=UTC),
+        )
+        context = {"dag_run": MagicMock(run_id="manual__123")}
+
+        assert operator.poke(context) is True
 
     @patch("dags.common.utils.get_last_execution_date")
     def test_monthly_vs_daily_with_proper_window_configuration(

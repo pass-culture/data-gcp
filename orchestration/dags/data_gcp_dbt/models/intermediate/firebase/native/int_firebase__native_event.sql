@@ -67,7 +67,7 @@ select
     coalesce(itemtype, if(event_name = "ViewItem", type, null)) as item_type,
     id as item_id,
     playlistid as playlist_id,
-    playlistindex as playlist_index,
+    playlist_index,
     originid as origin_id,
     displayed_offers,
     displayed_venues,

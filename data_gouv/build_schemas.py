@@ -78,7 +78,7 @@ GEO_FIELDS = [
         "title": "Code région",
         "description": "Code INSEE (Code officiel géographique) de la région de "
         "l'adresse déclarée par le bénéficiaire à l'inscription. Vide pour les "
-        "collectivités d'outre-mer (975, 978, 986, 987, 988) et pour les "
+        "collectivités d'outre-mer (975, 977, 978, 986, 987, 988) et pour les "
         "bénéficiaires non localisés.",
         "type": "string",
         "example": "11",
@@ -88,8 +88,8 @@ GEO_FIELDS = [
         "name": "region_name",
         "title": "Région",
         "description": "Nom de la région. « non localisé » lorsque l'adresse n'a pas "
-        "pu être rattachée à une commune ; nom de la collectivité ou « Collectivités "
-        "d'outre-mer » pour les collectivités d'outre-mer.",
+        "pu être rattachée à une commune ; « Collectivités d'outre-mer » pour les "
+        "collectivités d'outre-mer.",
         "type": "string",
         "example": "Île-de-France",
         "constraints": {"required": True},
@@ -214,8 +214,9 @@ RESOURCES = {
                 "Nombre de bénéficiaires actuels",
                 "Nombre de bénéficiaires dont le crédit n'est ni expiré ni "
                 "entièrement dépensé à la fin du mois (crédit encore disponible et "
-                "âge limite d'utilisation non atteint). Sous-ensemble de "
-                "total_beneficiaries : il ne lui est jamais supérieur.",
+                "âge limite d'utilisation non atteint), donc toujours nul à partir de 21 "
+                "ans. Sous-ensemble de total_beneficiaries : il ne lui est jamais "
+                "supérieur.",
                 684122,
             ),
         ],

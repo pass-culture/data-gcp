@@ -12,7 +12,12 @@ with
             is_in_qpv,
             macro_density_label,
             micro_density_label,
-            sum(total_actual_beneficiaries) as total_actual_beneficiaries,
+            -- a credit is usable until the day before the 21st birthday at most: an
+            -- actual beneficiary aged 21 or more on the first day of the month is a
+            -- data inconsistency (a few dozen), counted as not actual
+            sum(
+                if(age_at_calculation >= 21, 0, total_actual_beneficiaries)
+            ) as total_actual_beneficiaries,
             sum(total_beneficiaries) as total_beneficiaries,
             mod(abs(sum(cell_key_beneficiaries)), 256) as cell_key_beneficiaries,
             mod(

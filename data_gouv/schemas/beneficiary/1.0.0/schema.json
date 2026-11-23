@@ -53,7 +53,7 @@
     {
       "name": "region_code",
       "title": "Code région",
-      "description": "Code INSEE (Code officiel géographique) de la région de l'adresse déclarée par le bénéficiaire à l'inscription. Vide pour les collectivités d'outre-mer (975, 978, 986, 987, 988) et pour les bénéficiaires non localisés.",
+      "description": "Code INSEE (Code officiel géographique) de la région de l'adresse déclarée par le bénéficiaire à l'inscription. Vide pour les collectivités d'outre-mer (975, 977, 978, 986, 987, 988) et pour les bénéficiaires non localisés.",
       "type": "string",
       "example": "11",
       "constraints": {
@@ -64,7 +64,7 @@
     {
       "name": "region_name",
       "title": "Région",
-      "description": "Nom de la région. « non localisé » lorsque l'adresse n'a pas pu être rattachée à une commune ; nom de la collectivité ou « Collectivités d'outre-mer » pour les collectivités d'outre-mer.",
+      "description": "Nom de la région. « non localisé » lorsque l'adresse n'a pas pu être rattachée à une commune ; « Collectivités d'outre-mer » pour les collectivités d'outre-mer.",
       "type": "string",
       "example": "Île-de-France",
       "constraints": {
@@ -168,7 +168,7 @@
     {
       "name": "total_actual_beneficiaries",
       "title": "Nombre de bénéficiaires actuels",
-      "description": "Nombre de bénéficiaires dont le crédit n'est ni expiré ni entièrement dépensé à la fin du mois (crédit encore disponible et âge limite d'utilisation non atteint). Sous-ensemble de total_beneficiaries : il ne lui est jamais supérieur. Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
+      "description": "Nombre de bénéficiaires dont le crédit n'est ni expiré ni entièrement dépensé à la fin du mois (crédit encore disponible et âge limite d'utilisation non atteint), donc toujours nul à partir de 21 ans. Sous-ensemble de total_beneficiaries : il ne lui est jamais supérieur. Effectif protégé par la méthode des clés aléatoires (Cell Key Method, utilisée par l'INSEE et recommandée par Eurostat) : une valeur publiée vaut 0 ou au moins 5, et les petits effectifs sont légèrement bruités (±5 au maximum). Additionner plusieurs lignes (département, région, trimestre, année) avant de calculer un taux : le bruit se compense à l'agrégation.",
       "type": "integer",
       "example": "684122",
       "constraints": {

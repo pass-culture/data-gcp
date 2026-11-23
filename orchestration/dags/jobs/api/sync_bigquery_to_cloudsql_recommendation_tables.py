@@ -51,6 +51,7 @@ TABLE_TO_VIEW = {
     "offer_metadata": "offer_metadata_mv",
     "artist": "artist_mv",
     "artist_top_by_category": "artist_top_by_category_mv",
+    "qpi_gtl_mapping": "qpi_gtl_mapping_mv",
 }
 
 TABLES_TO_PROCESS = list(TABLE_TO_VIEW.keys())

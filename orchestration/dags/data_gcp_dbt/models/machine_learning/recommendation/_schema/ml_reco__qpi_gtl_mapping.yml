@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: ml_reco__qpi_gtl_mapping
+    description: "{{ doc('description__ml_reco__qpi_gtl_mapping') }}"
+    columns:
+      - name: ux_name
+        description: "{{ doc('column__qpi_ux_name') }}"
+        data_tests:
+          - not_null
+      - name: backend_name
+        description: "{{ doc('column__qpi_backend_name') }}"
+        data_tests:
+          - not_null
+      - name: gtl_label
+        description: "{{ doc('column__qpi_gtl_label') }}"

@@ -1,0 +1,31 @@
+{% include 'ops_agent_basic.sh.j2' %}
+
+# best-effort DCGM setup (set +e) - DLVM lacks datacenter-gpu-manager by
+# default, hence NVIDIA's CUDA repo; debug: journalctl -u google-startup-scripts
+# see README.md for why the version is resolved dynamically below
+
+set +e
+if ! apt-cache madison datacenter-gpu-manager | grep -q '3.3.'; then
+    wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb -O /tmp/cuda-keyring.deb
+    sudo dpkg -i /tmp/cuda-keyring.deb
+    sudo apt-get update -qq
+fi
+DCGM_VERSION=$(apt-cache madison datacenter-gpu-manager | grep '3.3.' | head -1 | awk '{print $3}')
+sudo apt-get install -y datacenter-gpu-manager=${DCGM_VERSION}
+sudo systemctl enable --now nvidia-dcgm
+
+sudo tee /etc/google-cloud-ops-agent/config.yaml > /dev/null << 'EOF'
+metrics:
+  receivers:
+    dcgm:
+      type: dcgm
+      receiver_version: {{ dcgm_receiver_version }}
+  service:
+    pipelines:
+      dcgm:
+        receivers:
+          - dcgm
+EOF
+
+sudo systemctl restart google-cloud-ops-agent
+set -e

@@ -29,8 +29,15 @@
         facts_cte (string): name of the CTE holding the department figures
         measures (list): measure columns, summed then masked
         dimensions (list): other grouping columns (e.g. scholar_year)
+        secret_windows (list): rolling windows (months) of the secret model
+            that mask a territory. All of them by default: partner pages show
+            the 6 and 48 month windows, so a territory secret in one of them is
+            masked here whatever the window, otherwise comparing the two would
+            disclose it. One mask, no window dimension in the output
 #}
-{% macro venue_secret_levels(facts_cte, measures, dimensions=[]) %}
+{% macro venue_secret_levels(
+    facts_cte, measures, dimensions=[], secret_windows=[6, 48]
+) %}
     {% set last_month = (
         "date_trunc(date_sub(date('" ~ ds() ~ "'), interval 1 month), month)"
     ) %}
@@ -54,7 +61,7 @@
             from {{ ref("statistical_secret__cultural_partner_" ~ side) }}
             where
                 partition_month = {{ last_month }}
-                and rolling_window_months_count in (6, 48)
+                and rolling_window_months_count in ({{ secret_windows | join(", ") }})
         {% endfor %}
     ),
 

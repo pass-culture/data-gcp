@@ -9,8 +9,9 @@
 
     For each segment:
         - is_secret_applicable selects the KPIs subject to the statistical secret:
-          the ones measured on the cultural partner (venue) geography. KPIs
-          measured on the beneficiary geography are never masked;
+          bookings and revenue measured on the cultural partner (venue)
+          geography. KPIs measured on the beneficiary geography and partner
+          counts (public lists, see exp_base__cultural_partner) are never masked;
         - aggregation tells consumers how to aggregate over months: "flow" = sum
           the months (and a row every month, see apply_statistical_secret),
           "stock" = read a single month (snapshot, cumulative, average or share).
@@ -22,7 +23,7 @@
     },
     "coverage": {"is_secret_applicable": "false", "aggregation": "'stock'"},
     "cultural_partner": {
-        "is_secret_applicable": "true",
+        "is_secret_applicable": "false",
         "aggregation": "'stock'",
     },
     "collective_partner_booking": {

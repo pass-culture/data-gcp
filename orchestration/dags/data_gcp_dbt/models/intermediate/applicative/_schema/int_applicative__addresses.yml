@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: int_applicative__offerer_address
+    description: Addresses of active venues, restricted to VENUE_LOCATION.
+    columns:
+      - name: offerer_address_id
+        data_tests:
+          - not_null
+          - unique
+      - name: offerer_address_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['VENUE_LOCATION']
+
+  - name: int_applicative__offer_address
+    description: Offer addresses of active venues, restricted to OFFER_LOCATION.
+    columns:
+      - name: offerer_address_id
+        data_tests:
+          - not_null
+          - unique
+      - name: offerer_address_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['OFFER_LOCATION']
+
+unit_tests:
+  - name: venue_addresses_only
+    model: int_applicative__offerer_address
+    given:
+      - input: ref('int_applicative__all_offerer_address')
+        rows:
+          - {offerer_address_id: '1', offerer_address_type: 'VENUE_LOCATION'}
+          - {offerer_address_id: '2', offerer_address_type: 'OFFER_LOCATION'}
+          - {offerer_address_id: '3', offerer_address_type: null}
+    expect:
+      rows:
+        - {offerer_address_id: '1', offerer_address_type: 'VENUE_LOCATION'}
+
+  - name: offer_addresses_only
+    model: int_applicative__offer_address
+    given:
+      - input: ref('int_applicative__all_offerer_address')
+        rows:
+          - {offerer_address_id: '1', offerer_address_type: 'VENUE_LOCATION'}
+          - {offerer_address_id: '2', offerer_address_type: 'OFFER_LOCATION'}
+          - {offerer_address_id: '3', offerer_address_type: null}
+    expect:
+      rows:
+        - {offerer_address_id: '2', offerer_address_type: 'OFFER_LOCATION'}

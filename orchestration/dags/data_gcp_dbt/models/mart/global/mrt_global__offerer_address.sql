@@ -7,4 +7,4 @@ select
     address_postal_code,
     address_city,
     address_department_code
-from {{ ref("int_applicative__offerer_address") }}
+from {{ ref("int_applicative__all_offerer_address") }}

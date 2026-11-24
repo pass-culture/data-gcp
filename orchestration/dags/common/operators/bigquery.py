@@ -54,9 +54,10 @@ def bigquery_view_task(dag, table, job_params, extra_params={}, exists_ok=True):
     )
 
 
-def bigquery_federated_query_task(dag, task_id, job_params):
+def bigquery_federated_query_task(dag, task_id, job_params, location=None):
     return BigQueryInsertJobOperator(
         task_id=task_id,
+        location=location,
         configuration={
             "query": {
                 "query": f"""SELECT * FROM EXTERNAL_QUERY('{APPLICATIVE_EXTERNAL_CONNECTION_ID}', ''' {one_line_query(job_params['sql'])} ''')""",

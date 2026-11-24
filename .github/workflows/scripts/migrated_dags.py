@@ -13,8 +13,12 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
-def _load_migrated_dags() -> list[str]:
-    """Read the list of migrated DAGs from migrated_dags.yaml."""
+def _load_migrated_dags() -> dict[str, dict]:
+    """Read the migrated DAGs mapping from migrated_dags.yaml.
+
+    Returns a dict keyed by DAG name. Each value is the entry config, which may
+    optionally declare a ``file`` path.
+    """
     yaml_path = _repo_root() / "orchestration" / "scripts" / "migrated_dags.yaml"
 
     try:
@@ -34,7 +38,9 @@ def _load_migrated_dags() -> list[str]:
         )
         raise typer.Exit(code=1)
 
-    return list(config[MIGRATED_DAGS_KEY])
+    return {
+        name: (cfg or {}) for name, cfg in (config[MIGRATED_DAGS_KEY] or {}).items()
+    }
 
 
 @app.command()
@@ -48,16 +54,39 @@ def get_migrated_paths(
     Print the file paths of migrated DAGs found under jobs_dir.
     Only these files are synced to the EU bucket.
     """
-    migrated = set(_load_migrated_dags())
+    migrated = _load_migrated_dags()
     source_dir = Path(jobs_dir)
 
-    migrated_paths = set()
-    for path in source_dir.rglob("*.py"):
-        if path.stem in migrated:
-            migrated_paths.add(path.stem)
-            print(path.as_posix())
+    resolved_names: set[str] = set()
+    printed_files: set[str] = set()
 
-    for missing in sorted(migrated - migrated_paths):
+    def _emit(path: Path) -> None:
+        posix = path.as_posix()
+        if posix not in printed_files:
+            printed_files.add(posix)
+            print(posix)
+
+    for name, cfg in migrated.items():
+        explicit = cfg.get("file")
+        if not explicit:
+            continue
+        file_path = Path(str(explicit))
+        if not file_path.exists():
+            print(
+                f"Warning: migrated DAG '{name}' declares file '{explicit}' "
+                "which does not exist",
+                file=sys.stderr,
+            )
+            continue
+        resolved_names.add(name)
+        _emit(file_path)
+
+    for path in source_dir.rglob("*.py"):
+        if path.stem in migrated and path.stem not in resolved_names:
+            resolved_names.add(path.stem)
+            _emit(path)
+
+    for missing in sorted(set(migrated) - resolved_names):
         print(
             f"Warning: migrated DAG '{missing}' has no file under {jobs_dir}",
             file=sys.stderr,

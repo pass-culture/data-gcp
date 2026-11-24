@@ -49,7 +49,7 @@ with DAG(
     tags=[DAG_TAGS.DE.value, DAG_TAGS.POD.value],
     params={
         "branch": Param(
-            default="production" if ENV_SHORT_NAME == "prod" else "master",
+            default="production" if ENV_SHORT_NAME in ("prod", "prd") else "master",
             type="string",
             description="Git branch to deploy",
         ),
@@ -102,6 +102,7 @@ with DAG(
         "runtime_image": "py313",
         "runtime_image_tag": "v1",
         "microservice_path": MICROSERVICE_PATH,
+        "service_account_name": f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl",
         "runtime_sparse_paths": SPARSE_PATHS,
         "runtime_workdir": MICROSERVICE_PATH,
         "container_resources": DEFAULT_CONTAINER_RESOURCES,

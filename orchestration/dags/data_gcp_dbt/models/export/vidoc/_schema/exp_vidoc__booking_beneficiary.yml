@@ -8,27 +8,39 @@ models:
           arguments:
             combination_of_columns:
               - partition_month
-              - department_name
+              - territory_level
+              - territory_code
               - offer_category_id
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
         data_tests:
           - not_null
-      - name: region_name
-        description: "{{ doc('column__user_region_name') }}"
-      - name: region_code
-        description: "{{ doc('column__user_region_code') }}"
-      - name: department_name
-        description: "{{ doc('column__user_department_name') }}"
+      - name: territory_level
+        description: "{{ doc('column__territory_level') }}"
         data_tests:
           - not_null
-      - name: department_code
-        description: "{{ doc('column__user_department_code') }}"
+          - accepted_values:
+              arguments:
+                values: ['DEP', 'REG', 'GROUP', 'NAT']
+      - name: territory_code
+        description: "{{ doc('column__territory_code') }}"
+        data_tests:
+          - not_null
+      - name: territory_name
+        description: "{{ doc('column__territory_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: territory_group
+        description: "{{ doc('column__territory_group') }}"
       - name: offer_category_id
         description: "{{ doc('column__offer_category_id') }}"
+        data_tests:
+          - not_null
       - name: is_low_count
-        description: "{{ doc('column__exp_vidoc__booking_beneficiary__is_low_count') }}"
+        description: "{{ doc('column__exp_base__booking_beneficiary__is_low_count') }}"
+        data_tests:
+          - not_null
       - name: total_used_bookings
         description: "{{ doc('column__booking_individual__total_used_bookings') }}"
       - name: total_used_amount

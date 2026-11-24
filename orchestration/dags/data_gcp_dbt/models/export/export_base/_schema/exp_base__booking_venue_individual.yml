@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: exp_base__booking_venue_individual
+    description: "{{ doc('description__exp_base__booking_venue_individual') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - territory_level
+              - territory_code
+      - dbt_utils.expression_is_true:
+          arguments:
+            # a secret territory is masked, NAT is never secret
+            expression: "not is_statistic_secret or (total_revenue_amount is null and territory_level != 'NAT')"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: territory_level
+        description: "{{ doc('column__territory_level') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DEP', 'REG', 'GROUP', 'NAT']
+      - name: territory_code
+        description: "{{ doc('column__territory_code') }}"
+        data_tests:
+          - not_null
+      - name: territory_name
+        description: "{{ doc('column__territory_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: territory_group
+        description: "{{ doc('column__territory_group') }}"
+      - name: is_statistic_secret
+        description: "{{ doc('column__is_statistic_secret') }}"
+        data_tests:
+          - not_null
+      - name: total_bookings
+        description: "{{ doc('column__finance_individual__total_bookings') }}"
+      - name: total_quantities
+        description: "{{ doc('column__total_quantities') }}"
+      - name: total_revenue_amount
+        description: "{{ doc('column__total_revenue_amount') }}"
+      - name: total_reimbursed_amount
+        description: "{{ doc('column__total_reimbursed_amount') }}"
+      - name: total_contribution_amount
+        description: "{{ doc('column__total_contribution_amount') }}"

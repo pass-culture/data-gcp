@@ -191,3 +191,17 @@ Number of months between partition_month and the last consolidated month (month 
 {% docs column__external_reporting_scholar_year_month %}
 Rank of partition_month in its scholar year: 0 = September ... 11 = August. With d = months_ago - X, d >= 0 and scholar_year_month + d <= 11 keeps the months of the scholar year of month X, up to X.
 {% enddocs %}
+
+{% docs column__territory_level %}
+Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.
+
+GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions.
+{% enddocs %}
+
+{% docs column__territory_code %}
+Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.
+{% enddocs %}
+
+{% docs column__territory_name %}
+Name of the territory at its level (department, region, territory group code, or France).
+{% enddocs %}

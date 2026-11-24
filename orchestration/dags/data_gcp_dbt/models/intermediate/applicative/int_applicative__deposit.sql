@@ -6,6 +6,18 @@ with
             max(date(recredit_creation_date)) as last_recredit_date,
             count(distinct recredit_id) as total_recredit,
             sum(recredit_amount) as total_recredit_amount,
+            sum(
+                case when recredit_type = 'BONUS_CREDIT' then recredit_amount else 0 end
+            ) as recredit_bonus_amount,
+            count(
+                distinct case when recredit_type = 'BONUS_CREDIT' then recredit_id end
+            ) as total_bonus_recredit,
+            min(
+                case
+                    when recredit_type = 'BONUS_CREDIT'
+                    then date(recredit_creation_date)
+                end
+            ) as first_bonus_recredit_date,
             -- Get the total amount of previous deposit recredits
             sum(
                 case
@@ -40,6 +52,9 @@ select
     rd.last_recredit_date,
     rd.total_recredit,
     rd.total_recredit_amount,
+    rd.recredit_bonus_amount,
+    rd.total_bonus_recredit,
+    rd.first_bonus_recredit_date,
     rd.first_recredit_17_date,
     rd.first_recredit_18_date,
     -- credit_17 / credit_18 carried by this deposit, whatever the scheme (aggregated

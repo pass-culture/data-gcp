@@ -33,3 +33,5 @@
 {% docs column__native_daily_item_viewed_origin_id %}Identifier of the page where the item was seen: home entry_id (origin 'home'), search_id or thematic search name (origin 'search'), or the offer_id, venue_id or artist_id of the page (origin 'offer', 'venue', 'venueMap', 'artist'). On legacy events, only filled for 'home' and 'search'.{% enddocs %}
 
 {% docs column__native_daily_item_viewed_item_displayed_timestamp %}Timestamp of the 'ViewItem' event (Firebase event time). When the app sent the event again for the same item at the same place in the session (the user scrolled back to it), the timestamp of the last one. NULL on legacy events (before the per-item ViewItem tracking).{% enddocs %}
+
+{% docs column__native_daily_item_viewed_tracking_version %}Version of the 'ViewItem' tracking the row comes from: 'v2' (one event per viewed item, see int_firebase__native_daily_item_viewed_v2) or 'legacy' (one event per playlist with a list of 'position:item_id' pairs, see int_firebase__native_daily_item_viewed_legacy). Use it to monitor the migration from the legacy tracking to the new one.{% enddocs %}

@@ -4,10 +4,9 @@ models:
   - name: int_firebase__native_daily_item_viewed
     description: >-
       One row per item (offer, venue, artist) displayed to a user of the native app, built from 'ViewItem' events.
-      Current events carry one item each (`id`, `index`, `playlistId`, `playlistIndex`, `originId`, `eventTimestamp`);
-      legacy events carry a list of 'position:item_id' pairs per playlist, which is split into one row per item.
-      The app sends the current event again when the user scrolls back to an item: these repeats (same session, page,
-      playlist, position and item) are deduplicated, keeping the last one.
+      Union of the two tracking versions, identified by `tracking_version`:
+      'v2' (int_firebase__native_daily_item_viewed_v2, one event per item) and
+      'legacy' (int_firebase__native_daily_item_viewed_legacy, one event per playlist split into one row per item).
     columns:
       - name: event_date
         description: '{{ doc("column__native_daily_item_viewed_event_date") }}'
@@ -109,3 +108,16 @@ models:
       - name: item_displayed_timestamp
         description: '{{ doc("column__native_daily_item_viewed_item_displayed_timestamp") }}'
         data_type: TIMESTAMP
+
+      - name: tracking_version
+        description: '{{ doc("column__native_daily_item_viewed_tracking_version") }}'
+        data_type: STRING
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day)"
+          - accepted_values:
+              arguments:
+                values: ["v2", "legacy"]
+              config:
+                where: "event_date >= date_sub(current_date(), interval 7 day)"

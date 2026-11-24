@@ -75,7 +75,7 @@ with
         select
             user_id,
             offer_id,
-            item_id,
+            int_applicative__offer_item_id.item_id,
             event_date as consult_date,
             origin as consult_origin,
             reco_call_id,
@@ -87,7 +87,9 @@ with
         from {{ ref("int_firebase__native_event") }}
         inner join
             {{ ref("int_applicative__offer_item_id") }}
-            as int_applicative__offer_item_id using (offer_id)
+            as int_applicative__offer_item_id as int_applicative__offer_item_id using (
+                offer_id
+            )
         where
             event_name = 'ConsultOffer'
             and origin

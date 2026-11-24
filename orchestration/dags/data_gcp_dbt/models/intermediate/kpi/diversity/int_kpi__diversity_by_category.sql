@@ -19,6 +19,8 @@ select
 from {{ ref("mrt_native__outgoing_cohort") }} as oc
 cross join unnest(oc.category_booked_users) as cat
 inner join {{ ref("region_department") }} as rd on oc.user_department_code = rd.num_dep
+-- a few deposits carry a mistyped expiration date (year 22, 1994, ...)
+where date(oc.user_expiration_month) >= "{{ var('PASS_START_DATE') }}"
 group by
     date_trunc(date(oc.user_expiration_month), month),
     oc.user_is_in_qpv,

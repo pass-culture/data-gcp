@@ -5,6 +5,7 @@
     ranking_metric,
     rank_column_name,
     additional_partition_by=[],
+    tie_breaker_field=none,
     top_n=50
 ) %}
     {% set geo_levels = [
@@ -41,7 +42,9 @@
                         {{ partition_field }},
                     {% endfor %}
                     {{ geo.group_expr }}
-                order by sum({{ ranking_metric }}) desc
+                order by
+                    sum({{ ranking_metric }}) desc
+                    {% if tie_breaker_field %}, {{ tie_breaker_field }} asc {% endif %}
             ) as {{ rank_column_name }}
         from {{ base_cte }}
         where {{ geo.value_expr }} is not null

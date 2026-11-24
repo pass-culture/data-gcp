@@ -14,6 +14,10 @@
     credit at the exact age (milestone_age) over the population of that age,
     both counted on the population department. taux_couverture_<age> reads
     milestone_age <age> + 1, as the source data counts age + 1.
+    Beneficiary counts are the perturbed cells (department x milestone age) of
+    exp_base__beneficiary_coverage: REG and NAT are sums of these cells, so that
+    they match the vidoc and data.gouv.fr exports. Population counts are public
+    INSEE estimates and are not perturbed.
 #}
 {% set age_groups = get_age_groups() %}
 {% set dimensions = [
@@ -35,7 +39,7 @@ with
             ) as total_beneficiaries_last_12_months
         from {{ ref("metrics_population__coverage") }} as population
         left join
-            {{ ref("metrics_beneficiary__coverage") }} as beneficiary
+            {{ ref("exp_base__beneficiary_coverage") }} as beneficiary
             on population.partition_month = beneficiary.partition_month
             and cast(population.milestone_age as int64) = beneficiary.milestone_age
             and population.department_code = beneficiary.department_code

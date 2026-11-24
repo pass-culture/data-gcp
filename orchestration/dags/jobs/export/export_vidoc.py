@@ -118,7 +118,7 @@ with DAG(
         )
         columns = ", ".join(config["columns"])
 
-        # EXPORT DATA rather than an extract job, to export the lot 1 columns only
+        # EXPORT DATA rather than an extract job, to export the prod columns only
         bq_to_gcs = BigQueryInsertJobOperator(
             project_id=GCP_PROJECT_ID,
             task_id=f"bq_extract_{s3_prefix}",

@@ -21,6 +21,11 @@ environments = [
     "sys_platform == 'darwin'",
     "sys_platform == 'linux'",
 ]
+constraint-dependencies = [
+    "h2 >= 4.4.1", # GHSA-6hr6-w5qg-qmwg, PYSEC-2026-3628
+    "hpack >= 4.2.0", # GHSA-8v8h-hg4w-mvq2, PYSEC-2026-4053
+    "werkzeug >= 3.1.9", # GHSA-g6x2-hccm-hh4m, PYSEC-2026-4312
+]
 ## ruff
 # Recommended ruff config for now, to be updated as we go along.
 [tool.ruff]

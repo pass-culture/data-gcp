@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: mrt_institutional__event
+    description: "{{ doc('description__mrt_institutional__event') }}"
+    columns:
+      - name: event_date
+        data_type: DATE
+        description: "{{ doc('column__event_date') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+      - name: event_timestamp
+        data_type: TIMESTAMP
+        description: "{{ doc('column__event_timestamp') }}"
+      - name: user_pseudo_id
+        data_type: STRING
+        description: "{{ doc('column__user_pseudo_id') }}"
+      - name: session_id
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_session_id') }}"
+      - name: unique_session_id
+        data_type: STRING
+        description: "{{ doc('column__unique_session_id') }}"
+      - name: session_number
+        data_type: INT64
+        description: "{{ doc('column__session_number') }}"
+      - name: event_name
+        data_type: STRING
+        description: "{{ doc('column__event_name') }}"
+        data_tests:
+          - not_null:
+              config:
+                where: "event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)"
+      - name: page_title
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_page_title') }}"
+      - name: engagement_time_msec
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_engagement_time_msec') }}"
+      - name: percent_scrolled
+        data_type: INT64
+        description: "{{ doc('column__institutional_event_percent_scrolled') }}"
+      - name: session_engaged
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_session_engaged') }}"
+      - name: source
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_source') }}"
+      - name: medium
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_medium') }}"
+      - name: campaign
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_campaign') }}"
+      - name: user_traffic_source
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_user_traffic_source') }}"
+      - name: user_traffic_medium
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_user_traffic_medium') }}"
+      - name: file_name
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_file_name') }}"
+      - name: file_extension
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_file_extension') }}"
+      - name: link_text
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_link_text') }}"
+      - name: link_url
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_link_url') }}"
+      - name: link_domain
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_link_domain') }}"
+      - name: outbound
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_outbound') }}"
+      - name: device_category
+        data_type: STRING
+        description: "{{ doc('column__user_device_category') }}"
+      - name: geo_country
+        data_type: STRING
+        description: "{{ doc('column__user_country') }}"
+      - name: geo_region
+        data_type: STRING
+        description: "{{ doc('column__institutional_event_geo_region') }}"

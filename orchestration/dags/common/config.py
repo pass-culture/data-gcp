@@ -153,7 +153,9 @@ DE_BIGQUERY_TMP_BACKUP_BUCKET_NAME = os.environ.get(
 BASE32_JS_LIB_PATH = f"gs://{DE_TOOLS_BUCKET_NAME}/base32-encode/base32.js"
 
 if ENV_SHORT_NAME == "prod":
-    ELEMENTARY_REPORT_URL = "https://dataquality.data.passculture.team/#/"
+    ELEMENTARY_REPORT_URL = (
+        "https://dataquality.prd.data.passculture.team/#/report/dashboard"
+    )
 else:
     ELEMENTARY_REPORT_URL = None
 

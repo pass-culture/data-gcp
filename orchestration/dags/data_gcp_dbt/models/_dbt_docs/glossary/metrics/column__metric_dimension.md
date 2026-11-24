@@ -69,7 +69,7 @@ Message to display instead of the KPI when it has no value: 'Données non dispon
 {% enddocs %}
 
 {% docs column__milestone_age %}
-Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in beneficiary coverage models and in exp_vidoc__population_coverage, STRING in int_kpi__population_coverage and metrics_population__coverage.
+Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi__population_coverage and metrics_population__coverage.
 {% enddocs %}
 
 {% docs column__age_at_calculation %}

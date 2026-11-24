@@ -113,7 +113,16 @@ uv run pytest
 2. Next, you need the input data of your new vector, you can either:
     a. use an existing model in `data-gcp/orchestration/dags/data_gcp_dbt/models/machine_learning/input/` that already contain the all items and features you want to embedd.
 
-    b. create a new input DBT model for your vector in that same directory which contans exactly the items you want to embed and their features. Please follow the naming convention: `<ml_input__<name of your vector>_to_embed>`. If you do create a new input model, make sure you run the DBT model before running the embedding job so the table is created in BigQuery. To do so run
+    b. create a new input DBT model for your vector in that same directory which contans exactly the items you want to embed and their features. Please follow the naming convention: `<ml_input__<name of your vector>_to_embed>`. Its `to_embed` column must be computed against your vector's **own** merged table (`ml_semantic_embedding__<name of your vector>`), never reused from another input model, otherwise items embedded by another vector are wrongly marked as done for yours:
+    ```sql
+    select base.item_id, base.content_hash, {{ to_embed_condition("base", "past") }} as to_embed
+    from {{ ref("ml_input__all_items_metadata_to_embed") }} as base
+    left join {{ ref("ml_semantic_embedding__<name of your vector>") }} as past
+        on base.item_id = past.item_id
+    ```
+    If your prompt uses features outside `content_hash`, add them to your own hash (see `ml_input__movies_metadata_to_embed`). Also filter out items whose prompt would be empty: `prepare` drops them, so they would otherwise stay `to_embed` forever.
+
+    If you do create a new input model, make sure you run the DBT model before running the embedding job so the table is created in BigQuery. To do so run
     ```bash
     dbt run -s <name of your new model> -t <ENV_SHORT_NAME>
     ```

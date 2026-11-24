@@ -8,6 +8,8 @@ description: Key indicators from the `external_reporting__deposit_usage` model.
 The `external_reporting__deposit_usage` model provides aggregated key indicators related to pass Culture deposit usage.
 It is designed for automated export, especially in Excel format.
 
+The `*_trimestre` KPIs are the same averages over the calendar quarter, on the row of its last month only: quarterly cohorts of small territories rarely count fewer than 5 beneficiaries, and quarters do not overlap so that a masked month cannot be deduced by difference.
+
 {% enddocs %}
 
 ## Table Description

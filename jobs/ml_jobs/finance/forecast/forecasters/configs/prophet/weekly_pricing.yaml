@@ -8,6 +8,7 @@ prophet:
     - "2024-07-03"
     - "2024-12-20"
     - "2025-06-25"
+    - "2025-12-20"
   changepoint_prior_scale: 0.05
   yearly_seasonality: true
   weekly_seasonality: true

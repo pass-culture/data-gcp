@@ -42,7 +42,8 @@ select
     user_pseudo_id,
     any_value(user_id) as user_id,
     any_value(session_number) as session_number,
-    min(event_date) as first_event_date,
+    {{ firebase_session_start_date("session_id", "min(event_date)") }}
+    as first_event_date,
     min(event_timestamp) as first_event_timestamp,
     max(event_timestamp) as last_event_timestamp,
     date_diff(
@@ -275,11 +276,12 @@ select
 
 from filtered_events
 group by session_id, user_pseudo_id, unique_session_id
--- Events are read one day further back than the partitions rewritten, and a visit is
--- kept only when it starts inside them: a visit that crosses midnight stays whole in
--- the partition of its first day instead of leaving a truncated copy in the next one.
+-- A visit is dated by its session start (see firebase_session_start_date) and kept
+-- only when it starts in the partitions rewritten: no copy of it can land in another
+-- partition. Events are read one day further back so a visit crossing midnight is
+-- whole; events received more than 3 days after the start are dropped.
 {% if is_incremental() %}
     having
-        min(event_date)
+        first_event_date
         between date_sub(date("{{ ds() }}"), interval 3 day) and date("{{ ds() }}")
 {% endif %}

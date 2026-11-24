@@ -28,7 +28,7 @@ dependencies = [
     "tensorflow[and-cuda]>=2.16.0; sys_platform == 'linux'",
     "tensorflow>=2.16.0; sys_platform == 'darwin'",
     "tf-keras>=2.18.0",
-    "tornado >= 6.5.9",
+    "tornado >= 6.6.1",
     "tqdm>=4.64.1",
     "typer>=0.7.0",
 ]
@@ -72,7 +72,7 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
 [tool.uv]
 environments = [
-    "sys_platform == 'darwin'",
+    "sys_platform == 'darwin' and python_full_version < '3.12'",
     "sys_platform == 'linux'",
 ]
 constraint-dependencies = [
@@ -81,7 +81,7 @@ constraint-dependencies = [
     "requests >= 2.33.0", # GHSA-35cv-6p6j-x96x
     "pydantic-settings >= 2.14.2", # GHSA-87rw-pf2v-x3x9
     "msgpack >= 1.2.3", # GHSA-qmhj-6hxf-p4j8, GHSA-j586-36cw-2gc2
-    "soupsieve >= 2.8.4", # GHSA-wf34-78mc-v73j, GHSA-p7q2-5c5x-qfhw
+    "soupsieve >= 4.0.0", # GHSA-wf34-78mc-v73j, GHSA-p7q2-5c5x-qfhw, GHSA-4j63-6c4x-wfg4, GHSA-6655-6qjp-jx7x, GHSA-7g44-g9rc-x53w, GHSA-mmhr-3c5m-f64f
     "python-socketio >= 5.16.2", # GHSA-q9x8-6j69-g388
     "python-engineio >= 4.13.2", # GHSA-5rqg-hfv6-mmr4, GHSA-j37r-j4qc-9xfm
     "mcp >= 1.28.1", # GHSA-qq9j-2wq5-9gf3, GHSA-4cc4-g4x5-r7wf, GHSA-3gqf-j8h7-4q7g
@@ -89,7 +89,7 @@ constraint-dependencies = [
     "pillow >= 13.0.0", # GHSA-jw5h-h276-9jcc, GHSA-2jxr-v4xp-q87w, GHSA-9m85-6jwx-3479, GHSA-332p-7hrc-92wf, GHSA-5x8w-8jj5-q52h, GHSA-8g5g-8vmr-9782, GHSA-v9pv-5gc8-w2m6, GHSA-w889-685w-c8fh
     "certifi >= 2026.10.19", # GHSA-6q48-6c7w-9gw2
     "anyio >= 4.14.2", # GHSA-82r6-8w77-94w6
-    "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
+    "pyasn1 >= 0.6.5", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7, GHSA-2qm8-x737-gmw5, GHSA-9m75-vc3g-4x39, GHSA-fm9c-5rcf-2q5p, GHSA-mm57-4v3p-rchx
     "mlflow >= 3.17.2", # CVE-2026-0545, CVE-2026-64849 (GHSA-7gwp-5pfp-969j), GHSA-wqmh-qccw-pqwf
     "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, PYSEC-2026-3552
     # mlflow: GHSA-h7x2-h6g9-p789 (SSRF via api_base) has no fixed release yet; revisit when a fix lands.
@@ -106,13 +106,15 @@ constraint-dependencies = [
     "python-dotenv >= 1.2.2", # GHSA-mf9w-mj56-hr94
     "starlette >= 1.3.1", # GHSA-86qp-5c8j-p5mr, PYSEC-2026-161
     # transformers skipped: recommenders>=1.2.1 hard-requires transformers<5, incompatible with >=5.10.0
-    # (PYSEC-2025-217, GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, GHSA-xrqw-3rrv-vx5w)
+    # (PYSEC-2025-217, GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, GHSA-xrqw-3rrv-vx5w, GHSA-x9r9-c232-4q39)
     "urllib3 >= 2.8.0", # GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j, PYSEC-2026-142, PYSEC-2026-141
     "graphql-core >= 3.2.12", # GHSA-r77w-qph3-7vf8, GHSA-vj8h-fx38-h3vc
     "fsspec >= 2026.6.0", # GHSA-27vj-qcqg-25rc
     "nbconvert >= 7.17.2", # GHSA-pjvx-prjx-h659
     "multidict >= 6.9.1", # GHSA-54p9-h82j-f925
-    "oauthlib >= 4.0.0", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
-    "opentelemetry-api >= 1.45.1", # GHSA-xcq7-p3pf-p88h
+    "oauthlib >= 4.0.1", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
+    "opentelemetry-api >= 1.45.2", # GHSA-xcq7-p3pf-p88h, GHSA-mf5v-w3w3-f6cg
     "werkzeug >= 3.1.9", # GHSA-g6x2-hccm-hh4m
+    "cornac >= 2.6.0", # GHSA-rrh3-cwwj-g5mg
+    "filelock >= 4.2.1", # GHSA-69hj-f68j-2879, GHSA-8mx5-7m5m-r77g
 ]

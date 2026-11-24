@@ -25,3 +25,13 @@
 {% docs column__native_daily_item_viewed_total_user_item_viewed_bucket_7_9 %}Number of distinct logged-in users who saw the item in positions 7 to 9 of its module (item index 6 to 8) that day, for the row's attributes.{% enddocs %}
 
 {% docs column__native_daily_item_viewed_total_user_item_viewed_bucket_10_plus %}Number of distinct logged-in users who saw the item in position 10 or beyond of its module (item index 9 or more) that day, for the row's attributes. Also counts views with an unknown position (index -1).{% enddocs %}
+
+{% docs column__native_daily_item_viewed_item_index %}Position of the item in its playlist or result list, as a string; '-1' when unknown on legacy events.{% enddocs %}
+
+{% docs column__native_daily_item_viewed_playlist_index %}Position of the playlist on the page; NULL for search results lists of offers.{% enddocs %}
+
+{% docs column__native_daily_item_viewed_origin_id %}Identifier of the page where the item was seen: home entry_id (origin 'home'), search_id or thematic search name (origin 'search'), or the offer_id, venue_id or artist_id of the page (origin 'offer', 'venue', 'venueMap', 'artist'). On legacy events, only filled for 'home' and 'search'.{% enddocs %}
+
+{% docs column__native_daily_item_viewed_item_displayed_timestamp %}Timestamp of the 'ViewItem' event (Firebase event time). When the app sent the event again for the same item at the same place in the session (the user scrolled back to it), the timestamp of the last one. NULL on legacy events (before the per-item ViewItem tracking).{% enddocs %}
+
+{% docs column__native_daily_item_viewed_tracking_version %}Version of the 'ViewItem' tracking the row comes from: 'v2' (one event per viewed item, see int_firebase__native_daily_item_viewed_v2) or 'legacy' (one event per playlist with a list of 'position:item_id' pairs, see int_firebase__native_daily_item_viewed_legacy). Use it to monitor the migration from the legacy tracking to the new one.{% enddocs %}

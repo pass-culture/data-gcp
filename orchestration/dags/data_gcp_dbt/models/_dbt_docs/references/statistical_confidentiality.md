@@ -79,8 +79,31 @@ Practical consequences:
 - **Nested invariants can break on a single cell.** If cohort A ⊂ B, the raw counts satisfy `count(A) ≤ count(B)`, but after independent perturbation `count(A) + noise_A ≤ count(B) + noise_B` is not guaranteed on small cells.
 - **Ratio noise does not cancel.** A rate `count(A)/count(B)` gets independent noise on both sides, so per-cell ratios can be noticeably off on small cells.
 - **Aggregation is the fix.** Sum numerator and denominator each over many cells (national, regional, quarterly) before dividing — the `O(sqrt(N))` error on each sum becomes negligible relative to the sum.
-- **Nested counts are capped on export.** Where a published table pairs a sub-cohort with its parent cohort (`exp_vidoc__diversity`: N+ categories and spent share buckets ⊂ expired; `exp_vidoc__diversity_by_category`: category bookers ⊂ expired; `exp_vidoc__beneficiary`: active ⊂ ever credited), the perturbed sub-cohort count is capped at the perturbed parent count of the same cell, so shares never exceed 100% at any aggregation level. The cap only uses perturbed values, so it does not weaken confidentiality, but it adds a small downward bias on the capped counts (about -0.2% nationally, up to several % on small overseas departments).
+- **Nested counts are capped on export.** Where a published table pairs a sub-cohort with its parent cohort (`exp_base__diversity`: N+ categories and spent share buckets ⊂ expired; `exp_base__diversity_by_category`: category bookers ⊂ expired; `exp_base__beneficiary`: active ⊂ ever credited), the perturbed sub-cohort count is capped at the perturbed parent count of the same cell, so shares never exceed 100% at any aggregation level. The cap only uses perturbed values, so it does not weaken confidentiality, but it adds a small downward bias on the capped counts (about -0.2% nationally, up to several % on small overseas departments).
 - **Additive consistency is not guaranteed.** `perturb(total) ≠ Σ perturb(sub-totals)`. Don't expect published breakdowns to sum exactly to a published total.
+
+### A single perturbed base for every export
+
+Beneficiary counts are perturbed **once**, at their finest published grain, in the `exp_base__*` models (`models/export/export_base`): month x department x age x QPV x density for beneficiaries, month x department x milestone age for coverage, expiration month x department x QPV x density (x category) for diversity. Every tool then only **sums** these perturbed cells:
+
+| Tool | Reads |
+|---|---|
+| vidoc (`exp_vidoc__*`) | the base cells (`select *`) |
+| data.gouv.fr (`exp_data_gouv__*`) | the base cells, lot 1 columns and closed months |
+| external reporting (`external_reporting__beneficiary`, `__coverage`, `__diversity`) | NAT, REG and DEP figures = sums of the base cells |
+
+A territory and month therefore show **exactly** the same counts in every tool, and a consumer summing the published cells gets the external reporting figures. This is also why national figures are perturbed (they are sums of perturbed cells): the error stays within a few tens on several millions.
+
+Perturbing a total again (e.g. `perturb(department total)`) next to the sum of its perturbed cells would give two different values for the same figure, and comparing them helps to remove the noise. So a figure that can be computed from the base is never perturbed a second time. Only grains that the base does not hold are perturbed separately, with their own additive cell keys: EPCI and municipality levels of external reporting, and breakdowns of the active beneficiaries by gender or activity.
+
+The base also applies two rules for every tool:
+
+- **All-zero cells are left out.** Rows only exist for cells with at least one young person, so a published cell whose counts are all 0 would reveal a cell of 1 to 5 people perturbed to 0. Leaving it out makes a missing combination read as "0 or a very small count". Sums are unchanged. A diversity category is left out with its cell.
+- **Impossible ages are unknown.** In `exp_base__beneficiary`, an age that no credit history allows (inconsistent declared birth date) is merged into the unknown age (`null`) **before** perturbation, with the [`plausible_beneficiary_age`](https://github.com/pass-culture/data-gcp/blob/master/orchestration/dags/data_gcp_dbt/macros/export_base/plausible_beneficiary_age.sql) rule: ages are measured on the first day of the month, so 14 is possible until the March 2025 reform, then the youngest age grows by one year per year; the oldest is 19 in February 2019 plus one year per year.
+
+The base also holds figures that are **out of scope** of both rules, so that every tool still reads one source: partner counts (`exp_base__cultural_partner`, `exp_base__cultural_partner_by_type`, at municipality grain). The statistical secret of businesses (at least 3 businesses, none above 85% of the value) protects their economic values, such as revenue and amounts, not counts of establishments (INSEE publishes establishment counts by municipality), and partner lists are public. Venues are not people, so cell key perturbation does not apply. This holds in external reporting as in vidoc. The statistical secret applies to bookings and revenue measured on the venue geography.
+
+Exception: coverage figures of external reporting exclude French Polynesia (987), which has no INSEE population estimate, so their REG and NAT sums are lower than the sums of the published cells by the beneficiaries of 987.
 
 ### Parameters
 

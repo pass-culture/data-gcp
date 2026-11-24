@@ -59,15 +59,16 @@ constraint-dependencies = [
     "certifi >= 2026.10.19", # GHSA-6q48-6c7w-9gw2
     "anyio >= 4.14.2", # GHSA-82r6-8w77-94w6
     "sentence-transformers >= 5.6.0", # GHSA-jhr6-gm9c-rqjv
-    "pyasn1 >= 0.6.4", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7
+    "pyasn1 >= 0.6.5", # GHSA-5q8p-9xrr-4jqm, GHSA-gqpq-g87q-wr6g, GHSA-f39v-xm4p-9hm7, GHSA-2qm8-x737-gmw5, GHSA-9m75-vc3g-4x39, GHSA-fm9c-5rcf-2q5p, GHSA-mm57-4v3p-rchx
     "gitpython >= 3.2.1", # GHSA-rwj8-pgh3-r573, GHSA-hxwm-x553-x359, GHSA-wfm5-v35h-vwf4, GHSA-cjjc-xp8v-855w, GHSA-j4jw-m6xq-5x6x, GHSA-63pj-vm49-gjx3, GHSA-xm45-vr68-g3jr, GHSA-9vhm-6c77-rvj4, GHSA-rpm5-65cw-6hj4, GHSA-239g-whfq-7xj9, GHSA-83vg-56qc-22m7, GHSA-g5vv-9gxw-82hx
     "torch >= 2.13.0", # GHSA-rrmf-rvhw-rf47, PYSEC-2026-139
     "transformers >= 5.10.0", # GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r, PYSEC-2025-217, GHSA-xrqw-3rrv-vx5w
     "click >= 8.3.3", # PYSEC-2026-2132
     "fsspec >= 2026.6.0", # GHSA-27vj-qcqg-25rc
     "multidict >= 6.9.1", # GHSA-54p9-h82j-f925
-    "oauthlib >= 4.0.0", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
+    "oauthlib >= 4.0.1", # GHSA-3jp2-3mrg-2vxc, GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv
     "werkzeug >= 3.1.9", # GHSA-g6x2-hccm-hh4m
+    "filelock >= 4.2.1", # GHSA-69hj-f68j-2879, GHSA-8mx5-7m5m-r77g
 ]
 environments = [
     "sys_platform == 'darwin'",

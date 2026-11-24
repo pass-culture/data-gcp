@@ -83,7 +83,7 @@ models:
     external_reporting:
       +schema: external_reporting_{{ target.name }}
       # built on the 1st, 5th and 10th as a preview of the month being
-      # consolidated (months_ago = -1), frozen from the 15th (tests run then)
+      # consolidated (months_ago = -1), frozen from the 15th.
       +tags: ["monthly_1", "monthly_5", "monthly_10", "monthly_15"]
       +labels:
         schedule: "monthly"
@@ -125,6 +125,16 @@ models:
       vidoc:
         +schema: export_vidoc_{{ target.name }}
         +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      export_base:
+        # perturbed base of every export (vidoc, data_gouv, external_reporting)
+        +schema: export_base_{{ target.name }}
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+      data_gouv:
+        +schema: export_data_gouv_{{ target.name }}
+        +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
+        # published schema (Table Schema on data.gouv.fr): fail the build on drift
+        +contract:
+          enforced: true
     machine_learning:
       +materialized: "{{ var('CI_MATERIALIZATION', 'table') }}"
       +meta:
@@ -153,6 +163,11 @@ data_tests:
   +severity: "{{ env_var('CI_SEVERITY', 'warn') }}"
   +tags: "test"
   data_gcp_dbt:
+    external_reporting:
+      individual:
+        +tags: "weekly"
+      collective:
+        +tags: "weekly"
     export:
       +severity: "{{ 'error' if target.name in ['prod', 'stg'] else 'warn' }}"
 vars:

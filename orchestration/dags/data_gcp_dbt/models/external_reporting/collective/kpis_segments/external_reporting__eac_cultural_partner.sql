@@ -46,7 +46,7 @@
             sum(total_active_partners_collective),
             sum(total_cumulative_activated_partners_collective)
         ) as kpi
-    from {{ ref("metrics_cultural_partner__activation") }} {{ incremental_filter }}
+    from {{ ref("exp_base__cultural_partner") }} {{ incremental_filter }}
     group by partition_month, dimension_name, dimension_value
     having sum(total_partners_with_collective_offer) > 0
     union all

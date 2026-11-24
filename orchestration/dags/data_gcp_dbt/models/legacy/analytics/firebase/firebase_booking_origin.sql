@@ -75,7 +75,7 @@ with
         select
             user_id,
             offer_id,
-            item_id,
+            int_applicative__offer_item_id.item_id,
             event_date as consult_date,
             origin as consult_origin,
             reco_call_id,

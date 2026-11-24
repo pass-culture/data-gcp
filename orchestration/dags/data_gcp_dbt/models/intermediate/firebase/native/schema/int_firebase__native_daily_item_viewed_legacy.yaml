@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: int_firebase__native_daily_item_viewed_legacy
+    description: >-
+      One row per item (offer, venue, artist) displayed to a user of the native app, from the legacy 'ViewItem'
+      tracking: one event per playlist carrying a list of 'position:item_id' pairs, split into one row per item.
+      item_displayed_timestamp is always NULL and origin_id is only filled for 'home' and 'search'.
+    columns:
+      - name: event_date
+        description: '{{ doc("column__native_daily_item_viewed_event_date") }}'
+        data_type: DATE
+
+      - name: origin
+        description: '{{ doc("column__native_daily_item_viewed_origin") }}'
+        data_type: STRING
+
+      - name: traffic_source
+        description: '{{ doc("column__traffic_source") }}'
+        data_type: STRING
+
+      - name: traffic_medium
+        description: '{{ doc("column__traffic_medium") }}'
+        data_type: STRING
+
+      - name: traffic_campaign
+        description: '{{ doc("column__traffic_campaign") }}'
+        data_type: STRING
+
+      - name: module_id
+        description: '{{ doc("column__native_daily_item_viewed_module_id") }}'
+        data_type: STRING
+
+      - name: home_entry_id
+        description: '{{ doc("column__native_daily_item_viewed_home_entry_id") }}'
+        data_type: STRING
+
+      - name: item_type
+        description: '{{ doc("column__native_daily_item_viewed_item_type") }}'
+        data_type: STRING
+
+      - name: unique_session_id
+        description: '{{ doc("column__unique_session_id") }}'
+        data_type: STRING
+
+      - name: user_id
+        description: '{{ doc("column__user_id") }}'
+        data_type: STRING
+
+      - name: item_index
+        description: '{{ doc("column__native_daily_item_viewed_item_index") }}'
+        data_type: STRING
+
+      - name: viewed_item_id
+        description: '{{ doc("column__native_daily_item_viewed_viewed_item_id") }}'
+        data_type: STRING
+
+      - name: playlist_index
+        description: '{{ doc("column__native_daily_item_viewed_playlist_index") }}'
+        data_type: INT64
+
+      - name: origin_id
+        description: '{{ doc("column__native_daily_item_viewed_origin_id") }}'
+        data_type: STRING
+
+      - name: reco_call_id
+        description: '{{ doc("column__reco_call_id") }}'
+        data_type: STRING
+
+      - name: item_displayed_timestamp
+        description: '{{ doc("column__native_daily_item_viewed_item_displayed_timestamp") }}'
+        data_type: TIMESTAMP

@@ -8,11 +8,13 @@ on:
       - production
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
   linter:
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_linter.yml
     with:
       NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
@@ -38,6 +40,9 @@ jobs:
   test-jobs:
     needs: find-test-jobs
     if: ${{ needs.find-test-jobs.outputs.jobs != '' && toJson(fromJson(needs.find-test-jobs.outputs.jobs)) != '[]' }}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_job_test.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -53,6 +58,9 @@ jobs:
       NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
 
   test-orchestration:
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_test_orchestration.yml
     with:
       NOTIF_CHANNEL_ID: ${{ vars.DEFAULT_NOTIF_CHANNEL_ID }}
@@ -65,6 +73,9 @@ jobs:
   airflow-deploy-on-dev:
     # deploying new custom gke airflow on dev
     if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/production' }}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_deploy_airflow.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
@@ -85,6 +96,9 @@ jobs:
   airflow-deploy-on-stg:
     # deploying new custom gke airflow on stg
     if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_deploy_airflow.yml
     needs: [test-orchestration, test-jobs, linter]
     with:
@@ -104,6 +118,9 @@ jobs:
 
   airflow-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_deploy_airflow.yml
     needs: [test-orchestration, test-jobs, linter, airflow-deploy-on-dev]
     with:
@@ -124,6 +141,9 @@ jobs:
 
   mkdocs-deploy-on-prod:
     if: github.ref == 'refs/heads/production'
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_deploy_mkdocs.yml
     needs: [linter]
     with:
@@ -169,6 +189,9 @@ jobs:
   k8s-deploy-on-dev:
     needs: [find-build-job]
     if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch' )}}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       GITHUB_ENV_NAME: "dev"
@@ -182,6 +205,9 @@ jobs:
   k8s-deploy-on-stg:
     needs: [find-build-job]
     if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch' )}}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       GITHUB_ENV_NAME: "staging"
@@ -195,6 +221,9 @@ jobs:
   k8s-deploy-on-prod:
     needs: [find-build-job]
     if: ${{ needs.find-build-job.outputs.has-changed == 'true' && ( github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch' )}}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_build_image.yml
     with:
       GITHUB_ENV_NAME: "production"

@@ -4,11 +4,13 @@ on:
   pull_request:
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
   linter:
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_linter.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -37,6 +39,9 @@ jobs:
       TARGET_AIRFLOW_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
       ENV_SHORT_NAME: "prod"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_dbt_workflow.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -51,6 +56,9 @@ jobs:
       TARGET_AIRFLOW_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
       ENV_SHORT_NAME: "stg"
       APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG }}
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_dbt_workflow.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -105,6 +113,9 @@ jobs:
       - run: echo "Matrix Not Empty"
 
   test-jobs:
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_job_test.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -135,6 +146,9 @@ jobs:
   test-orchestration:
     needs: find-changed-orchestration
     if: needs.find-changed-orchestration.outputs.run_tests == 'true'
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/reusable_test_orchestration.yml
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}

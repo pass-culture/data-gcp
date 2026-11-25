@@ -107,6 +107,8 @@ json_array="[$(IFS=,; echo "${folders[*]}")]"
 - Semgrep: the id is the alert's `rule`, copied exactly. A wrong id suppresses nothing.
 - Sonar (Python only): the key without the language prefix, `python:S6890` → `NOSONAR(S6890)`.
 - If a comment makes the line too long, `ruff format` may move it: check with step 6 after formatting.
+  Jobs that enforce `E501`/`W505` on comments (e.g. `graph_recommendation`) reject long ids with a reason: put the
+  reason on its own comment line just above `# nosemgrep: <rule id>`.
 
 **GitHub dismissal**, only for Sonar alerts on workflows or Dockerfiles that are FPs (no inline syntax there).
 Ask the user first, then:

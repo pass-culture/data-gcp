@@ -67,6 +67,9 @@ interpolated into code (SQL, shell, Python) without validation. Untrusted is a T
 
 - Performance advice, not security (`DataLoader` without explicit `pin_memory`). FP for security; the owner may set
   `pin_memory` if the job trains on GPU.
+- The rule only checks that `pin_memory=` is written in the call (not `False`). A wrapper that forwards `**kwargs`
+  is fixed without behaviour change by `pin_memory=kwargs.pop("pin_memory", False)` (PyTorch's default):
+  cheaper than a suppression whose id does not fit in 88 columns at method indent.
 
 ### `python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1`
 
@@ -81,6 +84,8 @@ interpolated into code (SQL, shell, Python) without validation. Untrusted is a T
 - `importlib.import_module(f"cli.{domain}")` from `sys.argv` in CLI entry points. The DAG passes the argument: low risk,
   but the fix is cheap. Check the value against the modules of `cli/` (or a dict of allowed domains) before importing.
 - `automations/configs/templates/common_layout/main.py` is the scaffolding template: fix it too, so new jobs inherit the fix.
+- Already checked against an allowlist before the import (e.g. `artist/main.py`, `sys.argv[1] in DOMAINS`): mitigated,
+  suppress. The rule still fires: only a literal import silences it, which would defeat lazy per-domain imports.
 
 ### `python.lang.security.audit.eval-detected.eval-detected`
 
@@ -97,6 +102,9 @@ interpolated into code (SQL, shell, Python) without validation. Untrusted is a T
 - `allow_origins=["*"]` on a FastAPI app. Needs the owner: which browser front-ends call it?
   Server-to-server only: FP, or remove the CORS middleware. Called from a web app: restrict to its origins.
   Never decide alone: list it as a question at the checkpoint.
+- Clue: an app served only as a Vertex AI custom container (`aiplatform.Model.upload` in `cli/deploy_model.py`) is reached
+  through `aiplatform.googleapis.com` with IAM, never directly by a browser: the middleware has no effect, propose removing it
+  (done for `edito_semantic_search`, DE-4955).
 
 ### `bash.lang.security.ifs-tampering.ifs-tampering`
 

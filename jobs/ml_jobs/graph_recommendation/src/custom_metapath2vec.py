@@ -91,6 +91,7 @@ class CustomMetaPath2Vec(torch.nn.Module):
         return DataLoader(
             range(self.num_nodes_dict[self.metapaths[0][0][0]]),
             collate_fn=self._sample,
+            pin_memory=kwargs.pop("pin_memory", False),
             **kwargs,
         )
 

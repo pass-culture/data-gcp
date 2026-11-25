@@ -13,6 +13,7 @@ from common.config import (
     BIGQUERY_TMP_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
+    ETL_IMPERSONATION_SA,
     GCP_PROJECT_ID,
 )
 from common.operators.bigquery import bigquery_job_task
@@ -60,7 +61,7 @@ def check_table_exists(**kwargs):
     job_params = kwargs["job_params"]
     job_name = kwargs["job_name"]
     table = kwargs["table"]
-    bq_hook = BigQueryHook()
+    bq_hook = BigQueryHook(impersonation_chain=ETL_IMPERSONATION_SA)
     client = bq_hook.get_client(project_id=GCP_PROJECT_ID)
     for dataset_id in job_params.get("gcp_project_env", []):
         logging.info(f"Check if {table} exists in {dataset_id}")
@@ -119,6 +120,7 @@ def add_copy_and_load_tasks(
         project_id=GCP_PROJECT_ID,
         # cross-region copy jobs must run in the source location
         location=query_job_params["location"],
+        impersonation_chain=ETL_IMPERSONATION_SA,
         configuration={
             "copy": {
                 "sourceTable": {

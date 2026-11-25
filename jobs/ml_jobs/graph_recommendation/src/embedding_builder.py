@@ -219,6 +219,8 @@ def train_metapath2vec(
 
     # Extract and save embeddings for item nodes
     logger.info("Extracting item embeddings...")
+    # weights_only=True: no pickled objects are loaded.
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     checkpoint = torch.load(checkpoint_path, weights_only=True)
     embedding = checkpoint["embedding.weight"].detach().cpu().numpy()
     item_embeddings = embedding[

@@ -35,14 +35,14 @@ jobs:
   dbt-integration-prod:
     needs: find-dbt-changes
     if: github.base_ref == 'production' && needs.find-dbt-changes.outputs.changes == 'true'
-    with:
-      TARGET_AIRFLOW_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
-      ENV_SHORT_NAME: "prod"
-      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/reusable_dbt_workflow.yml
+    with:
+      TARGET_AIRFLOW_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_PROD }}
+      ENV_SHORT_NAME: "prod"
+      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_PROD }}
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}
@@ -52,14 +52,14 @@ jobs:
   dbt-integration-stg:
     needs: find-dbt-changes
     if: github.base_ref == 'master' && needs.find-dbt-changes.outputs.changes == 'true'
-    with:
-      TARGET_AIRFLOW_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
-      ENV_SHORT_NAME: "stg"
-      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG }}
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/reusable_dbt_workflow.yml
+    with:
+      TARGET_AIRFLOW_BUCKET: ${{ vars.GKE_AIRFLOW_DAGS_BUCKET_STG }}
+      ENV_SHORT_NAME: "stg"
+      APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ vars.APPLICATIVE_EXTERNAL_CONNECTION_ID_STG }}
     secrets:
       GCP_EHP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_EHP_WORKLOAD_IDENTITY_PROVIDER }}
       GCP_EHP_SERVICE_ACCOUNT: ${{ secrets.GCP_EHP_SERVICE_ACCOUNT }}

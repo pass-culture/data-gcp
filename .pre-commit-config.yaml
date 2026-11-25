@@ -62,8 +62,9 @@ repos:
         entry: bash -c 'uv-secure "$@" || true' --
 
   - repo: https://github.com/semgrep/pre-commit
-    rev: 'v1.179.0' # v1.156.0
+    rev: 'v1.156.0' # keep in sync with the semgrep/semgrep image in on_pr_semgrep.yml and on_schedule_semgrep.yml
     hooks:
       - id: semgrep
         entry: env -u GIT_DIR -u GIT_INDEX_FILE SEMGREP_ENABLE_VERSION_CHECK=0 semgrep
-        args: ['--config', 'auto', '--config', 'p/security-audit', '--baseline-commit', 'HEAD~', '--error']
+        args: ['--config', 'auto', '--config', 'p/security-audit', '--baseline-commit', 'HEAD', '--error', '--quiet', '--skip-unknown-extensions']
+        stages: [pre-commit]

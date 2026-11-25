@@ -69,7 +69,7 @@ An offer is considered bookable if it meets the following criteria:
 {% docs column__mediation_humanized_id %} Human-readable identifier for mediation. {% enddocs %}
 {% docs column__is_future_scheduled %} Indicates if the offer's publication is scheduled in the future. {% enddocs %}
 {% docs column__is_coming_soon %} Indicates if the offer is published in the app but not bookable yet (coming soon). {% enddocs %}
-{% docs column__item_id %} Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id. {% enddocs %}
+{% docs column__item_id %} Identifier of the work (item) the offer belongs to, used internally by the data science team; several offers of the same book or film share an item_id, and so do all the offers of the same event series (e.g. the dates of a tour in different cities). {% enddocs %}
 {% docs column__search_group_name %} Legacy: Category displayed in the application {% enddocs %}
 {% docs column__image_url %} Image displayed in the passculture.app if present. {% enddocs %}
 {% docs column__titelive_gtl_id %} Unique identifier of the Genre Tite Live (GTL) associated to this offer.{% enddocs %}

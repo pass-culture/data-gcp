@@ -507,7 +507,7 @@ Scholar year 2025-2026 (national): 99,019 bookings, 37.6 M€ (2024-2025: 166,52
 Bookings are not counts of people: no cell key perturbation.
 
 - **School geography**: no secret (public money spent by schools).
-- **Venue geography**: amounts by venue territory are the collective revenue of the partners located there. As in external reporting, a department is masked (`is_statistic_secret` TRUE, indicators NULL on every month, rules in `department_secret_reason_label`) when it is under the individual or collective cultural partner secret at the last complete month (6 or 48 month window). Region totals summed from departments leave out the masked departments.
+- **Venue geography**: amounts by venue territory are the collective revenue of the partners located there, under the statistical secret of businesses applied once in [exp_base\_\_booking_venue_collective](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__booking_venue_collective/index.md): a territory secret at the last complete month (individual or collective side, 6 or 48 month window) has `is_statistic_secret` TRUE and NULL figures on every month. Every level (department, region, METRO / DROM / COM, France) is published on its own rows: never sum departments.
 
 ## Share of the collective credit consumed by institutions
 
@@ -1107,35 +1107,34 @@ Only bookings already included in a payment batch are counted: a used booking is
 ```
 SELECT
     partition_month,
-    venue_region_code,
-    venue_region_name,
-    SUM(total_bookings) AS used_bookings,
-    SUM(total_quantities) AS tickets
+    territory_code,
+    territory_name,
+    total_bookings AS used_bookings,
+    total_quantities AS tickets
 FROM `booking_partner_finance_individual`
-GROUP BY partition_month, venue_region_code, venue_region_name
+WHERE territory_level = 'REG'
 ORDER BY partition_month
 ```
 
 ### Available dimensions
 
-| Dimension    | Column                                           | Description                     |
-| ------------ | ------------------------------------------------ | ------------------------------- |
-| Month of use | `partition_month`                                | Month when the booking was used |
-| Department   | `venue_department_code`, `venue_department_name` | Department of the venue         |
-| Region       | `venue_region_code`, `venue_region_name`         | Region of the venue             |
+| Dimension     | Column                                                | Description                                                                                                          |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Month of use  | `partition_month`                                     | Month when the booking was used                                                                                      |
+| Territory     | `territory_level`, `territory_code`, `territory_name` | Venue territory, one level per row: `DEP` (department), `REG` (region), `GROUP` (METRO / DROM / COM), `NAT` (France) |
+| Parent region | `region_code`                                         | Region of a department (NULL for overseas collectivities)                                                            |
 
 ### Temporal tracking
 
-**Monthly.** One row per month of use and venue department. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.
+**Monthly.** One row per month of use and published venue territory. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.
 
 ### Data protection
 
-Partner revenue is under **statistical secret** (not cell key perturbation), with the rule of external reporting: when the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret), `is_statistic_secret` is TRUE and all KPIs of the department, bookings and tickets included, are NULL on every month. `department_secret_reason_label` gives the reasons.
+**Statistical secret of businesses** (INSEE rule, not cell key perturbation), applied once in [exp_base\_\_booking_venue_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__booking_venue_individual/index.md): a territory is secret when, at the last complete month, for the 6 or 48 month window and on the individual or the collective side, it has fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or a secondary secret applies. It then has `is_statistic_secret` TRUE and NULL figures on every month. Each level (department, region, group, France) is computed on unmasked data and published with its own secret status; NAT is never secret.
 
 ### Notes and caveats
 
-- Region and national totals are sums of the visible departments, so they leave out the secret departments (mostly overseas collectivities and Lozère): less than 0.06% of the national volume in 2026. External reporting publishes REG and NAT unmasked; this table has the department grain only.
-- `venue_region_code` is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...); `venue_region_name` is filled.
+- Read each level from its own rows (`WHERE territory_level = 'REG'`): never sum departments to get a region or France, the masked departments would be missing. Overseas collectivities are small and often secret one by one: read them from the `GROUP` row `COM`.
 - Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/individual_bookings_beneficiary_territory/index.md) (residence of the young person, no payment batch condition).
 
 ## Individual booking revenue by venue territory
@@ -1160,22 +1159,22 @@ Only bookings already included in a payment batch are counted.
 ```
 SELECT
     partition_month,
-    SUM(total_revenue_amount) AS revenue,
-    SUM(total_reimbursed_amount) AS reimbursed,
-    SUM(total_contribution_amount) AS partner_contribution,
-    SAFE_DIVIDE(SUM(total_reimbursed_amount), SUM(total_revenue_amount)) AS reimbursement_rate
+    total_revenue_amount AS revenue,
+    total_reimbursed_amount AS reimbursed,
+    total_contribution_amount AS partner_contribution,
+    SAFE_DIVIDE(total_reimbursed_amount, total_revenue_amount) AS reimbursement_rate
 FROM `booking_partner_finance_individual`
-GROUP BY partition_month
+WHERE territory_level = 'NAT'
 ORDER BY partition_month
 ```
 
 ### Available dimensions
 
-| Dimension    | Column                                           | Description                     |
-| ------------ | ------------------------------------------------ | ------------------------------- |
-| Month of use | `partition_month`                                | Month when the booking was used |
-| Department   | `venue_department_code`, `venue_department_name` | Department of the venue         |
-| Region       | `venue_region_code`, `venue_region_name`         | Region of the venue             |
+| Dimension     | Column                                                | Description                                                                                                          |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Month of use  | `partition_month`                                     | Month when the booking was used                                                                                      |
+| Territory     | `territory_level`, `territory_code`, `territory_name` | Venue territory, one level per row: `DEP` (department), `REG` (region), `GROUP` (METRO / DROM / COM), `NAT` (France) |
+| Parent region | `region_code`                                         | Region of a department (NULL for overseas collectivities)                                                            |
 
 ### Temporal tracking
 
@@ -1183,12 +1182,11 @@ ORDER BY partition_month
 
 ### Data protection
 
-**Statistical secret** on the venue department, with the rule of external reporting: the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret). A secret department has `is_statistic_secret` TRUE and NULL amounts on every month. Revenue is never published at venue or offer level.
+**Statistical secret of businesses** (INSEE rule, not cell key perturbation), applied once in [exp_base\_\_booking_venue_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__booking_venue_individual/index.md): a territory is secret when, at the last complete month, for the 6 or 48 month window and on the individual or the collective side, it has fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or a secondary secret applies. It then has `is_statistic_secret` TRUE and NULL figures on every month. Each level (department, region, group, France) is computed on unmasked data and published with its own secret status; NAT is never secret. Revenue is never published at venue or offer level.
 
 ### Notes and caveats
 
-- Sums of departments underestimate the region and national revenue by the secret departments (less than 0.03% of the national revenue in 2026). External reporting publishes REG and NAT unmasked; this table has the department grain only.
-- `venue_region_code` is NULL for the overseas collectivities; `venue_region_name` is filled.
+- Read each level from its own rows (`WHERE territory_level = 'REG'`): never sum departments to get a region or France, the masked departments would be missing. Overseas collectivities are small and often secret one by one: read them from the `GROUP` row `COM`.
 - Not broken down by offer category, by design: by venue location, a category often has fewer than 3 partners in a department (about a third of the department x category cells over 12 months), so the revenue by category would reveal a partner's revenue. Categories are read on the young people's side (practices), as in the observatoire: see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/individual_bookings_beneficiary_territory/index.md).
 
 ## Tops
@@ -1608,34 +1606,36 @@ Unlike the [venue territory KPIs](https://pass-culture.github.io/data-gcp/dbt/kp
 
 ### Calculation
 
-Rows with `offer_category_id = 'ALL'` hold the department total; the other rows the categories. Never sum the two together.
+Rows with `offer_category_id = 'ALL'` hold the territory total; the other rows the categories. Never sum the two together. Each level (`DEP`, `REG`, `GROUP`, `NAT`) has its own rows: filter on it, never sum departments.
+
+The share of a category divides it by the `ALL` row of the same month and territory. Don't divide by the sum of the category rows: masked categories are NULL and the `ALL` row has its own mask, so that sum is not the territory total.
 
 ```
 SELECT
-    t.partition_month,
-    c.offer_category_id,
-    SUM(c.total_used_bookings) AS used_bookings,
-    SUM(c.total_used_amount) AS amount_spent,
-    SAFE_DIVIDE(SUM(c.total_used_bookings), SUM(t.total_used_bookings)) AS category_share
-FROM `booking_beneficiary` AS c
-JOIN `booking_beneficiary` AS t
-    ON t.partition_month = c.partition_month
-    AND t.department_name = c.department_name
-    AND t.offer_category_id = 'ALL'
-WHERE c.offer_category_id != 'ALL'
-    AND c.total_used_bookings IS NOT NULL
-GROUP BY t.partition_month, c.offer_category_id
-ORDER BY t.partition_month, used_bookings DESC
+    partition_month,
+    offer_category_id,
+    total_used_bookings AS used_bookings,
+    total_used_amount AS amount_spent,
+    SAFE_DIVIDE(
+        total_used_bookings,
+        MAX(IF(offer_category_id = 'ALL', total_used_bookings, NULL)) OVER (
+            PARTITION BY partition_month, territory_level, territory_code
+        )
+    ) AS category_share
+FROM `booking_beneficiary`
+WHERE territory_level = 'NAT'
+QUALIFY offer_category_id != 'ALL'
+ORDER BY partition_month, used_bookings DESC
 ```
 
 ### Available dimensions
 
-| Dimension    | Column                               | Description                                |
-| ------------ | ------------------------------------ | ------------------------------------------ |
-| Month of use | `partition_month`                    | Month when the booking was used            |
-| Department   | `department_code`, `department_name` | Department of residence of the beneficiary |
-| Region       | `region_code`, `region_name`         | Region of residence of the beneficiary     |
-| Category     | `offer_category_id`                  | Offer category                             |
+| Dimension     | Column                                                | Description                                                                                  |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Month of use  | `partition_month`                                     | Month when the booking was used                                                              |
+| Territory     | `territory_level`, `territory_code`, `territory_name` | Territory of residence, one level per row: `DEP`, `REG`, `GROUP` (METRO / DROM / COM), `NAT` |
+| Parent region | `region_code`                                         | Region of a department (NULL for overseas collectivities)                                    |
+| Category      | `offer_category_id`                                   | Offer category                                                                               |
 
 ### Temporal tracking
 
@@ -1643,13 +1643,12 @@ ORDER BY t.partition_month, used_bookings DESC
 
 ### Data protection
 
-Same low count rule as external reporting (`external_reporting__individual`, with `external_reporting__beneficiary_booking_bookers`). Values are not perturbed, but a row is NULL on every month (`is_low_count` TRUE) when fewer than 5 distinct beneficiaries account for it since 2022: the bookers of the department for an `ALL` row, the bookers of the category in the department for a category row. The category rows of a department with fewer than 20 bookers since 2022 are all NULL (no category breakdown for very small territories). Region and national totals summed from departments leave out the masked rows (rare: in August-October 2026 the `ALL` rows add up exactly to the national total).
+Low count rule, applied once in [exp_base\_\_booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__booking_beneficiary/index.md). Values are not perturbed, but a row is NULL on every month (`is_low_count` TRUE) when fewer than 5 distinct beneficiaries account for it since 2022 (the bookers of the territory for an `ALL` row, of the category in the territory for a category row), or when the territory has fewer than 20 bookers for a category row. A secondary mask hides one more department when a region, group or France total would otherwise give a masked set of 1 to 4 bookers by subtraction. Each level is computed on unmasked data, so regions and France are exact.
 
 ### Notes and caveats
 
 - The territory is the **current** address of the beneficiary, not his address at booking date: a young person who moved has all his past bookings in his new department.
-- Bookings of users no longer known as beneficiaries (deleted, suspended, GRANT_FREE accounts: about 0.2% of the used bookings) have no residence and are left out, national total included. Beneficiaries without a located address are in department `-1` (`non localisé`).
-- `region_code` is NULL for the overseas collectivities (Nouvelle-Calédonie, Saint-Martin, Polynésie Française, Saint-Pierre-et-Miquelon, Wallis et Futuna); `region_name` is filled.
+- Bookings of users no longer known as beneficiaries (deleted, suspended, GRANT_FREE accounts: about 0.2% of the used bookings) have no residence and are left out, national total included. Beneficiaries without a located address are counted in France only.
 - Category rows cover the external reporting categories (`get_categories()`); marginal categories are kept as is (`MEDIA`, `CARTE_JEUNES`: about 1,000-1,500 bookings a year each; `LIVRE` and `CINEMA` make up 85% of the bookings).
 - Amounts are booking amounts paid with the credit: this is the young people's spending, not the partners' revenue.
 
@@ -2581,6 +2580,116 @@ Columns, grain and capping rules are described in [exp_vidoc_beneficiary_coverag
 | milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
 | total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                       |
 
+# Table: Individual bookings by beneficiary territory (export base)
+
+The `exp_base__booking_beneficiary` table holds the used individual bookings and the amounts spent by young people, by month of use, **territory of residence** and offer category, at every published level (DEP, REG, GROUP, NAT). It is the single place where the low count rule of these figures is applied.
+
+**exp_base\_\_booking_beneficiary\_\_is_low_count**: True when the row is masked by the low count rule: 1 to 4 beneficiaries booked since 2022 (in the category for a category row), 1 to 19 bookers in the territory for a category row, a secondary mask (a department hidden so that a parent total does not give a small masked set by subtraction), or, for a region, group or France, hidden departments with 1 to 4 bookers together that no other department can cover. `total_used_bookings` and `total_used_amount` are then NULL on every month.
+
+## Table description
+
+**Grain**: `partition_month`, `territory_level`, `territory_code`, `offer_category_id`. Rows with `offer_category_id = 'ALL'` hold the total, all categories: do not sum them with the category rows.
+
+Bookings and amounts are not counts of people and cannot be perturbed. They follow the **low count rule** of external reporting, on the distinct beneficiaries who booked since 2022 (sum of the new bookers of `metrics_booking__individual_bookers`):
+
+- **primary**: the `ALL` row is masked when 1 to 4 beneficiaries account for it; a category row when 1 to 4 beneficiaries booked in the category, or when the territory has 1 to 19 bookers (category breakdown);
+- **secondary**: for each region, then territory group, then France, when the hidden departments of the parent have 1 to 4 bookers together, the parent total would give them by subtraction. The visible departments of the parent are hidden from the smallest up until the hidden set has at least 5 bookers; when none can be added, the parent is masked. Departments missing from the referential (`non localisé`) are never published and count as hidden for France.
+
+Masked rows are NULL on every month. Each level is computed on unmasked data and published on its own rows: never sum a level to get another one. Overseas collectivities have no region: read them as a whole from the `GROUP` row `COM`.
+
+Same sources as external reporting (`external_reporting__beneficiary_booking`): current address of the beneficiary (`mrt_global__user_beneficiary`), bookings of users missing from it (deleted, suspended, GRANT_FREE) left out, categories of `get_categories()`, months from January 2022 to the month before the run date, rows only for cells with at least one used booking.
+
+Read by [exp_vidoc_booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_beneficiary/index.md). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
+| name                | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| partition_month     |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| territory_level     |           | Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.                                                                                                                              |
+|                     |           |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|                     |           | GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions. |
+| territory_code      |           | Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.                                                                                                                                                                                                                                                                                                                                                                                 |
+| territory_name      |           | Name of the territory at its level (department, region, territory group code, or France).                                                                                                                                                                                                                                                                                                                                                                                                              |
+| region_code         |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| territory_group     |           | Territory group of the department: METRO (mainland France and Corsica), DROM (971 to 974 and 976) or COM (other overseas collectivities, 3-digit codes 975, 977, 978, 986 to 988). NON_LOCALISE for a department code missing from the referential (e.g. a venue geocoded abroad): it forms its own region ('non localisé') and group, so that it never masks a real department.                                                                                                                       |
+| offer_category_id   |           | Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category.                                                                                                                                                                                                                    |
+| is_low_count        |           | True when the row is masked by the low count rule: 1 to 4 beneficiaries booked since 2022 (in the category for a category row), 1 to 19 bookers in the territory for a category row, a secondary mask (a department hidden so that a parent total does not give a small masked set by subtraction), or, for a region, group or France, hidden departments with 1 to 4 bookers together that no other department can cover. `total_used_bookings` and `total_used_amount` are then NULL on every month. |
+| total_used_bookings |           | Number of used individual bookings (booking_is_used), counted on the month of use, for the row's cell.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| total_used_amount   |           | Amount of the used individual bookings (booking_intermediary_amount, in euros), counted on the month of use, for the row's cell.                                                                                                                                                                                                                                                                                                                                                                       |
+
+# Table: Collective bookings by venue territory (export base)
+
+The `exp_base__booking_venue_collective` table holds the confirmed collective (EAC) bookings and their amount by month, scholar year and **venue (cultural partner) territory**, at every published level (DEP, REG, GROUP, NAT), under the statistical secret of businesses.
+
+## Table description
+
+**Grain**: `partition_month`, `scholar_year`, `territory_level`, `territory_code`.
+
+Same levels and secret rules as [exp_base\_\_booking_venue_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__booking_venue_individual/index.md): each level is computed on unmasked data and published on its own, never sum a level to get another one.
+
+- Same source and values as `external_reporting__collective_partner_booking` (`metrics_booking__collective`): monthly flows summable over a scholar year, bookings created before the scholar year counted in September, months from January 2022 to the month before the run date.
+- Bookings by **school** territory are public money and not secret: see [exp_vidoc_booking_collective](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective/index.md).
+
+Read by [exp_vidoc_booking_collective_venue](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective_venue/index.md).
+
+| name                          | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| partition_month               |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| scholar_year                  |           | Scholar year (September to August) the `partition_month` belongs to.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| territory_level               |           | Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.                                                                                                                              |
+|                               |           |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|                               |           | GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions. |
+| territory_code                |           | Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.                                                                                                                                                                                                                                                                                                                                                                                 |
+| territory_name                |           | Name of the territory at its level (department, region, territory group code, or France).                                                                                                                                                                                                                                                                                                                                                                                                              |
+| region_code                   |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| territory_group               |           | Territory group of the department: METRO (mainland France and Corsica), DROM (971 to 974 and 976) or COM (other overseas collectivities, 3-digit codes 975, 977, 978, 986 to 988). NON_LOCALISE for a department code missing from the referential (e.g. a venue geocoded abroad): it forms its own region ('non localisé') and group, so that it never masks a real department.                                                                                                                       |
+| is_statistic_secret           |           | A boolean flag indicating whether the data point is subject to statistical confidentiality (true) or not (false). This is triggered when the KPI falls below a minimum threshold to protect individual privacy and prevent re-identification.                                                                                                                                                                                                                                                          |
+| total_collective_bookings     |           | Number of collective bookings created in the month that are confirmed (confirmed, used, pending reimbursement or reimbursed). A booking created before its scholar year starts is counted in the first month of that scholar year.                                                                                                                                                                                                                                                                     |
+| total_collective_amount_spent |           | Total amount spent for collective bookings.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+
+# Table: Individual bookings by venue territory (export base)
+
+The `exp_base__booking_venue_individual` table holds the used individual bookings and their amounts (revenue, reimbursed, contribution) by month and **venue (cultural partner) territory**, at every published level. It is the single place where the statistical secret of businesses is applied to these figures.
+
+## Table description
+
+**Grain**: `partition_month`, `territory_level`, `territory_code`.
+
+Bookings and amounts of a venue are economic data of a business: they follow the **statistical secret of businesses** (INSEE rule), not the cell key perturbation of people. A territory is secret when, over the last 6 or 48 months, it has fewer than 3 cultural partners with revenue, one partner holds more than 85% of the revenue, or a secondary secret applies (see `statistical_secret__cultural_partner_individual` and `_collective`).
+
+Masked cells cannot be summed, so every level is **computed on unmasked data and published on its own** (`territory_level`):
+
+| Level   | Territories                                             | Secret                           |
+| ------- | ------------------------------------------------------- | -------------------------------- |
+| `DEP`   | every department, overseas collectivities included      | `is_department_secret_stat`      |
+| `REG`   | the 18 regions (overseas collectivities have no region) | `is_region_secret_stat`          |
+| `GROUP` | METRO, DROM, COM                                        | `is_territory_group_secret_stat` |
+| `NAT`   | France, venues missing from the referential included    | never                            |
+
+- The secret model already masks a second department when a region or territory group total would give a masked one by subtraction (secondary secret), and flags a region or group total that would still disclose it. Publishing the REG, GROUP and NAT rows therefore never discloses a masked department.
+- Overseas collectivities (975, 977, 978, 986 to 988) are small and often secret one by one, but the COM group is not: read them from the `GROUP` row.
+- A territory is secret when it is secret at the **last complete month**, for any window and on the individual or collective side (partner pages show both). Its figures are then NULL on **every month** (`is_statistic_secret` TRUE). The status can change from one run to the next for the whole history.
+- Never sum a level to get another one: the sum of the published departments of a region is lower than the region row when a department is masked.
+- Same source and months as `external_reporting__finance` (all categories, `metrics_booking__finance_individual`): bookings already in a payment batch, on their month of use, from January 2022 to the month before the run date.
+
+Read by [exp_vidoc_booking_partner_finance_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual/index.md). See [Statistical confidentiality](https://pass-culture.github.io/data-gcp/dbt/references/statistical_confidentiality/index.md).
+
+| name                      | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| partition_month           |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| territory_level           |           | Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.                                                                                                                              |
+|                           |           |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|                           |           | GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions. |
+| territory_code            |           | Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.                                                                                                                                                                                                                                                                                                                                                                                 |
+| territory_name            |           | Name of the territory at its level (department, region, territory group code, or France).                                                                                                                                                                                                                                                                                                                                                                                                              |
+| region_code               |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| territory_group           |           | Territory group of the department: METRO (mainland France and Corsica), DROM (971 to 974 and 976) or COM (other overseas collectivities, 3-digit codes 975, 977, 978, 986 to 988). NON_LOCALISE for a department code missing from the referential (e.g. a venue geocoded abroad): it forms its own region ('non localisé') and group, so that it never masks a real department.                                                                                                                       |
+| is_statistic_secret       |           | A boolean flag indicating whether the data point is subject to statistical confidentiality (true) or not (false). This is triggered when the KPI falls below a minimum threshold to protect individual privacy and prevent re-identification.                                                                                                                                                                                                                                                          |
+| total_bookings            |           | Number of distinct used individual bookings having an invoiced pricing in a payment batch, for the month of use and the row's cell.                                                                                                                                                                                                                                                                                                                                                                    |
+| total_quantities          |           | Number of seats booked: the sum of booking quantities, where a duo booking counts 2. Not a number of bookings.                                                                                                                                                                                                                                                                                                                                                                                         |
+| total_revenue_amount      |           | Revenue: sum of booking_intermediary_amount of used individual bookings that have an invoiced pricing included in a payment batch, at the row's grain.                                                                                                                                                                                                                                                                                                                                                 |
+| total_reimbursed_amount   |           | Amount reimbursed by pass Culture to offerers at the row's grain: pricing amounts on 'offerer revenue' pricing lines of invoiced pricings in a payment batch.                                                                                                                                                                                                                                                                                                                                          |
+| total_contribution_amount |           | Total amount contributed by the offerers on their bookings, i.e. the share of revenue borne by the offerers (revenue minus reimbursed amount): 'offerer contribution' pricing lines of invoiced pricings in a payment batch, at the row's grain.                                                                                                                                                                                                                                                       |
+
 # Table: Cultural partners (export base)
 
 The `exp_base__cultural_partner` table holds the monthly active and cumulative activated cultural partners (venues), by channel and venue geography, at the finest grain (municipality). Every export of partner counts reads it.
@@ -3350,36 +3459,31 @@ Each row represents a key indicator calculated for a specific month, geographic 
 | milestone_age                      |           | Age milestone in whole years, used to determine users eligibility: months between birth month and the observation month divided by 12, kept when it is an integer, so milestone_age N is the cohort turning N that month. Stored as INT64 in the beneficiary and population coverage exports, STRING in int_kpi\_\_population_coverage and metrics_population\_\_coverage. |
 | total_beneficiaries_last_12_months |           | Rolling sum of distinct users over the last 12 months for a given age and department: the sum of monthly distinct-user counts over the current and 11 previous months, so a user active in several months is counted once per month.                                                                                                                                       |
 
-The `exp_vidoc_booking_beneficiary` model provides the used individual bookings and the amounts spent by young people, by month of use, territory of residence of the beneficiary and offer category. It is designed to be exported to the ministry for vidoc visualisation. It is built from [`metrics_booking__individual`](#!/model/model.data_gcp_dbt.metrics_booking__individual) with the same rules as `external_reporting__beneficiary_booking`, and the low count rule of `external_reporting__individual` (`external_reporting__beneficiary_booking_bookers`).
-
-**exp_vidoc\_\_booking_beneficiary\_\_is_low_count**: True when fewer than 5 beneficiaries account for the row since 2022 (fewer than 5 bookers in the category, or fewer than 20 bookers in the department for a category row): `total_used_bookings` and `total_used_amount` are then NULL on every month.
+The `exp_vidoc_booking_beneficiary` model provides the used individual bookings and the amounts spent by young people, by month of use, territory of residence of the beneficiary and offer category. It is designed to be exported to the ministry for vidoc visualisation. It reads [exp_base\_\_booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/export_base/description__exp_base__booking_beneficiary.md), where the low count rule is applied.
 
 ## Table Description
 
-Each row represents the used individual bookings of a month of use, a department of residence of the beneficiary and an offer category. Rows with `offer_category_id = 'ALL'` hold the department total, all categories: **do not sum them with the category rows**.
+**Grain**: `partition_month`, `territory_level`, `territory_code`, `offer_category_id`.
 
-**Grain**: `partition_month`, `department_name`, `offer_category_id`.
+- One row per month, published territory (`DEP`, `REG`, `GROUP` METRO / DROM / COM, `NAT`) and category. Rows with `offer_category_id = 'ALL'` hold the total, all categories: **do not sum them with the category rows**. Read each level from its own rows: never sum departments to get a region or France.
+- The territory is the **current** address of the beneficiary. Beneficiaries without a located address are counted in France only.
+- When `is_low_count` is TRUE, both figures are NULL on every month (rules in the base).
+- Months from January 2022 to the month before the run date; rows only for cells with at least one used booking.
 
-- The territory is the **current** address of the beneficiary (`mrt_global__user_beneficiary`), not the address at booking date.
-- Bookings of users missing from `mrt_global__user_beneficiary` (deleted, suspended, GRANT_FREE: about 0.2% of the used bookings) have no residence and are **left out**. Beneficiaries without a located address are in department `-1` (`non localisé`).
-- `region_code` and `department_code` come from `region_department` (joined on the department name). `region_code` is NULL for the overseas collectivities (Nouvelle-Calédonie, Saint-Martin, Polynésie Française, Saint-Pierre-et-Miquelon, Wallis et Futuna); `region_name` is filled.
-- Category rows cover the categories of `get_categories()`, as in external reporting; marginal categories (`MEDIA`, `CARTE_JEUNES`: about 1,000-1,500 bookings a year each) are not grouped.
-- Months from January 2022 to the month before the run date.
-- Rows are **only emitted** for cells with at least one used booking.
-
-**Data protection** (as in external reporting): counts and amounts are not perturbed. They are NULL on every month (`is_low_count`) when the distinct beneficiaries who booked since 2022 (sum of the new bookers of `metrics_booking__individual_bookers`) are 1 to 4 for the row (department for `ALL`, department and category for a category row), or when the department has 1 to 19 bookers for a category row (category breakdown). Region totals summed from departments leave out the masked rows.
-
-| name                | data_type | description                                                                                                                                                                                                                                                                         |
-| ------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| partition_month     |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                             |
-| region_name         |           | Region name of the user's registered address.                                                                                                                                                                                                                                       |
-| region_code         |           | Region code of the user's registered address.                                                                                                                                                                                                                                       |
-| department_name     |           | Department name associated with the user's registered address.                                                                                                                                                                                                                      |
-| department_code     |           | Department code associated with the user's registered address.                                                                                                                                                                                                                      |
-| offer_category_id   |           | Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category. |
-| is_low_count        |           | True when fewer than 5 beneficiaries account for the row since 2022 (fewer than 5 bookers in the category, or fewer than 20 bookers in the department for a category row): `total_used_bookings` and `total_used_amount` are then NULL on every month.                              |
-| total_used_bookings |           | Number of used individual bookings (booking_is_used), counted on the month of use, for the row's cell.                                                                                                                                                                              |
-| total_used_amount   |           | Amount of the used individual bookings (booking_intermediary_amount, in euros), counted on the month of use, for the row's cell.                                                                                                                                                    |
+| name                | data_type | description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| partition_month     |           | Indicates the first day of the month the KPI refers to.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| territory_level     |           | Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.                                                                                                                              |
+|                     |           |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|                     |           | GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions. |
+| territory_code      |           | Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.                                                                                                                                                                                                                                                                                                                                                                                 |
+| territory_name      |           | Name of the territory at its level (department, region, territory group code, or France).                                                                                                                                                                                                                                                                                                                                                                                                              |
+| region_code         |           | The official code of the region (région) containing the IRIS area.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| territory_group     |           | Territory group of the department: METRO (mainland France and Corsica), DROM (971 to 974 and 976) or COM (other overseas collectivities, 3-digit codes 975, 977, 978, 986 to 988). NON_LOCALISE for a department code missing from the referential (e.g. a venue geocoded abroad): it forms its own region ('non localisé') and group, so that it never masks a real department.                                                                                                                       |
+| offer_category_id   |           | Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category.                                                                                                                                                                                                                    |
+| is_low_count        |           | True when the row is masked by the low count rule: 1 to 4 beneficiaries booked since 2022 (in the category for a category row), 1 to 19 bookers in the territory for a category row, a secondary mask (a department hidden so that a parent total does not give a small masked set by subtraction), or, for a region, group or France, hidden departments with 1 to 4 bookers together that no other department can cover. `total_used_bookings` and `total_used_amount` are then NULL on every month. |
+| total_used_bookings |           | Number of used individual bookings (booking_is_used), counted on the month of use, for the row's cell.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| total_used_amount   |           | Amount of the used individual bookings (booking_intermediary_amount, in euros), counted on the month of use, for the row's cell.                                                                                                                                                                                                                                                                                                                                                                       |
 
 The `exp_vidoc__booking_collective` model provides the confirmed collective (EAC) bookings and their amount by month, scholar year and **school (educational institution) department**, rolled up from `metrics_booking__collective_institution`. It computes the same values as the `total_reservations_collectives_etablissements` and `total_montant_engage_etablissements` KPIs of `external_reporting__eac_offer_booking`. It is the vidoc default for collective bookings: it follows where pupils are, like the domain and format splits. The same indicators by cultural partner location are in `exp_vidoc__booking_collective_venue`.
 
@@ -3421,30 +3525,25 @@ Each row represents the confirmed collective bookings created in a month in an o
 - Bookings created before their scholar year starts are counted in its first month (September). Months from January 2022 to the last complete month.
 - No statistical secret (school geography).
 
-The `exp_vidoc__booking_collective_venue` model provides the confirmed collective (EAC) bookings and their amount by month, scholar year and **cultural partner (venue) department**, rolled up from `metrics_booking__collective`. It computes the same values, with the same statistical secret, as `external_reporting__collective_partner_booking` (`total_reservations_collectives`, `total_montant_engage`) at department level.
+The `exp_vidoc__booking_collective_venue` model provides the confirmed collective (EAC) bookings and their amount by month, scholar year and **cultural partner (venue) territory**. It reads [exp_base\_\_booking_venue_collective](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/export_base/description__exp_base__booking_venue_collective.md), where the statistical secret of businesses is applied; values are those of `external_reporting__collective_partner_booking` (`total_reservations_collectives`, `total_montant_engage`).
 
 ## Table Description
 
-Each row represents the confirmed collective bookings created in a month, for a scholar year and a venue department (where the cultural partner is, not where the school is).
+**Grain**: `partition_month`, `scholar_year`, `territory_level`, `territory_code`.
 
-**Grain**: `partition_month`, `scholar_year`, `venue_department_code`.
+- One row per month, scholar year and published territory: `DEP`, `REG`, `GROUP` (METRO / DROM / COM) and `NAT`. Read each level from its own rows: never sum departments to get a region or France.
+- When `is_statistic_secret` is TRUE, both figures are NULL on every month. NAT is never secret.
+- Same rules as [`exp_vidoc__booking_collective`](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective/index.md) (school territory, not secret): monthly flows summable over a scholar year, bookings created before the scholar year counted in September, months from January 2022 to the last complete month.
 
-- Same rules as [`exp_vidoc__booking_collective`](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/description__exp_vidoc_booking_collective/index.md): monthly flows summable over a scholar year, bookings created before the scholar year counted in September, months from January 2022 to the last complete month.
-- Statistical secret, as in external reporting: a department is secret when it is secret (`is_department_secret_stat`) at the **last complete month**, on the individual or the collective cultural partner secret (`statistical_secret__cultural_partner_individual` / `_collective`), on the 6 or the 48 month window. `total_collective_bookings` and `total_collective_amount_spent` are then NULL on **every month** of the department (`is_statistic_secret` TRUE); `department_secret_reason_label` gives the rules behind the mask, worded as the `secret_detail` of external reporting (e.g. `Moins de 3 partenaires (collectif, 6 mois)`). Region and national totals summed from departments leave out the secret departments: national totals are read from `exp_vidoc__booking_collective`.
-
-The `exp_vidoc_booking_partner_finance_individual` model provides aggregated financial KPIs related to individual bookings. It is designed to be exported to the ministry for vidoc visualisation. It applies the statistical secret of external reporting (`apply_statistical_secret` in `external_reporting__individual`): a department is secret when it is secret (`is_department_secret_stat`) at the last complete month, for any rolling window (6 or 48 months) of `statistical_secret__cultural_partner_individual` or `statistical_secret__cultural_partner_collective` (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret). The financial KPIs of a secret department are then NULL on every month.
+The `exp_vidoc_booking_partner_finance_individual` model provides the used individual bookings and their amounts by month and venue territory (the venue's location, not the beneficiary's residence). It is designed to be exported to the ministry for vidoc visualisation. It reads [exp_base\_\_booking_venue_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/export_base/description__exp_base__booking_venue_individual.md), where the statistical secret of businesses is applied.
 
 ## Table Description
 
-Each row represents the financial indicators of used individual bookings for a month and a venue department (the venue's location, not the beneficiary's residence).
+**Grain**: `partition_month`, `territory_level`, `territory_code`.
 
-**Grain**: `partition_month`, `venue_department_code`.
-
-When `is_statistic_secret` is TRUE, all financial KPIs (`total_bookings`, `total_quantities`, `total_revenue_amount`, `total_reimbursed_amount`, `total_contribution_amount`) are NULL on every month. `department_secret_reason_label` lists the reasons, with the side (individual / collective) and the window. The secret status is evaluated at the last complete month, so it can change from one export to the next for the whole history of a department.
-
-- External reporting never masks REG and NAT; this table has the department grain only, so region and national totals summed from it leave out the secret departments (mostly overseas collectivities and Lozère: less than 0.03% of the national revenue in 2026).
-- Only bookings already included in a payment batch are counted, on their month of use. Months from January 2022 to the month before the run date are exported, as in external reporting; the last month is about 99% complete when first published and may be slightly revised afterwards.
-- `venue_region_code` is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...), which have no region code; `venue_region_name` is filled.
+- One row per month and published territory: departments (`DEP`), regions (`REG`), territory groups METRO / DROM / COM (`GROUP`) and France (`NAT`). Read each level from its own rows: never sum departments to get a region or France.
+- When `is_statistic_secret` is TRUE, all figures are NULL on every month. NAT is never secret; the COM group is the way to read the overseas collectivities.
+- Only bookings already included in a payment batch are counted, on their month of use. Months from January 2022 to the month before the run date; the last month is about 99% complete when first published and may be slightly revised afterwards.
 
 The `exp_vidoc_cultural_partner` model provides the monthly number of active and cumulatively activated cultural partners (venues), by channel (individual, collective, both). It is designed to be exported to the ministry for vidoc visualisation. It sums the cells of [exp_base\_\_cultural_partner](https://pass-culture.github.io/data-gcp/dbt/models/export/vidoc/export_base/description__exp_base__cultural_partner.md), as `external_reporting__cultural_partner`.
 
@@ -11721,6 +11820,14 @@ Work in progress
 
 **external_reporting_scholar_year_month**: Rank of partition_month in its scholar year: 0 = September ... 11 = August. With d = months_ago - X, d >= 0 and scholar_year_month + d \<= 11 keeps the months of the scholar year of month X, up to X.
 
+**territory_level**: Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.
+
+GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions.
+
+**territory_code**: Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.
+
+**territory_name**: Name of the territory at its level (department, region, territory group code, or France).
+
 # Diversity Booking
 
 description: Description of the `diversity booking` columns. title: Diversity Booking
@@ -12453,6 +12560,16 @@ Work in progress
 
 **native_daily_item_viewed_total_user_item_viewed_bucket_10_plus**: Number of distinct logged-in users who saw the item in position 10 or beyond of its module (item index 9 or more) that day, for the row's attributes. Also counts views with an unknown position (index -1).
 
+**native_daily_item_viewed_item_index**: Position of the item in its playlist or result list, as a string; '-1' when unknown on legacy events.
+
+**native_daily_item_viewed_playlist_index**: Position of the playlist on the page; NULL for search results lists of offers.
+
+**native_daily_item_viewed_origin_id**: Identifier of the page where the item was seen: home entry_id (origin 'home'), search_id or thematic search name (origin 'search'), or the offer_id, venue_id or artist_id of the page (origin 'offer', 'venue', 'venueMap', 'artist'). On legacy events, only filled for 'home' and 'search'.
+
+**native_daily_item_viewed_item_displayed_timestamp**: Timestamp of the 'ViewItem' event (Firebase event time). When the app sent the event again for the same item at the same place in the session (the user scrolled back to it), the timestamp of the last one. NULL on legacy events (before the per-item ViewItem tracking).
+
+**native_daily_item_viewed_tracking_version**: Version of the 'ViewItem' tracking the row comes from: 'v2' (one event per viewed item, see int_firebase\_\_native_daily_item_viewed_v2) or 'legacy' (one event per playlist with a list of 'position:item_id' pairs, see int_firebase\_\_native_daily_item_viewed_legacy). Use it to monitor the migration from the legacy tracking to the new one.
+
 **firebase_screen**: The name of the screen where the event occurred, providing context for the event.
 
 **user_location_type**: The type of geolocation used by the user during the session (via geolocation data, manually entered by the user, or information unavailable).
@@ -12545,7 +12662,7 @@ Work in progress
 
 **native_event_flattened_module_list_id**: On 'CategoryBlockClicked' and 'TrendsBlockClicked', the identifier of the list module that contains the clicked block.
 
-**native_event_flattened_index**: Position sent with the event: on 'ModuleDisplayedOnHomePage', the position of the module on the home; on 'ViewItem', the position of the playlist on the page.
+**native_event_flattened_index**: Position sent with the event: on 'ModuleDisplayedOnHomePage', the position of the module on the home; on 'ViewItem', the position of the item in its playlist or result list (before the per-item ViewItem tracking, the position of the playlist on the page). Read from the string, int or double value of the parameter.
 
 **native_event_flattened_traffic_gen**: `utm_gen` parameter of the marketing link that opened the app, attached by the app to the following events (only when the user accepted the marketing cookies).
 
@@ -12593,9 +12710,17 @@ Work in progress
 
 **native_event_flattened_is_headline**: On 'ConsultOffer', 'true' when the consulted offer is the headline offer of its venue, 'false' otherwise.
 
-**native_event_flattened_items_0**: On 'ViewItem', the first chunk of the displayed items, as 'position:item_id' pairs separated by commas (100 characters at most; position -1 when unknown). Only this first chunk is extracted: the items sent in the following chunks (`items_1`, ...) are not in this table.
+**native_event_flattened_items_0**: On legacy 'ViewItem' events (one event per playlist), the first chunk of the displayed items, as 'position:item_id' pairs separated by commas (100 characters at most; position -1 when unknown). Only this first chunk is extracted: the items sent in the following chunks (`items_1`, ...) are not in this table. NULL on the current per-item 'ViewItem' events, which use `id` instead.
 
-**native_event_flattened_item_type**: On 'ViewItem', the type of the displayed items.
+**native_event_flattened_item_type**: On legacy 'ViewItem' events, the type of the displayed items (the current per-item 'ViewItem' events send it in `type`).
+
+**native_event_flattened_id**: On 'ViewItem' (one event per viewed item), the identifier of the viewed item: an offer_id, venue_id or artist_id depending on `type`.
+
+**native_event_flattened_playlist_id**: On 'ViewItem', the identifier of the playlist containing the item: the Contentful module_id for Contentful playlists, a hard-coded name for playlists managed in the app (e.g. 'venueMap'). NULL for search results lists of offers.
+
+**native_event_flattened_playlist_index**: On 'ViewItem', the position of the playlist on the page. NULL for search results lists of offers.
+
+**native_event_flattened_origin_id**: On 'ViewItem', the identifier of the page where the item was seen: the home entry_id when origin = 'home', the search_id (or a hard-coded thematic search name) when origin = 'search', the offer_id, venue_id or artist_id of the page when origin = 'offer', 'venue', 'venueMap' or 'artist'.
 
 **native_event_flattened_theme_setting**: On 'UpdateAppTheme' and 'AppThemeStatus', the theme chosen in the app settings (e.g. 'light', 'dark').
 

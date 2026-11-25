@@ -14,34 +14,36 @@ Unlike the [venue territory KPIs](https://pass-culture.github.io/data-gcp/dbt/kp
 
 ### Calculation
 
-Rows with `offer_category_id = 'ALL'` hold the department total; the other rows the categories. Never sum the two together.
+Rows with `offer_category_id = 'ALL'` hold the territory total; the other rows the categories. Never sum the two together. Each level (`DEP`, `REG`, `GROUP`, `NAT`) has its own rows: filter on it, never sum departments.
+
+The share of a category divides it by the `ALL` row of the same month and territory. Don't divide by the sum of the category rows: masked categories are NULL and the `ALL` row has its own mask, so that sum is not the territory total.
 
 ```
 SELECT
-    t.partition_month,
-    c.offer_category_id,
-    SUM(c.total_used_bookings) AS used_bookings,
-    SUM(c.total_used_amount) AS amount_spent,
-    SAFE_DIVIDE(SUM(c.total_used_bookings), SUM(t.total_used_bookings)) AS category_share
-FROM `booking_beneficiary` AS c
-JOIN `booking_beneficiary` AS t
-    ON t.partition_month = c.partition_month
-    AND t.department_name = c.department_name
-    AND t.offer_category_id = 'ALL'
-WHERE c.offer_category_id != 'ALL'
-    AND c.total_used_bookings IS NOT NULL
-GROUP BY t.partition_month, c.offer_category_id
-ORDER BY t.partition_month, used_bookings DESC
+    partition_month,
+    offer_category_id,
+    total_used_bookings AS used_bookings,
+    total_used_amount AS amount_spent,
+    SAFE_DIVIDE(
+        total_used_bookings,
+        MAX(IF(offer_category_id = 'ALL', total_used_bookings, NULL)) OVER (
+            PARTITION BY partition_month, territory_level, territory_code
+        )
+    ) AS category_share
+FROM `booking_beneficiary`
+WHERE territory_level = 'NAT'
+QUALIFY offer_category_id != 'ALL'
+ORDER BY partition_month, used_bookings DESC
 ```
 
 ### Available dimensions
 
-| Dimension    | Column                               | Description                                |
-| ------------ | ------------------------------------ | ------------------------------------------ |
-| Month of use | `partition_month`                    | Month when the booking was used            |
-| Department   | `department_code`, `department_name` | Department of residence of the beneficiary |
-| Region       | `region_code`, `region_name`         | Region of residence of the beneficiary     |
-| Category     | `offer_category_id`                  | Offer category                             |
+| Dimension     | Column                                                | Description                                                                                  |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Month of use  | `partition_month`                                     | Month when the booking was used                                                              |
+| Territory     | `territory_level`, `territory_code`, `territory_name` | Territory of residence, one level per row: `DEP`, `REG`, `GROUP` (METRO / DROM / COM), `NAT` |
+| Parent region | `region_code`                                         | Region of a department (NULL for overseas collectivities)                                    |
+| Category      | `offer_category_id`                                   | Offer category                                                                               |
 
 ### Temporal tracking
 
@@ -49,12 +51,11 @@ ORDER BY t.partition_month, used_bookings DESC
 
 ### Data protection
 
-Same low count rule as external reporting (`external_reporting__individual`, with `external_reporting__beneficiary_booking_bookers`). Values are not perturbed, but a row is NULL on every month (`is_low_count` TRUE) when fewer than 5 distinct beneficiaries account for it since 2022: the bookers of the department for an `ALL` row, the bookers of the category in the department for a category row. The category rows of a department with fewer than 20 bookers since 2022 are all NULL (no category breakdown for very small territories). Region and national totals summed from departments leave out the masked rows (rare: in August-October 2026 the `ALL` rows add up exactly to the national total).
+Low count rule, applied once in [exp_base\_\_booking_beneficiary](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__booking_beneficiary/index.md). Values are not perturbed, but a row is NULL on every month (`is_low_count` TRUE) when fewer than 5 distinct beneficiaries account for it since 2022 (the bookers of the territory for an `ALL` row, of the category in the territory for a category row), or when the territory has fewer than 20 bookers for a category row. A secondary mask hides one more department when a region, group or France total would otherwise give a masked set of 1 to 4 bookers by subtraction. Each level is computed on unmasked data, so regions and France are exact.
 
 ### Notes and caveats
 
 - The territory is the **current** address of the beneficiary, not his address at booking date: a young person who moved has all his past bookings in his new department.
-- Bookings of users no longer known as beneficiaries (deleted, suspended, GRANT_FREE accounts: about 0.2% of the used bookings) have no residence and are left out, national total included. Beneficiaries without a located address are in department `-1` (`non localisé`).
-- `region_code` is NULL for the overseas collectivities (Nouvelle-Calédonie, Saint-Martin, Polynésie Française, Saint-Pierre-et-Miquelon, Wallis et Futuna); `region_name` is filled.
+- Bookings of users no longer known as beneficiaries (deleted, suspended, GRANT_FREE accounts: about 0.2% of the used bookings) have no residence and are left out, national total included. Beneficiaries without a located address are counted in France only.
 - Category rows cover the external reporting categories (`get_categories()`); marginal categories are kept as is (`MEDIA`, `CARTE_JEUNES`: about 1,000-1,500 bookings a year each; `LIVRE` and `CINEMA` make up 85% of the bookings).
 - Amounts are booking amounts paid with the credit: this is the young people's spending, not the partners' revenue.

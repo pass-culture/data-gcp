@@ -3910,6 +3910,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3998,6 +4004,90 @@
     
   
     Beneficiary coverage numerator (perturbed base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_beneficiary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by beneficiary territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_venue_collective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective bookings by venue territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_venue_individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by venue territory (export base)
   
 
     
@@ -19458,7 +19548,7 @@
 <p>Bookings are not counts of people: no cell key perturbation.</p>
 <ul>
 <li><strong>School geography</strong>: no secret (public money spent by schools).</li>
-<li><strong>Venue geography</strong>: amounts by venue territory are the collective revenue of the partners located there. As in external reporting, a department is masked (<code>is_statistic_secret</code> TRUE, indicators NULL on every month, rules in <code>department_secret_reason_label</code>) when it is under the individual or collective cultural partner secret at the last complete month (6 or 48 month window). Region totals summed from departments leave out the masked departments.</li>
+<li><strong>Venue geography</strong>: amounts by venue territory are the collective revenue of the partners located there, under the statistical secret of businesses applied once in <a href="../../../models/export/export_base/description__exp_base__booking_venue_collective/">exp_base__booking_venue_collective</a>: a territory secret at the last complete month (individual or collective side, 6 or 48 month window) has <code>is_statistic_secret</code> TRUE and NULL figures on every month. Every level (department, region, METRO / DROM / COM, France) is published on its own rows: never sum departments.</li>
 </ul>
 
 

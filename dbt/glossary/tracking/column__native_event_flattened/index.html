@@ -3761,6 +3761,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3849,6 +3855,90 @@
     
   
     Beneficiary coverage numerator (perturbed base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_beneficiary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by beneficiary territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_venue_collective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective bookings by venue territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_venue_individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by venue territory (export base)
   
 
     
@@ -19247,7 +19337,7 @@
 
 <p><strong>native_event_flattened_module_list_id</strong>: On 'CategoryBlockClicked' and 'TrendsBlockClicked', the identifier of the list module that contains the clicked block.</p>
 
-<p><strong>native_event_flattened_index</strong>: Position sent with the event: on 'ModuleDisplayedOnHomePage', the position of the module on the home; on 'ViewItem', the position of the playlist on the page.</p>
+<p><strong>native_event_flattened_index</strong>: Position sent with the event: on 'ModuleDisplayedOnHomePage', the position of the module on the home; on 'ViewItem', the position of the item in its playlist or result list (before the per-item ViewItem tracking, the position of the playlist on the page). Read from the string, int or double value of the parameter.</p>
 
 <p><strong>native_event_flattened_traffic_gen</strong>: <code>utm_gen</code> parameter of the marketing link that opened the app, attached by the app to the following events (only when the user accepted the marketing cookies).</p>
 
@@ -19295,9 +19385,17 @@
 
 <p><strong>native_event_flattened_is_headline</strong>: On 'ConsultOffer', 'true' when the consulted offer is the headline offer of its venue, 'false' otherwise.</p>
 
-<p><strong>native_event_flattened_items_0</strong>: On 'ViewItem', the first chunk of the displayed items, as 'position:item_id' pairs separated by commas (100 characters at most; position -1 when unknown). Only this first chunk is extracted: the items sent in the following chunks (<code>items_1</code>, ...) are not in this table.</p>
+<p><strong>native_event_flattened_items_0</strong>: On legacy 'ViewItem' events (one event per playlist), the first chunk of the displayed items, as 'position:item_id' pairs separated by commas (100 characters at most; position -1 when unknown). Only this first chunk is extracted: the items sent in the following chunks (<code>items_1</code>, ...) are not in this table. NULL on the current per-item 'ViewItem' events, which use <code>id</code> instead.</p>
 
-<p><strong>native_event_flattened_item_type</strong>:  On 'ViewItem', the type of the displayed items. </p>
+<p><strong>native_event_flattened_item_type</strong>:  On legacy 'ViewItem' events, the type of the displayed items (the current per-item 'ViewItem' events send it in <code>type</code>). </p>
+
+<p><strong>native_event_flattened_id</strong>: On 'ViewItem' (one event per viewed item), the identifier of the viewed item: an offer_id, venue_id or artist_id depending on <code>type</code>.</p>
+
+<p><strong>native_event_flattened_playlist_id</strong>: On 'ViewItem', the identifier of the playlist containing the item: the Contentful module_id for Contentful playlists, a hard-coded name for playlists managed in the app (e.g. 'venueMap'). NULL for search results lists of offers.</p>
+
+<p><strong>native_event_flattened_playlist_index</strong>: On 'ViewItem', the position of the playlist on the page. NULL for search results lists of offers.</p>
+
+<p><strong>native_event_flattened_origin_id</strong>: On 'ViewItem', the identifier of the page where the item was seen: the home entry_id when origin = 'home', the search_id (or a hard-coded thematic search name) when origin = 'search', the offer_id, venue_id or artist_id of the page when origin = 'offer', 'venue', 'venueMap' or 'artist'.</p>
 
 <p><strong>native_event_flattened_theme_setting</strong>: On 'UpdateAppTheme' and 'AppThemeStatus', the theme chosen in the app settings (e.g. 'light', 'dark').</p>
 

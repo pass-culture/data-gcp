@@ -91,3 +91,11 @@
 **external_reporting_months_ago**: Number of months between partition_month and the last consolidated month (month M is consolidated on the 15th of M + 1): 0 = last consolidated month, 1 = the month before, negative = not yet consolidated. Reports filter on d = months_ago - X (X = selected month, 0 by default): d = 0 for stock KPIs at month X, d >= 0 to sum flow KPIs up to month X, d between 0 and 5 for the 6 months up to X.
 
 **external_reporting_scholar_year_month**: Rank of partition_month in its scholar year: 0 = September ... 11 = August. With d = months_ago - X, d >= 0 and scholar_year_month + d \<= 11 keeps the months of the scholar year of month X, up to X.
+
+**territory_level**: Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.
+
+GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions.
+
+**territory_code**: Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.
+
+**territory_name**: Name of the territory at its level (department, region, territory group code, or France).

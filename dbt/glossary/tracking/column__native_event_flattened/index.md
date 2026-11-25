@@ -82,7 +82,7 @@
 
 **native_event_flattened_module_list_id**: On 'CategoryBlockClicked' and 'TrendsBlockClicked', the identifier of the list module that contains the clicked block.
 
-**native_event_flattened_index**: Position sent with the event: on 'ModuleDisplayedOnHomePage', the position of the module on the home; on 'ViewItem', the position of the playlist on the page.
+**native_event_flattened_index**: Position sent with the event: on 'ModuleDisplayedOnHomePage', the position of the module on the home; on 'ViewItem', the position of the item in its playlist or result list (before the per-item ViewItem tracking, the position of the playlist on the page). Read from the string, int or double value of the parameter.
 
 **native_event_flattened_traffic_gen**: `utm_gen` parameter of the marketing link that opened the app, attached by the app to the following events (only when the user accepted the marketing cookies).
 
@@ -130,9 +130,17 @@
 
 **native_event_flattened_is_headline**: On 'ConsultOffer', 'true' when the consulted offer is the headline offer of its venue, 'false' otherwise.
 
-**native_event_flattened_items_0**: On 'ViewItem', the first chunk of the displayed items, as 'position:item_id' pairs separated by commas (100 characters at most; position -1 when unknown). Only this first chunk is extracted: the items sent in the following chunks (`items_1`, ...) are not in this table.
+**native_event_flattened_items_0**: On legacy 'ViewItem' events (one event per playlist), the first chunk of the displayed items, as 'position:item_id' pairs separated by commas (100 characters at most; position -1 when unknown). Only this first chunk is extracted: the items sent in the following chunks (`items_1`, ...) are not in this table. NULL on the current per-item 'ViewItem' events, which use `id` instead.
 
-**native_event_flattened_item_type**: On 'ViewItem', the type of the displayed items.
+**native_event_flattened_item_type**: On legacy 'ViewItem' events, the type of the displayed items (the current per-item 'ViewItem' events send it in `type`).
+
+**native_event_flattened_id**: On 'ViewItem' (one event per viewed item), the identifier of the viewed item: an offer_id, venue_id or artist_id depending on `type`.
+
+**native_event_flattened_playlist_id**: On 'ViewItem', the identifier of the playlist containing the item: the Contentful module_id for Contentful playlists, a hard-coded name for playlists managed in the app (e.g. 'venueMap'). NULL for search results lists of offers.
+
+**native_event_flattened_playlist_index**: On 'ViewItem', the position of the playlist on the page. NULL for search results lists of offers.
+
+**native_event_flattened_origin_id**: On 'ViewItem', the identifier of the page where the item was seen: the home entry_id when origin = 'home', the search_id (or a hard-coded thematic search name) when origin = 'search', the offer_id, venue_id or artist_id of the page when origin = 'offer', 'venue', 'venueMap' or 'artist'.
 
 **native_event_flattened_theme_setting**: On 'UpdateAppTheme' and 'AppThemeStatus', the theme chosen in the app settings (e.g. 'light', 'dark').
 

@@ -3921,6 +3921,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -4009,6 +4015,90 @@
     
   
     Beneficiary coverage numerator (perturbed base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_beneficiary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by beneficiary territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_venue_collective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective bookings by venue territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/export/export_base/description__exp_base__booking_venue_individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by venue territory (export base)
   
 
     
@@ -19416,12 +19506,12 @@
 <h3 id="calculation">Calculation</h3>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span>
 <span class="w">    </span><span class="n">partition_month</span><span class="p">,</span>
-<span class="w">    </span><span class="n">venue_region_code</span><span class="p">,</span>
-<span class="w">    </span><span class="n">venue_region_name</span><span class="p">,</span>
-<span class="w">    </span><span class="k">SUM</span><span class="p">(</span><span class="n">total_bookings</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">used_bookings</span><span class="p">,</span>
-<span class="w">    </span><span class="k">SUM</span><span class="p">(</span><span class="n">total_quantities</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tickets</span>
+<span class="w">    </span><span class="n">territory_code</span><span class="p">,</span>
+<span class="w">    </span><span class="n">territory_name</span><span class="p">,</span>
+<span class="w">    </span><span class="n">total_bookings</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">used_bookings</span><span class="p">,</span>
+<span class="w">    </span><span class="n">total_quantities</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">tickets</span>
 <span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">booking_partner_finance_individual</span><span class="o">`</span>
-<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">partition_month</span><span class="p">,</span><span class="w"> </span><span class="n">venue_region_code</span><span class="p">,</span><span class="w"> </span><span class="n">venue_region_name</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">territory_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;REG&#39;</span>
 <span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">partition_month</span>
 </code></pre></div>
 <h3 id="available-dimensions">Available dimensions</h3>
@@ -19440,25 +19530,24 @@
 <td>Month when the booking was used</td>
 </tr>
 <tr>
-<td>Department</td>
-<td><code>venue_department_code</code>, <code>venue_department_name</code></td>
-<td>Department of the venue</td>
+<td>Territory</td>
+<td><code>territory_level</code>, <code>territory_code</code>, <code>territory_name</code></td>
+<td>Venue territory, one level per row: <code>DEP</code> (department), <code>REG</code> (region), <code>GROUP</code> (METRO / DROM / COM), <code>NAT</code> (France)</td>
 </tr>
 <tr>
-<td>Region</td>
-<td><code>venue_region_code</code>, <code>venue_region_name</code></td>
-<td>Region of the venue</td>
+<td>Parent region</td>
+<td><code>region_code</code></td>
+<td>Region of a department (NULL for overseas collectivities)</td>
 </tr>
 </tbody>
 </table>
 <h3 id="temporal-tracking">Temporal tracking</h3>
-<p><strong>Monthly.</strong> One row per month of use and venue department. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.</p>
+<p><strong>Monthly.</strong> One row per month of use and published venue territory. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.</p>
 <h3 id="data-protection">Data protection</h3>
-<p>Partner revenue is under <strong>statistical secret</strong> (not cell key perturbation), with the rule of external reporting: when the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret), <code>is_statistic_secret</code> is TRUE and all KPIs of the department, bookings and tickets included, are NULL on every month. <code>department_secret_reason_label</code> gives the reasons.</p>
+<p><strong>Statistical secret of businesses</strong> (INSEE rule, not cell key perturbation), applied once in <a href="../../../models/export/export_base/description__exp_base__booking_venue_individual/">exp_base__booking_venue_individual</a>: a territory is secret when, at the last complete month, for the 6 or 48 month window and on the individual or the collective side, it has fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or a secondary secret applies. It then has <code>is_statistic_secret</code> TRUE and NULL figures on every month. Each level (department, region, group, France) is computed on unmasked data and published with its own secret status; NAT is never secret.</p>
 <h3 id="notes-and-caveats">Notes and caveats</h3>
 <ul>
-<li>Region and national totals are sums of the visible departments, so they leave out the secret departments (mostly overseas collectivities and Lozère): less than 0.06% of the national volume in 2026. External reporting publishes REG and NAT unmasked; this table has the department grain only.</li>
-<li><code>venue_region_code</code> is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...); <code>venue_region_name</code> is filled.</li>
+<li>Read each level from its own rows (<code>WHERE territory_level = 'REG'</code>): never sum departments to get a region or France, the masked departments would be missing. Overseas collectivities are small and often secret one by one: read them from the <code>GROUP</code> row <code>COM</code>.</li>
 <li>Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see <a href="../../usage/individual_bookings_beneficiary_territory/">Individual bookings by category and beneficiary territory</a> (residence of the young person, no payment batch condition).</li>
 </ul>
 

@@ -17,33 +17,32 @@ Only bookings already included in a payment batch are counted: a used booking is
 ```
 SELECT
     partition_month,
-    venue_region_code,
-    venue_region_name,
-    SUM(total_bookings) AS used_bookings,
-    SUM(total_quantities) AS tickets
+    territory_code,
+    territory_name,
+    total_bookings AS used_bookings,
+    total_quantities AS tickets
 FROM `booking_partner_finance_individual`
-GROUP BY partition_month, venue_region_code, venue_region_name
+WHERE territory_level = 'REG'
 ORDER BY partition_month
 ```
 
 ### Available dimensions
 
-| Dimension    | Column                                           | Description                     |
-| ------------ | ------------------------------------------------ | ------------------------------- |
-| Month of use | `partition_month`                                | Month when the booking was used |
-| Department   | `venue_department_code`, `venue_department_name` | Department of the venue         |
-| Region       | `venue_region_code`, `venue_region_name`         | Region of the venue             |
+| Dimension     | Column                                                | Description                                                                                                          |
+| ------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Month of use  | `partition_month`                                     | Month when the booking was used                                                                                      |
+| Territory     | `territory_level`, `territory_code`, `territory_name` | Venue territory, one level per row: `DEP` (department), `REG` (region), `GROUP` (METRO / DROM / COM), `NAT` (France) |
+| Parent region | `region_code`                                         | Region of a department (NULL for overseas collectivities)                                                            |
 
 ### Temporal tracking
 
-**Monthly.** One row per month of use and venue department. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.
+**Monthly.** One row per month of use and published venue territory. Months up to the month before the run date are exported, as in external reporting. Bookings enter the table when their payment batch is closed: the last month is about 99% complete when first published and may be slightly revised (+1%) on the next exports.
 
 ### Data protection
 
-Partner revenue is under **statistical secret** (not cell key perturbation), with the rule of external reporting: when the department is secret at the last complete month, for the 6 or 48 month window, on the individual or the collective side (fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or secondary secret), `is_statistic_secret` is TRUE and all KPIs of the department, bookings and tickets included, are NULL on every month. `department_secret_reason_label` gives the reasons.
+**Statistical secret of businesses** (INSEE rule, not cell key perturbation), applied once in [exp_base\_\_booking_venue_individual](https://pass-culture.github.io/data-gcp/dbt/models/export/export_base/description__exp_base__booking_venue_individual/index.md): a territory is secret when, at the last complete month, for the 6 or 48 month window and on the individual or the collective side, it has fewer than 3 cultural partners with revenue, one partner above 85% of the revenue, or a secondary secret applies. It then has `is_statistic_secret` TRUE and NULL figures on every month. Each level (department, region, group, France) is computed on unmasked data and published with its own secret status; NAT is never secret.
 
 ### Notes and caveats
 
-- Region and national totals are sums of the visible departments, so they leave out the secret departments (mostly overseas collectivities and Lozère): less than 0.06% of the national volume in 2026. External reporting publishes REG and NAT unmasked; this table has the department grain only.
-- `venue_region_code` is NULL for the overseas collectivities (Saint-Martin, Saint-Pierre-et-Miquelon, Nouvelle-Calédonie, ...); `venue_region_name` is filled.
+- Read each level from its own rows (`WHERE territory_level = 'REG'`): never sum departments to get a region or France, the masked departments would be missing. Overseas collectivities are small and often secret one by one: read them from the `GROUP` row `COM`.
 - Not broken down by offer category, by design (partner side: a category often has fewer than 3 partners in a department). Categories are read on the young people's side (practices), as in the observatoire. For bookings by category, see [Individual bookings by category and beneficiary territory](https://pass-culture.github.io/data-gcp/dbt/kpis/usage/individual_bookings_beneficiary_territory/index.md) (residence of the young person, no payment batch condition).

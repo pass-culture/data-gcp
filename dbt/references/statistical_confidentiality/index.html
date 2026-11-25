@@ -3780,6 +3780,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3868,6 +3874,90 @@
     
   
     Beneficiary coverage numerator (perturbed base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/export/export_base/description__exp_base__booking_beneficiary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by beneficiary territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/export/export_base/description__exp_base__booking_venue_collective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective bookings by venue territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/export/export_base/description__exp_base__booking_venue_individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by venue territory (export base)
   
 
     
@@ -15209,6 +15299,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#bookings-and-amounts-by-venue-territory-statistical-secret-of-businesses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bookings and amounts by venue territory: statistical secret of businesses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -19478,6 +19579,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#bookings-and-amounts-by-venue-territory-statistical-secret-of-businesses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bookings and amounts by venue territory: statistical secret of businesses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -19665,6 +19777,9 @@
 </ul>
 <p>The base also holds figures that are <strong>out of scope</strong> of both rules, so that every tool still reads one source: partner counts (<code>exp_base__cultural_partner</code>, <code>exp_base__cultural_partner_by_type</code>, at municipality grain). The statistical secret of businesses (at least 3 businesses, none above 85% of the value) protects their economic values, such as revenue and amounts, not counts of establishments (INSEE publishes establishment counts by municipality), and partner lists are public. Venues are not people, so cell key perturbation does not apply. This holds in external reporting as in vidoc. The statistical secret applies to bookings and revenue measured on the venue geography.</p>
 <p>Exception: coverage figures of external reporting exclude French Polynesia (987), which has no INSEE population estimate, so their REG and NAT sums are lower than the sums of the published cells by the beneficiaries of 987.</p>
+<h3 id="bookings-and-amounts-by-venue-territory-statistical-secret-of-businesses">Bookings and amounts by venue territory: statistical secret of businesses</h3>
+<p>Bookings and amounts measured on the venue (cultural partner) territory are economic data of businesses. They are not perturbed: they follow the statistical secret of businesses (INSEE rule), applied once in <code>exp_base__booking_venue_individual</code> and <code>exp_base__booking_venue_collective</code>. A territory is secret when, over the last 6 or 48 months, it has fewer than 3 partners with revenue or one partner above 85% of the revenue (primary secret), or when publishing it would give a masked territory by subtraction (secondary secret, <code>statistical_secret__cultural_partner_*</code>).</p>
+<p>Masked cells cannot be summed, so the base publishes every level on its own rows, computed on unmasked data: departments, the 18 regions, the territory groups METRO / DROM / COM, and France (never secret). The secret model masks a second department when a region or group total would disclose a masked one, and flags the region and group totals that would still disclose it. Overseas collectivities are often secret one by one but not as a group, so they are read from the COM group.</p>
 <h3 id="parameters">Parameters</h3>
 <table>
 <thead>

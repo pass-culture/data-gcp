@@ -3838,6 +3838,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3926,6 +3932,90 @@
     
   
     Beneficiary coverage numerator (perturbed base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../export_base/description__exp_base__booking_beneficiary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by beneficiary territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../export_base/description__exp_base__booking_venue_collective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective bookings by venue territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../export_base/description__exp_base__booking_venue_individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by venue territory (export base)
   
 
     
@@ -19240,15 +19330,14 @@
 
   <h1>booking_collective_venue</h1>
 
-<p>The <code>exp_vidoc__booking_collective_venue</code> model provides the confirmed collective (EAC) bookings and their amount by month, scholar year and <strong>cultural partner (venue) department</strong>, rolled up from <code>metrics_booking__collective</code>.
-It computes the same values, with the same statistical secret, as <code>external_reporting__collective_partner_booking</code> (<code>total_reservations_collectives</code>, <code>total_montant_engage</code>) at department level.</p>
+<p>The <code>exp_vidoc__booking_collective_venue</code> model provides the confirmed collective (EAC) bookings and their amount by month, scholar year and <strong>cultural partner (venue) territory</strong>. It reads <a href="../export_base/description__exp_base__booking_venue_collective.md">exp_base__booking_venue_collective</a>, where the statistical secret of businesses is applied; values are those of <code>external_reporting__collective_partner_booking</code> (<code>total_reservations_collectives</code>, <code>total_montant_engage</code>).</p>
 
 <h2 id="table-description">Table Description</h2>
-<p>Each row represents the confirmed collective bookings created in a month, for a scholar year and a venue department (where the cultural partner is, not where the school is).</p>
-<p><strong>Grain</strong>: <code>partition_month</code>, <code>scholar_year</code>, <code>venue_department_code</code>.</p>
+<p><strong>Grain</strong>: <code>partition_month</code>, <code>scholar_year</code>, <code>territory_level</code>, <code>territory_code</code>.</p>
 <ul>
-<li>Same rules as <a href="../description__exp_vidoc_booking_collective/"><code>exp_vidoc__booking_collective</code></a>: monthly flows summable over a scholar year, bookings created before the scholar year counted in September, months from January 2022 to the last complete month.</li>
-<li>Statistical secret, as in external reporting: a department is secret when it is secret (<code>is_department_secret_stat</code>) at the <strong>last complete month</strong>, on the individual or the collective cultural partner secret (<code>statistical_secret__cultural_partner_individual</code> / <code>_collective</code>), on the 6 or the 48 month window. <code>total_collective_bookings</code> and <code>total_collective_amount_spent</code> are then NULL on <strong>every month</strong> of the department (<code>is_statistic_secret</code> TRUE); <code>department_secret_reason_label</code> gives the rules behind the mask, worded as the <code>secret_detail</code> of external reporting (e.g. <code>Moins de 3 partenaires (collectif, 6 mois)</code>). Region and national totals summed from departments leave out the secret departments: national totals are read from <code>exp_vidoc__booking_collective</code>.</li>
+<li>One row per month, scholar year and published territory: <code>DEP</code>, <code>REG</code>, <code>GROUP</code> (METRO / DROM / COM) and <code>NAT</code>. Read each level from its own rows: never sum departments to get a region or France.</li>
+<li>When <code>is_statistic_secret</code> is TRUE, both figures are NULL on every month. NAT is never secret.</li>
+<li>Same rules as <a href="../description__exp_vidoc_booking_collective/"><code>exp_vidoc__booking_collective</code></a> (school territory, not secret): monthly flows summable over a scholar year, bookings created before the scholar year counted in September, months from January 2022 to the last complete month.</li>
 </ul>
 
 

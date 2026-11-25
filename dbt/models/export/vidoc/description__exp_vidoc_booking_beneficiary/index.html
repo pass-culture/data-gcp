@@ -3838,6 +3838,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -3926,6 +3932,90 @@
     
   
     Beneficiary coverage numerator (perturbed base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../export_base/description__exp_base__booking_beneficiary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by beneficiary territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../export_base/description__exp_base__booking_venue_collective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collective bookings by venue territory (export base)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../export_base/description__exp_base__booking_venue_individual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Individual bookings by venue territory (export base)
   
 
     
@@ -19242,23 +19332,16 @@
 
 <p>The <code>exp_vidoc_booking_beneficiary</code> model provides the used individual bookings and the amounts spent by young people, by month of use, territory of residence of the beneficiary and offer category.
 It is designed to be exported to the ministry for vidoc visualisation.
-It is built from <a href="#!/model/model.data_gcp_dbt.metrics_booking__individual"><code>metrics_booking__individual</code></a> with the same rules as <code>external_reporting__beneficiary_booking</code>, and the low count rule of <code>external_reporting__individual</code> (<code>external_reporting__beneficiary_booking_bookers</code>).</p>
-
-<p><strong>exp_vidoc__booking_beneficiary__is_low_count</strong>: 
-True when fewer than 5 beneficiaries account for the row since 2022 (fewer than 5 bookers in the category, or fewer than 20 bookers in the department for a category row): <code>total_used_bookings</code> and <code>total_used_amount</code> are then NULL on every month.</p>
+It reads <a href="../export_base/description__exp_base__booking_beneficiary.md">exp_base__booking_beneficiary</a>, where the low count rule is applied.</p>
 
 <h2 id="table-description">Table Description</h2>
-<p>Each row represents the used individual bookings of a month of use, a department of residence of the beneficiary and an offer category. Rows with <code>offer_category_id = 'ALL'</code> hold the department total, all categories: <strong>do not sum them with the category rows</strong>.</p>
-<p><strong>Grain</strong>: <code>partition_month</code>, <code>department_name</code>, <code>offer_category_id</code>.</p>
+<p><strong>Grain</strong>: <code>partition_month</code>, <code>territory_level</code>, <code>territory_code</code>, <code>offer_category_id</code>.</p>
 <ul>
-<li>The territory is the <strong>current</strong> address of the beneficiary (<code>mrt_global__user_beneficiary</code>), not the address at booking date.</li>
-<li>Bookings of users missing from <code>mrt_global__user_beneficiary</code> (deleted, suspended, GRANT_FREE: about 0.2% of the used bookings) have no residence and are <strong>left out</strong>. Beneficiaries without a located address are in department <code>-1</code> (<code>non localisé</code>).</li>
-<li><code>region_code</code> and <code>department_code</code> come from <code>region_department</code> (joined on the department name). <code>region_code</code> is NULL for the overseas collectivities (Nouvelle-Calédonie, Saint-Martin, Polynésie Française, Saint-Pierre-et-Miquelon, Wallis et Futuna); <code>region_name</code> is filled.</li>
-<li>Category rows cover the categories of <code>get_categories()</code>, as in external reporting; marginal categories (<code>MEDIA</code>, <code>CARTE_JEUNES</code>: about 1,000-1,500 bookings a year each) are not grouped.</li>
-<li>Months from January 2022 to the month before the run date.</li>
-<li>Rows are <strong>only emitted</strong> for cells with at least one used booking.</li>
+<li>One row per month, published territory (<code>DEP</code>, <code>REG</code>, <code>GROUP</code> METRO / DROM / COM, <code>NAT</code>) and category. Rows with <code>offer_category_id = 'ALL'</code> hold the total, all categories: <strong>do not sum them with the category rows</strong>. Read each level from its own rows: never sum departments to get a region or France.</li>
+<li>The territory is the <strong>current</strong> address of the beneficiary. Beneficiaries without a located address are counted in France only.</li>
+<li>When <code>is_low_count</code> is TRUE, both figures are NULL on every month (rules in the base).</li>
+<li>Months from January 2022 to the month before the run date; rows only for cells with at least one used booking.</li>
 </ul>
-<p><strong>Data protection</strong> (as in external reporting): counts and amounts are not perturbed. They are NULL on every month (<code>is_low_count</code>) when the distinct beneficiaries who booked since 2022 (sum of the new bookers of <code>metrics_booking__individual_bookers</code>) are 1 to 4 for the row (department for <code>ALL</code>, department and category for a category row), or when the department has 1 to 19 bookers for a category row (category breakdown). Region totals summed from departments leave out the masked rows.</p>
 <table>
 <thead>
 <tr>
@@ -19274,24 +19357,39 @@ True when fewer than 5 beneficiaries account for the row since 2022 (fewer than 
 <td style="text-align: left;">Indicates the first day of the month the KPI refers to.</td>
 </tr>
 <tr>
-<td style="text-align: left;">region_name</td>
+<td style="text-align: left;">territory_level</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Region name of the user's registered address.</td>
+<td style="text-align: left;">Published territory level of the row: DEP (department, overseas collectivities included), REG (one of the 18 regions; overseas collectivities have no region), GROUP (territory group) or NAT (France, venues missing from the referential included). Each level is computed on unmasked data and published on its own: never sum the rows of a level to get another one.</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">GROUP splits France into three groups, nothing is left out: METRO (the 96 metropolitan departments), DROM (the 5 overseas departments and regions: 971 to 974, 976) and COM (the overseas collectivities: 975, 977, 978, 986 to 988). It is needed for the COM: they belong to no region, so no REG row holds them, and they are small and often secret one by one; the COM row is the only way to read them. METRO and DROM give the metropolitan and overseas totals without summing masked regions.</td>
+</tr>
+<tr>
+<td style="text-align: left;">territory_code</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Code of the territory at its level: department code (DEP), INSEE region code (REG), METRO / DROM / COM (GROUP) or NAT.</td>
+</tr>
+<tr>
+<td style="text-align: left;">territory_name</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Name of the territory at its level (department, region, territory group code, or France).</td>
 </tr>
 <tr>
 <td style="text-align: left;">region_code</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Region code of the user's registered address.</td>
+<td style="text-align: left;">The official code of the region (région) containing the IRIS area.</td>
 </tr>
 <tr>
-<td style="text-align: left;">department_name</td>
+<td style="text-align: left;">territory_group</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">Department name associated with the user's registered address.</td>
-</tr>
-<tr>
-<td style="text-align: left;">department_code</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;">Department code associated with the user's registered address.</td>
+<td style="text-align: left;">Territory group of the department: METRO (mainland France and Corsica), DROM (971 to 974 and 976) or COM (other overseas collectivities, 3-digit codes 975, 977, 978, 986 to 988). NON_LOCALISE for a department code missing from the referential (e.g. a venue geocoded abroad): it forms its own region ('non localisé') and group, so that it never masks a real department.</td>
 </tr>
 <tr>
 <td style="text-align: left;">offer_category_id</td>
@@ -19301,7 +19399,7 @@ True when fewer than 5 beneficiaries account for the row since 2022 (fewer than 
 <tr>
 <td style="text-align: left;">is_low_count</td>
 <td style="text-align: left;"></td>
-<td style="text-align: left;">True when fewer than 5 beneficiaries account for the row since 2022 (fewer than 5 bookers in the category, or fewer than 20 bookers in the department for a category row): <code>total_used_bookings</code> and <code>total_used_amount</code> are then NULL on every month.</td>
+<td style="text-align: left;">True when the row is masked by the low count rule: 1 to 4 beneficiaries booked since 2022 (in the category for a category row), 1 to 19 bookers in the territory for a category row, a secondary mask (a department hidden so that a parent total does not give a small masked set by subtraction), or, for a region, group or France, hidden departments with 1 to 4 bookers together that no other department can cover. <code>total_used_bookings</code> and <code>total_used_amount</code> are then NULL on every month.</td>
 </tr>
 <tr>
 <td style="text-align: left;">total_used_bookings</td>

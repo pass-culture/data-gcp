@@ -4,13 +4,17 @@ from common.config import ENV_SHORT_NAME, GCP_PROJECT_ID, GCP_REGION
 
 VPC_DEFAULT_NETWORK_ID_PER_ENV = {
     "dev": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-dev",
+    "tst": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-dev",
     "stg": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-staging",
     "prod": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-prod",
+    "prd": f"projects/{GCP_PROJECT_ID}/global/networks/vpc-data-prod",
 }
 VPC_DEFAULT_SUBNETWORK_ID_PER_ENV = {
     "dev": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-dev-private",
+    "tst": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-dev-private",
     "stg": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-staging-private",
     "prod": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-prod-private",
+    "prd": f"projects/{GCP_PROJECT_ID}/regions/{GCP_REGION}/subnetworks/data-prod-private",
 }
 VPC_DEFAULT_NETWORK_ID = VPC_DEFAULT_NETWORK_ID_PER_ENV[ENV_SHORT_NAME]
 VPC_DEFAULT_SUBNETWORK_ID = VPC_DEFAULT_SUBNETWORK_ID_PER_ENV[ENV_SHORT_NAME]

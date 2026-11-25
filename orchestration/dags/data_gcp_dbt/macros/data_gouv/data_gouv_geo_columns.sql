@@ -6,28 +6,17 @@
             - the "-1" code of non-localised beneficiaries becomes null, the
               'non localisé' label is kept so that national totals stay complete.
             - overseas collectivities (975, 977, 978, 986, 987, 988) have no
-              region code: one region label for all of them ('Iles du Nord',
-              'Saint-Martin'... upstream), department names as in the COG.
+              region code; their region label 'Collectivités d'outre-mer' and
+              the COG department names come from the seed region_department.
     #}
     if(
         region_code is null or region_code < 0,
         null,
         lpad(cast(cast(region_code as int64) as string), 2, "0")
     ) as region_code,
-    if(
-        department_code in ("975", "977", "978", "986", "987", "988"),
-        "Collectivités d'outre-mer",
-        region_name
-    ) as region_name,
+    region_name,
     nullif(department_code, "-1") as department_code,
-    case
-        department_code
-        when "986"
-        then "Wallis-et-Futuna"
-        when "987"
-        then "Polynésie française"
-        else department_name
-    end as department_name
+    department_name
 {% endmacro %}
 
 {% macro data_gouv_month_filter(month_column, first_month) %}

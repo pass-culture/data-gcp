@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: exp_base__booking_venue_collective
+    description: "{{ doc('description__exp_base__booking_venue_collective') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - scholar_year
+              - territory_level
+              - territory_code
+      - dbt_utils.expression_is_true:
+          arguments:
+            # a secret territory is masked, NAT is never secret
+            expression: "not is_statistic_secret or (total_collective_amount_spent is null and territory_level != 'NAT')"
+    columns:
+      - name: partition_month
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: scholar_year
+        description: "{{ doc('column__reporting_scholar_year') }}"
+        data_tests:
+          - not_null
+      - name: territory_level
+        description: "{{ doc('column__territory_level') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DEP', 'REG', 'GROUP', 'NAT']
+      - name: territory_code
+        description: "{{ doc('column__territory_code') }}"
+        data_tests:
+          - not_null
+      - name: territory_name
+        description: "{{ doc('column__territory_name') }}"
+      - name: region_code
+        description: "{{ doc('column__region_code') }}"
+      - name: territory_group
+        description: "{{ doc('column__territory_group') }}"
+      - name: is_statistic_secret
+        description: "{{ doc('column__is_statistic_secret') }}"
+        data_tests:
+          - not_null
+      - name: total_collective_bookings
+        description: "{{ doc('column__total_collective_bookings') }}"
+      - name: total_collective_amount_spent
+        description: "{{ doc('column__total_collective_amount_spent') }}"

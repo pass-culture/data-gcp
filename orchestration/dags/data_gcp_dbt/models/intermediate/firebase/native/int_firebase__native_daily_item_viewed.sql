@@ -9,75 +9,36 @@
     )
 }}
 
-with
-    source as (
-        select
-            event_date,
-            origin,
-            traffic_source,
-            traffic_medium,
-            traffic_campaign,
-            module_id,
-            entry_id as home_entry_id,
-            item_type,
-            unique_session_id,
-            item_index_list,
-            user_id
-        from {{ ref("int_firebase__native_event") }} as native_event
-        where
-            1 = 1 and native_event.event_name = "ViewItem"
-            {% if is_incremental() %}
-                and date(native_event.event_date)
-                >= date_sub('{{ ds() }}', interval 3 day)
-            {% else %} and date(native_event.event_date) >= date("2025-06-02")
-            {% endif %}
-    ),
+{% set tracking_versions = {
+    "v2": "int_firebase__native_daily_item_viewed_v2",
+    "legacy": "int_firebase__native_daily_item_viewed_legacy",
+} %}
 
-    -- sépare chaque pair index:item_id
-    split_items as (
-        select
-            event_date,
-            origin,
-            traffic_source,
-            traffic_medium,
-            traffic_campaign,
-            module_id,
-            home_entry_id,
-            item_type,
-            unique_session_id,
-            user_id,
-            split(item_index_list, ",") as item_pairs
-        from source
-    ),
-
-    -- explose la liste
-    unnested as (
-        select
-            event_date,
-            origin,
-            traffic_source,
-            traffic_medium,
-            traffic_campaign,
-            module_id,
-            home_entry_id,
-            item_type,
-            unique_session_id,
-            item_pair,
-            user_id
-        from split_items, unnest(item_pairs) as item_pair
-    )
-
-select
-    event_date,
-    origin,
-    traffic_source,
-    traffic_medium,
-    traffic_campaign,
-    module_id,
-    home_entry_id,
-    item_type,
-    unique_session_id,
-    user_id,
-    cast(split(item_pair, ":")[offset(0)] as string) as item_index,
-    cast(split(item_pair, ":")[offset(1)] as string) as viewed_item_id
-from unnested
+{% for tracking_version, model_name in tracking_versions.items() %}
+    select
+        event_date,
+        origin,
+        traffic_source,
+        traffic_medium,
+        traffic_campaign,
+        module_id,
+        home_entry_id,
+        item_type,
+        unique_session_id,
+        user_id,
+        item_index,
+        viewed_item_id,
+        playlist_index,
+        origin_id,
+        reco_call_id,
+        item_displayed_timestamp,
+        "{{ tracking_version }}" as tracking_version
+    from {{ ref(model_name) }}
+    {% if is_incremental() %}
+        where date(event_date) >= date_sub("{{ ds() }}", interval 3 day)
+    {% else %} where date(event_date) >= date("2025-06-02")
+    {% endif %}
+    {% if not loop.last %}
+        union all
+    {% endif %}
+{% endfor %}

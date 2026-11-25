@@ -75,6 +75,10 @@ SSH_HOOK_MAX_RETRIES = int(os.environ.get("SSH_HOOK_MAX_RETRIES", "20"))
 
 GCP_REGION = "europe-west1"
 GCE_ZONE = "europe-west1-b"
+# Region of our BigQuery datasets: the new datacenter (pc-data-* projects) is in Paris.
+BIGQUERY_LOCATION = (
+    "europe-west9" if GCP_PROJECT_ID.startswith("pc-data-") else GCP_REGION
+)
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 
@@ -94,10 +98,30 @@ if ENV_SHORT_NAME != "prod":
 else:
     MLFLOW_URL = "https://mlflow.passculture.team/"
 
-APPLICATIVE_EXTERNAL_CONNECTION_ID = os.environ.get(
-    "APPLICATIVE_EXTERNAL_CONNECTION_ID",
-    "pc-backend-tst.europe-west1.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro",
-)
+
+APPLICATIVE_EXTERNAL_CONNECTION_IDS_EU9 = {
+    "tst": "pc-backend-tst.europe-west9.pcapi-tst-pg-pcapi-tst-eu9-ba7a837d689180e6-replica-big-query-eu9-ro",
+    "stg": "pc-backend-stg.europe-west9.pcapi-stg-pg-pcapi-stg-eu9-2d4e3ae70a0de694-replica-big-query-eu9-ro",
+    "prd": "pc-backend-prd.europe-west9.pcapi-prd-pg-pcapi-prd-eu9-868d1bac7d27461b-replica-big-query-eu9-ro",
+}
+
+
+def _default_applicative_connection_id() -> str:
+    """Return the applicative replica connection depending on the datacenter.
+    This function will be removed once all projects are migrated to the new datacenter.
+    """
+    if (
+        GCP_PROJECT_ID.startswith("pc-data-")
+        and ENV_SHORT_NAME in APPLICATIVE_EXTERNAL_CONNECTION_IDS_EU9
+    ):
+        return APPLICATIVE_EXTERNAL_CONNECTION_IDS_EU9[ENV_SHORT_NAME]
+    return os.environ.get(
+        "APPLICATIVE_EXTERNAL_CONNECTION_ID",
+        "pc-backend-tst.europe-west1.pcapi-tst-pg-pcapi-tst-eu9-c324f1845dc3a220-replica-big-query-eu1-ro",
+    )
+
+
+APPLICATIVE_EXTERNAL_CONNECTION_ID = _default_applicative_connection_id()
 METABASE_EXTERNAL_CONNECTION_ID = os.environ.get("METABASE_EXTERNAL_CONNECTION_ID", "")
 
 DATA_GCS_BUCKET_NAME = os.environ.get(
@@ -107,7 +131,10 @@ DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME = os.environ.get(
     "DE_BIGQUERY_DATA_ARCHIVE_BUCKET_NAME", f"de-bigquery-data-archive-{ENV_SHORT_NAME}"
 )
 DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME = os.environ.get(
-    "DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME", f"de-bigquery-data-import-{ENV_SHORT_NAME}"
+    "DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME",
+    f"de-bigquery-data-import-eu-{ENV_SHORT_NAME}"
+    if GCP_PROJECT_ID.startswith("pc-data-")
+    else f"de-bigquery-data-import-{ENV_SHORT_NAME}",
 )
 DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME = os.environ.get(
     "DE_BIGQUERY_DATA_EXPORT_BUCKET_NAME", f"de-bigquery-data-export-{ENV_SHORT_NAME}"

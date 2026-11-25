@@ -1,0 +1,4 @@
+# Triton JIT needs gcc + Python.h (python3.10-dev) to compile custom CUDA
+# kernels (e.g. Gemma3 RoPE's bmm_outer_product) - DLVM image ships neither
+sudo apt-get update -qq
+sudo apt-get install -y -qq build-essential python3.10-dev

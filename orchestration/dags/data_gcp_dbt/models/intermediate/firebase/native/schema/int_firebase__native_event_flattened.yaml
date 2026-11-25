@@ -368,6 +368,22 @@ models:
         description: '{{ doc("column__native_event_flattened_item_type") }}'
         data_type: STRING
 
+      - name: id
+        description: '{{ doc("column__native_event_flattened_id") }}'
+        data_type: STRING
+
+      - name: playlistId
+        description: '{{ doc("column__native_event_flattened_playlist_id") }}'
+        data_type: STRING
+
+      - name: playlistIndex
+        description: '{{ doc("column__native_event_flattened_playlist_index") }}'
+        data_type: INT64
+
+      - name: originId
+        description: '{{ doc("column__native_event_flattened_origin_id") }}'
+        data_type: STRING
+
       - name: artistId
         description: '{{ doc("column__artist_id") }}'
         data_type: STRING

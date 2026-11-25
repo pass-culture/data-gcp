@@ -105,6 +105,12 @@ The base also holds figures that are **out of scope** of both rules, so that eve
 
 Exception: coverage figures of external reporting exclude French Polynesia (987), which has no INSEE population estimate, so their REG and NAT sums are lower than the sums of the published cells by the beneficiaries of 987.
 
+### Bookings and amounts by venue territory: statistical secret of businesses
+
+Bookings and amounts measured on the venue (cultural partner) territory are economic data of businesses. They are not perturbed: they follow the statistical secret of businesses (INSEE rule), applied once in `exp_base__booking_venue_individual` and `exp_base__booking_venue_collective`. A territory is secret when, over the last 6 or 48 months, it has fewer than 3 partners with revenue or one partner above 85% of the revenue (primary secret), or when publishing it would give a masked territory by subtraction (secondary secret, `statistical_secret__cultural_partner_*`).
+
+Masked cells cannot be summed, so the base publishes every level on its own rows, computed on unmasked data: departments, the 18 regions, the territory groups METRO / DROM / COM, and France (never secret). The secret model masks a second department when a region or group total would disclose a masked one, and flags the region and group totals that would still disclose it. Overseas collectivities are often secret one by one but not as a group, so they are read from the COM group.
+
 ### Parameters
 
 | Parameter | Value | Description |

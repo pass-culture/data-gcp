@@ -1,0 +1,10 @@
+{# see README.md for what each included script does #}
+{% include 'preamble.sh.j2' %}
+
+{% include 'setup_airflow_user.sh.j2' %}
+
+{% include 'install_triton_deps.sh.j2' %}
+
+{% if enable_monitoring %}
+{% include 'ops_agent_dcgm.sh.j2' %}
+{% endif %}

@@ -55,13 +55,17 @@ SCHEDULE_DICT = {
     },
     "import_harvestr": {
         "prod": "0 3 * * *",  # every day at 3:00 AM
+        "prd": "0 3 * * *",  # every day at 3:00 AM
         "stg": "0 3 * * *",  # every day at 3:00 AM
         "dev": "0 3 * * *",  # every day at 3:00 AM
+        "tst": "0 3 * * *",  # every day at 3:00 AM
     },
     "import_appfollow": {
         "prod": "0 2 * * 1",
+        "prd": "0 2 * * 1",
         "stg": "0 3 * * 1",
         "dev": None,
+        "tst": None,
     },
     "import_applicative_database": "0 1 * * *",
     "import_intraday_firebase_data": "0 1 * * *",
@@ -72,9 +76,9 @@ SCHEDULE_DICT = {
         "dev": "0 6 * * 3",  # every Wednesday at 6:00 AM
     },
     "sync_bigquery_to_cloudsql_recommendation_tables": {
-        "dev": "00 2 * * *",  # every day at 2:00 AM UTC
-        "stg": "00 2 * * *",
-        "prod": "00 2 * * *",
+        "dev": "00 5 * * *",  # every day at 5:00 AM UTC
+        "stg": "00 5 * * *",
+        "prod": "00 5 * * *",
     },
     "recommendation_endpoint_monitoring": "0 8 * * *",  # every day at 8:00 AM
     "export_external_reporting": {

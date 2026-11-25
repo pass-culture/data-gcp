@@ -12,7 +12,7 @@ The `jobs/` directory contains the core logic for data processing, including ETL
     *   **`connectors/`**: Attempt for another way to fetch data from external APIs (`external/` is the old way).
     *   **`internal/`**: Scripts that interact with internal API (to fetch/push data) to access Pass Culture services or GCP resources.
 *   **`ml_jobs/`**: Responsibility for machine learning workflows.
-    *   Includes subdirectories for specific ML tasks like `algo_training/`, `embeddings/`, `recommendation/`, and `ranking_endpoint/`.
+    *   Includes subdirectories for specific ML tasks like `algo_training/`, `item_embedding/`, `recommendation/`, and `ranking_endpoint/`.
 *   **`playground_vm/`**: Environment for testing and prototyping on virtual machines.
 
 ### 2. `orchestration/`

@@ -302,17 +302,6 @@ sources:
     schema: ml_preproc_{{ var('ENV_SHORT_NAME') }}
     database: "{{ 'passculture-data-prod' if var('ENV_SHORT_NAME') == 'prod' else 'passculture-data-ehp' }}"
     tables:
-      - name: item_embedding_extraction
-        columns:
-          - name: item_id
-            data_type: STRING
-            data_tests:
-              - not_null
-              - unique
-      - name: item_embedding_reduced_64
-      - name: item_embedding_reduced_32
-      - name: item_embedding_reduced_16
-      - name: item_embedding_reduced_5
       - name: delta_artist
       - name: delta_product_artist_link
       - name: similar_artist

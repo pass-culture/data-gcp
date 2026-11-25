@@ -137,9 +137,9 @@ def download_model(artifact_uri: str) -> None:
     Args:
         artifact_uri (str): GCS bucket path
     """
-    command = f"gsutil -m cp -r {artifact_uri} ."
+    command = ["gsutil", "-m", "cp", "-r", artifact_uri, "."]
     results = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     for line in results.stdout:
         logger.info(line.rstrip().decode("utf-8"))

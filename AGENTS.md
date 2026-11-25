@@ -18,6 +18,7 @@ Each area has its own `AGENTS.md`. Read the one closest to the files you touch.
 | `automations/` | | Microservice scaffolding, dependency constraint sync | |
 | `data_gouv/` | | Open-data publication to data.gouv.fr | |
 | `docs/` | | MkDocs site | `docs/README.md` |
+| `.agents/skills/` | | Shared agent skills and their scripts | `.agents/skills/AGENTS.md` |
 
 Owners come from `.github/CODEOWNERS`. Outside the user's own area, keep changes minimal and ask before refactoring.
 
@@ -68,7 +69,8 @@ pre-commit run --files <changed files>
 
 ## Skills
 
-Shared skills live in `.agents/skills/`:
+Shared skills live in `.agents/skills/`; read `.agents/skills/AGENTS.md` before writing or editing their scripts
+(Python, typed, documented, with doctests):
 
 - `data-pr-workflow`: branch, commit and PR conventions.
 - `pr-review`: review a PR and rate it /10.

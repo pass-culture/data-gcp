@@ -49,8 +49,8 @@ Read the skill, `AGENTS.md` files and `references/rules.md` from `$REPO`: the wo
 Run every command below from `$WT` (the script reads the files of the current checkout to spot deleted ones).
 
 ```bash
-python3 "$SKILL_DIR/scripts/alerts.py" --scope "$SCOPE"            # grouped by rule
-python3 "$SKILL_DIR/scripts/alerts.py" --scope "$SCOPE" --json     # one alert per line, for the details
+uv run --script "$SKILL_DIR/scripts/alerts.py" --scope "$SCOPE"            # grouped by rule
+uv run --script "$SKILL_DIR/scripts/alerts.py" --scope "$SCOPE" --json     # one alert per line, for the details
 ```
 
 Skip, and list in the report:
@@ -160,7 +160,7 @@ The repo is public: never quote a secret or personal data from the code in the P
 
 - Give the user the PR link, the table, the open questions and the dismissals done.
 - After the merge, the alerts close at the next daily Semgrep scan or Sonar analysis of `master`:
-  `python3 "$SKILL_DIR/scripts/alerts.py" --scope "$SCOPE"` the next day to check.
+  `uv run --script "$SKILL_DIR/scripts/alerts.py" --scope "$SCOPE"` the next day to check.
 - If you met a rule or a pattern missing from `references/rules.md`, add it in the same PR:
   the next run will triage it faster.
 - Once the PR is merged or closed: `git -C "$REPO" worktree remove "$WT"`.

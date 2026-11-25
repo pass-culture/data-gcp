@@ -74,6 +74,7 @@ Shared skills live in `.agents/skills/`:
 - `pr-review`: review a PR and rate it /10.
 - `vulnerability-fix`: fix vulnerable packages in one `uv.lock`.
 - `dependency-vulnerability-pr`: triage Dependabot alerts into safe and breaking PRs.
+- `code-scanning-triage`: triage Semgrep/SonarCloud code scanning alerts (fix or inline suppression), one PR per team.
 - `test-dag-from-diff`: upload test copies of changed DAGs to dev/stg Airflow.
 - `yaml-doc-test`: write dbt schema YAML and docs for mart models.
 - `sql-commenter`: comment BigQuery/dbt SQL without changing logic.

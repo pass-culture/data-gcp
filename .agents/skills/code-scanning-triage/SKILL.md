@@ -7,7 +7,7 @@ description: "Triage and fix the open GitHub code scanning alerts (Semgrep OSS a
 
 Handles the alerts of the repo's **Security > Code scanning** tab. Two tools feed it:
 
-- **Semgrep OSS**: `.github/workflows/on_schedule_semgrep.yml` runs `--config auto` every day on `master`
+- **Semgrep OSS**: `.github/workflows/on_schedule_semgrep.yml` runs `--config auto --config p/security-audit` every day on `master`
   and uploads the results. An alert closes when the next daily scan no longer finds it.
 - **SonarCloud** (free plan): its own analysis on `master`. An alert closes after the next analysis.
   Dismissals on GitHub and on SonarCloud do not sync.
@@ -121,15 +121,16 @@ gh api -X PATCH "repos/{owner}/{repo}/code-scanning/alerts/<number>" \
 ## 6. Validate
 
 Re-run each Semgrep rule on the changed files, before (it must find the alert) and after (it must find nothing).
-This uses only the rule, without sending metrics; the version is the one of the CI image:
+Running only the rule is fast and gives an exact before/after; the version is the one of the CI image:
 
 ```bash
-uvx --from semgrep==1.156.0 semgrep scan --metrics=off --disable-version-check --quiet \
+uvx --from semgrep==1.156.0 semgrep scan --disable-version-check --quiet \
   --config "r/<rule id>" <files>
 ```
 
-Never use `--config auto` locally: it refuses `--metrics=off`. An unknown rule id prints nothing and no error,
-which is why the "before" run matters. Sonar cannot be run locally: the PR's SonarCloud check shows the result.
+An unknown rule id prints nothing and no error, which is why the "before" run matters.
+Once done, check that the changed files bring no other finding, with the rulesets of CI and pre-commit:
+`--config auto --config p/security-audit`. Sonar cannot be run locally: the PR's SonarCloud check shows the result.
 
 Then, for every code change:
 

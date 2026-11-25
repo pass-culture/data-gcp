@@ -66,4 +66,4 @@ repos:
     hooks:
       - id: semgrep
         entry: env -u GIT_DIR -u GIT_INDEX_FILE SEMGREP_ENABLE_VERSION_CHECK=0 semgrep
-        args: ['--config', 'p/security-audit', '--baseline-commit', 'HEAD~', '--metrics=off']
+        args: ['--config', 'auto', '--config', 'p/security-audit', '--baseline-commit', 'HEAD~']

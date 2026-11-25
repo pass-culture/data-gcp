@@ -1,0 +1,22 @@
+# Guest Agent provisions every SSH-key account on this VM from this list on
+# every metadata poll (not just airflow's) - overriding its own default
+# (adm,dip,docker,lxd,plugdev,video) with only what's needed. See README.md.
+sudo groupadd -f docker
+sudo tee /etc/default/instance_configs.cfg > /dev/null <<'EOF'
+[Accounts]
+groups = docker
+EOF
+sudo systemctl restart google-guest-agent || true
+
+# docker group must be set before the racy chown below (set -e would abort
+# first and skip it otherwise - concurrent SSH tasks write into /home/airflow
+# and can delete a temp file mid-walk, e.g. an in-flight mlflow upload).
+# This ordering is why prod broke on 2026-11-23 - see README.md.
+if ! id -u airflow >/dev/null 2>&1; then
+  sudo useradd -m -s /bin/bash airflow
+fi
+sudo usermod -aG docker airflow 2>/dev/null || true
+
+# best-effort - must not abort the script
+sudo mkdir -p /home/airflow
+sudo chown -R airflow:airflow /home/airflow || true

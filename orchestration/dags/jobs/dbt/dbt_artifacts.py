@@ -183,6 +183,11 @@ recompile_dbt_project = PythonOperator(
     trigger_rule="all_done",
 )
 
+end = EmptyOperator(
+    task_id="end",
+    dag=dag,
+    trigger_rule="all_success",
+)
 
 # DAG Dependencies
 (
@@ -198,3 +203,4 @@ recompile_dbt_project = PythonOperator(
 (check_schedule >> dbt_test_weekly >> compute_metrics_elementary)
 (check_schedule >> dbt_test_monthly >> compute_metrics_elementary)
 (check_schedule >> dbt_test_monthly_15 >> compute_metrics_elementary)
+(send_elementary_report, recompile_dbt_project) >> end

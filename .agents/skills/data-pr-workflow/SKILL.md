@@ -87,9 +87,9 @@ git rebase -i $(git merge-base master HEAD)
 
 ## Step 3: Generate PR Title
 
-The PR title must follow this regex pattern:
+The PR title must match the regex of `.github/workflows/on_pr__title_checker.yml` (CI blocks the PR otherwise):
 ```
-^(\((DA-[0-9]+|DE-[0-9]+|HF-[0-9]+|BSR|)\) )?(build|lint|ci|docs|feat|fix|perf|refactor|test|core|dbt|)\(\w+\): \w+
+^\((DA|DE|AE|DS|HF|BSR|PC)(-[0-9]+)?\) (build|lint|ci|docs|feat|fix|perf|refactor|test|chore|dbt)\(\w+.*\): \w+.*
 ```
 
 **Format:**
@@ -115,6 +115,7 @@ The PR title must follow this regex pattern:
 ## Step 4: Create PR Description
 
 The PR description should be concise but informative. Remember: the code is public, so avoid sensitive details.
+Use the template below, not `.github/PULL_REQUEST_TEMPLATE/` nor `.github/pull_request_template.md` (both obsolete).
 
 **Template:**
 ```markdown
@@ -264,7 +265,7 @@ If you need to validate a PR title against the regex programmatically:
 ```python
 import re
 
-pattern = r'^(\((DA-[0-9]+|DE-[0-9]+|HF-[0-9]+|BSR|)\) )?(build|lint|ci|docs|feat|fix|perf|refactor|test|core|dbt|)\(\w+\): \w+'
+pattern = r'^\((DA|DE|AE|DS|HF|BSR|PC)(-[0-9]+)?\) (build|lint|ci|docs|feat|fix|perf|refactor|test|chore|dbt)\(\w+.*\): \w+.*'
 
 def validate_pr_title(title):
     if re.match(pattern, title):

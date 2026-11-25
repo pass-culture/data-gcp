@@ -8,9 +8,7 @@ Owned by DS. Each folder is an independent ML microservice, run by an Airflow DA
 |---|---|---|
 | `algo_training` | Train the Two-Tower recommendation model (TensorFlow, GPU) and deploy it to Vertex AI | yes |
 | `artist` | Link products to artists, enrich them with Wikidata, build artist similarity | yes |
-| `clusterisation` | Cluster item embeddings from JSON configs | no |
 | `edito_semantic_search` | Semantic search API and tooling for editorial content | yes |
-| `embeddings` | Legacy item embedding extraction | no |
 | `endpoint_monitoring` | Monitoring tests for the recommendation endpoints | yes |
 | `event_linkage` | Group offers into events by image, name and description similarity (GPU) | yes |
 | `finance` | Pricing forecast for the finance team (Prophet) | yes |
@@ -18,7 +16,6 @@ Owned by DS. Each folder is an independent ML microservice, run by an Airflow DA
 | `item_embedding` | Sentence-Transformers item embeddings, one YAML config per vector in `configs/` | yes |
 | `item_linkage` | Link products and offers through semantic vectors | yes |
 | `ranking_endpoint` | LightGBM ranking model and its serving image | no |
-| `reduction` | Embedding dimension reduction (PCA, UMAP) | no |
 | `retrieval_vector` | Recommendation retrieval API on LanceDB | yes |
 | `semantic_db_creation` | Build the LanceDB semantic database used by `retrieval_vector` | yes |
 

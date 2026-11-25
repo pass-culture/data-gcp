@@ -60,12 +60,11 @@ pre-commit run --files <changed files>
 
 ## Pull requests
 
-- Base branch `master`, squash and merge. Templates: `.github/PULL_REQUEST_TEMPLATE/`.
-- The title must pass `.github/workflows/on_pr__title_checker.yml`:
-  `^\((DA|DE|AE|DS|HF|BSR|PC)(-[0-9]+)?\) (build|lint|ci|docs|feat|fix|perf|refactor|test|chore|dbt)\(\w+.*\): \w+.*`,
-  e.g. `(DS-123) feat(item_embedding): add multilingual vector`.
+- Create PRs with the `data-pr-workflow` skill: branch name, commits, title, description and #data-review message.
+  Do not use `.github/PULL_REQUEST_TEMPLATE/` nor `.github/pull_request_template.md`: they are obsolete.
+- Base branch `master`, squash and merge.
+- The title is checked by `.github/workflows/on_pr__title_checker.yml`, e.g. `(DS-123) feat(item_embedding): add multilingual vector`.
 - Merges to `master` are blocked outside 12:00–18:00 Paris time, unless the title starts with `(HF)`.
-- Full workflow: `data-pr-workflow` skill. Where it disagrees with the title check above, the CI wins.
 
 ## Skills
 

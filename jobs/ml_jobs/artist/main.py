@@ -24,6 +24,7 @@ def main() -> None:
         sys.exit(1)
 
     domain = sys.argv[1]
+    # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import -- domain checked against DOMAINS above
     domain_app = importlib.import_module(f"cli.{domain}").app
     app.add_typer(domain_app, name=domain)
     app()

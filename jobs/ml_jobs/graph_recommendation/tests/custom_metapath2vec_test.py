@@ -157,6 +157,21 @@ def test_sample_and_loss(sample_graph_data):
     assert loss.item() >= 0
 
 
+def test_loader_pin_memory(sample_graph_data):
+    """pin_memory defaults to PyTorch's False and is forwarded when given."""
+    edge_index_dict, metapaths = sample_graph_data
+    model = CustomMetaPath2Vec(
+        edge_index_dict=edge_index_dict,
+        embedding_dim=16,
+        metapaths=metapaths,
+        walk_length=4,
+        context_size=2,
+    )
+
+    assert model.loader(batch_size=2).pin_memory is False
+    assert model.loader(batch_size=2, pin_memory=True).pin_memory is True
+
+
 def test_get_node_type_ranges(sample_graph_data):
     """Test node type range calculation."""
     _edge_index_dict, metapaths = sample_graph_data

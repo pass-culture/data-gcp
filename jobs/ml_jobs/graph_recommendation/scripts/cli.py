@@ -108,6 +108,8 @@ def build_heterograph_command(
         parquet_path,
         nrows=nrows,
     )
+    # Writes our own graph artifact, nothing is loaded here.
+    # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
     torch.save(graph_data, output_path)
 
     typer.secho(
@@ -160,6 +162,8 @@ def train_metapath2vec_command(
 
         # Build graph and save
         graph_data = build_item_metadata_heterograph(parquet_path, nrows=nrows)
+        # Writes our own graph artifact, nothing is loaded here.
+        # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch
         torch.save(graph_data, f=f"{RESULTS_DIR}/item_metadata_graph.pt")
 
         # Analyze and log

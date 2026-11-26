@@ -27,14 +27,17 @@ def deploy_container(serving_container, workers):
     Raises:
         subprocess.CalledProcessError: If deployment fails
     """
-    command = (
-        "sh cli/deploy_to_docker_registery.sh "
-        f"{serving_container} {workers} {GCP_PROJECT} {ENV_SHORT_NAME}"
-    )
+    command = [
+        "sh",
+        "cli/deploy_to_docker_registery.sh",
+        serving_container,
+        str(workers),
+        GCP_PROJECT,
+        ENV_SHORT_NAME,
+    ]
     try:
         result = subprocess.run(
             command,
-            shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,

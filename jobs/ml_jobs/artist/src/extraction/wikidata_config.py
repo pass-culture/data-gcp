@@ -110,6 +110,7 @@ QUERY_CONFIGS: dict[str, QueryConfig] = {
 # autoescape is off on purpose: these templates render SPARQL query text (not HTML)
 # from the static QUERY_CONFIGS below, not from user input. HTML-escaping would
 # corrupt the query syntax (e.g. the `<...>` IRIs and `&` in Wikidata property URIs).
+# nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2 -- renders SPARQL, not HTML, from static QUERY_CONFIGS
 _jinja_env = Environment(
     loader=FileSystemLoader(TEMPLATE_DIR),
     trim_blocks=True,
@@ -122,6 +123,7 @@ _jinja_env = Environment(
 def render_query(query_name: str, shard: str | None = None) -> str:
     config = QUERY_CONFIGS[query_name]
     rendered_template = _jinja_env.get_template(config.template)
+    # nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2 -- renders SPARQL, not HTML, from static QUERY_CONFIGS
     return rendered_template.render(
         entity_types=config.entity_types,
         id_properties=config.id_properties,

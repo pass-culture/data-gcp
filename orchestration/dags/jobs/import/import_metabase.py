@@ -10,6 +10,7 @@ from common.config import (
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
+    ETL_IMPERSONATION_SA,
     GCP_PROJECT_ID,
     METABASE_EXTERNAL_CONNECTION_ID,
 )
@@ -70,6 +71,7 @@ with DAG(
                 }
             },
             params=dict(params.get("params", {})),
+            impersonation_chain=ETL_IMPERSONATION_SA,
             dag=dag,
         )
         import_tables_to_raw_tasks.append(task)

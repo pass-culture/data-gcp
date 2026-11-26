@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
 )
@@ -17,10 +18,10 @@ from common.config import (
     DAG_TAGS,
     DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
+    ETL_IMPERSONATION_SA,
     GCP_PROJECT_ID,
 )
 from common.utils import get_airflow_schedule
-from google.cloud import storage
 
 QPI_ANSWERS_SCHEMA = [
     {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},
@@ -48,13 +49,9 @@ default_args = {
 
 def verify_folder():
     today = time.strftime("%Y%m%d")
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME)
+    gcs_hook = GCSHook(impersonation_chain=ETL_IMPERSONATION_SA)
     name = f"QPI_exports/qpi_answers_{today}/"
-    stats = bucket.list_blobs(prefix=name)
-    blob_list = []
-    for s in stats:
-        blob_list.append(s)
+    blob_list = gcs_hook.list(DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME, prefix=name)
     if len(blob_list) > 0:
         return "Files"
     else:
@@ -89,6 +86,7 @@ with DAG(
         source_format="PARQUET",
         write_disposition="WRITE_TRUNCATE",
         autodetect=True,
+        impersonation_chain=ETL_IMPERSONATION_SA,
     )
 
     # it fetches the file corresponding to the initial execution date of the dag and not the day the task is run.
@@ -102,6 +100,7 @@ with DAG(
         source_format="NEWLINE_DELIMITED_JSON",
         autodetect=False,
         schema_fields=QPI_ANSWERS_SCHEMA,
+        impersonation_chain=ETL_IMPERSONATION_SA,
     )
 
     append_to_raw = BigQueryInsertJobOperator(
@@ -120,6 +119,7 @@ with DAG(
             }
         },
         trigger_rule="none_failed_min_one_success",
+        impersonation_chain=ETL_IMPERSONATION_SA,
         dag=dag,
     )
 

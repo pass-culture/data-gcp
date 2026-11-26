@@ -4,6 +4,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 from common.config import (
     APPLICATIVE_EXTERNAL_CONNECTION_ID,
+    ETL_IMPERSONATION_SA,
     GCP_PROJECT_ID,
 )
 from common.utils import one_line_query
@@ -34,6 +35,7 @@ def bigquery_job_task(dag, table, job_params, extra_params={}):
         },
         trigger_rule=job_params.get("trigger_rule", "all_success"),
         params=dict(job_params.get("params", {}), **extra_params),
+        impersonation_chain=ETL_IMPERSONATION_SA,
         dag=dag,
     )
 
@@ -73,5 +75,6 @@ def bigquery_federated_query_task(dag, task_id, job_params, location=None):
             }
         },
         params=dict(job_params.get("params", {})),
+        impersonation_chain=ETL_IMPERSONATION_SA,
         dag=dag,
     )

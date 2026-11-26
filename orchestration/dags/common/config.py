@@ -82,6 +82,17 @@ BIGQUERY_LOCATION = (
 
 GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 
+
+def _default_etl_impersonation_sa() -> str | None:
+    if GCP_PROJECT_ID.startswith("pc-data-"):
+        return f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
+    return None
+
+
+ETL_IMPERSONATION_SA = (
+    os.environ.get("ETL_IMPERSONATION_SA") or _default_etl_impersonation_sa()
+)
+
 DEPLOYMENT_TAG = os.environ.get(
     "DEPLOYMENT_TAG", os.environ.get("LOCAL_TAG", "airflow-local")
 )

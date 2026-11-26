@@ -42,7 +42,7 @@
 
 {% docs column__native_event_flattened_search_genre_types %}On 'PerformSearch', the genre filters selected (e.g. book or music genres), as a JSON array in a string.{% enddocs %}
 
-{% docs column__native_event_flattened_search_location_filter %}On 'PerformSearch', the location filter as a JSON string: the location type and, for a place or a venue, its label (truncated so that the parameter stays within 100 characters).{% enddocs %}
+{% docs column__native_event_flattened_search_location_filter %}On 'PerformSearch', the location filter of the search as a JSON string. Key `locationType`: 'EVERYWHERE' (« France entière », no location filter), 'AROUND_ME' (around the device position, with the radius in km in `aroundRadius`), 'PLACE' (around a place chosen by the user, with its `label`) or 'VENUE' (search restricted to one venue, with its `label`). Labels are truncated so that the parameter stays within 100 characters.{% enddocs %}
 
 {% docs column__native_event_flattened_age %}Age chosen or entered by the user, sent on onboarding and sign-up events such as 'SelectAge' or 'SignUpTooYoung'.{% enddocs %}
 
@@ -106,7 +106,7 @@
 
 {% docs column__native_event_flattened_search_view %} On 'PerformSearch', the search screen the search was made from. {% enddocs %}
 
-{% docs column__native_event_flattened_duration %}On 'VenueMapSeenDuration' and 'VenueMapSessionDuration', the time spent on the venue map, in seconds (as a string).{% enddocs %}
+{% docs column__native_event_flattened_duration %}Time spent on a map, in seconds (as a string): on 'MapSeenDuration' (since 2026-10-08, any map, the map in `mapType`) and on the older venue-map events 'VenueMapSeenDuration' and 'VenueMapSessionDuration'. A few values are negative (device clock anomalies).{% enddocs %}
 
 {% docs column__native_event_flattened_appsflyer_user_id %}AppsFlyer identifier of the app install, sent with the event to link Firebase and AppsFlyer data.{% enddocs %}
 
@@ -118,7 +118,7 @@
 
 {% docs column__native_event_flattened_youtube_id %}YouTube identifier of the video, sent with video events such as 'ConsultVideo' and 'HasSeenAllVideo'.{% enddocs %}
 
-{% docs column__native_event_flattened_origin %}Where the event was triggered from in the app: the `from` event parameter, or the `origin` parameter when `from` is absent (on 'ViewItem', the page in lower case, e.g. 'home', 'searchresults', 'venue').{% enddocs %}
+{% docs column__native_event_flattened_origin %}Where the event was triggered from in the app: the `from` event parameter, or the `origin` parameter when `from` is absent (on 'ViewItem', the page in lower case, e.g. 'home', 'searchresults', 'venue'). An offer opened from a map carries 'venueMap' (venue map) or 'searchMap' (search results map), lower camel case, unlike the `mapType` values.{% enddocs %}
 
 {% docs column__native_event_flattened_displayed_offers %}On 'ModuleDisplayedOnHomePage', identifiers of the offers displayed in the module, rebuilt as an array from the `offers_1_10` to `offers_41_50` parameters (first 50 offers at most); empty array when none.{% enddocs %}
 
@@ -174,4 +174,4 @@
 
 {% docs column__native_event_flattened_displayed_on %}On 'ModuleDisplayed', the page on which the module was displayed (e.g. 'artist').{% enddocs %}
 
-{% docs column__native_event_flattened_map_type %}Firebase event parameter `mapType`: the type of map the event refers to, as sent by the app.{% enddocs %}
+{% docs column__native_event_flattened_map_type %}Firebase event parameter `mapType`, the map the event refers to: 'VenueMap' (map of the venues) or 'SearchMap' (map of the search results). Sent on 'ViewMap' (map displayed) and 'MapSeenDuration' since 2026-10-08, and on 'PinMapPressed' (venue pin tapped) since 2026-10-23; NULL before, and on the older venue-map events ('ConsultVenueMap', 'VenueMapSeenDuration').{% enddocs %}

@@ -5,7 +5,7 @@
 
     :construction_worker_tone1: Work in progress :construction_worker_tone1:
 
-{% docs column__click_type %}The type of click interaction by the user.{% enddocs %}
+{% docs column__click_type %}Name of the first block-click event on the module in the session: 'CategoryBlockClicked', 'TrendsBlockClicked', 'HighlightBlockClicked', 'BusinessBlockClicked', or 'ConsultVideo' for a video module ('ExclusivityBlockClicked' is also kept but no longer sent by the app). NULL = the module was displayed without a block click. Clicks on an offer or a venue inside a module are not click types (see the consultation timestamps), and the « see all » click ('SeeAllClicked') is not in this model.{% enddocs %}
 {% docs column__module_displayed_date %}The date when the module was displayed to the user.{% enddocs %}
 {% docs column__module_displayed_timestamp %}The timestamp when the module was displayed to the user.{% enddocs %}
 {% docs column__module_clicked_timestamp %}The timestamp when the module was clicked by the user.{% enddocs %}

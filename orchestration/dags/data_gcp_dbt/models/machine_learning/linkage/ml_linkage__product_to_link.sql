@@ -1,14 +1,149 @@
 with
-    product_author as (
+    -- Offer-level authors. offer_subcategory_id is kept to route
+    -- LIVRE_PAPIER products to Titelive contributors and other products to the
+    -- legacy `author` field (see product_author).
+    offer_author as (
         select
             offer_product_id,
-            author as artist_name,
+            author,
             offer_category_id,
-            "author" as artist_type,
+            offer_subcategory_id,
             sum(coalesce(total_individual_bookings, 0)) as total_booking_count
         from {{ ref("mrt_global__offer") }}
         where offer_product_id != ""
-        group by offer_product_id, author, offer_category_id
+        group by offer_product_id, author, offer_category_id, offer_subcategory_id
+    ),
+
+    -- Mapping between Titelive contributor role ids and the
+    -- artist_type used in the linkage. Only roles relevant for artist pages are
+    -- kept; contributors with an unmapped role are dropped by the inner join
+    -- in titelive_book_contributors.
+    titelive_role_mapping as (
+        select role_id, artist_type
+        from
+            unnest(
+                [
+                    struct("1" as role_id, "scriptwriter" as artist_type),
+                    struct("2" as role_id, "comic_artist" as artist_type),
+                    struct("4" as role_id, "illustrator" as artist_type),
+                    struct("5" as role_id, "thesis_director" as artist_type),
+                    struct("8" as role_id, "volume_editor" as artist_type),
+                    struct("9" as role_id, "photographer" as artist_type),
+                    struct("12" as role_id, "narrator" as artist_type),
+                    struct("14" as role_id, "adapter" as artist_type),
+                    struct("16" as role_id, "preface_author" as artist_type),
+                    struct("17" as role_id, "afterword_author" as artist_type),
+                    struct("18" as role_id, "foreword_author" as artist_type),
+                    struct("19" as role_id, "translator" as artist_type),
+                    struct("23" as role_id, "editorial_coordinator" as artist_type),
+                    struct("26" as role_id, "revised_translator" as artist_type),
+                    struct("30" as role_id, "author" as artist_type),
+                    struct("31" as role_id, "co_author" as artist_type),
+                    struct("32" as role_id, "introduction_author" as artist_type),
+                    struct("34" as role_id, "original_author" as artist_type),
+                    struct("35" as role_id, "cartographer" as artist_type),
+                    struct("37" as role_id, "main_subject" as artist_type),
+                    struct("38" as role_id, "collection_director" as artist_type),
+                    struct("39" as role_id, "posthumous_completer" as artist_type),
+                    struct("40" as role_id, "creator" as artist_type)
+                ]
+            )
+    ),
+
+    -- New data source for books: one row per (product, contributor,
+    -- role) extracted from the current Titelive snapshot of LIVRE_PAPIER
+    -- products. Contributors can be at the root of the payload or under
+    -- article[0], and `role` can be either an object or an array of objects.
+    titelive_book_contributors as (
+        select
+            product.id as offer_product_id,
+            titelive_role_mapping.artist_type,
+            lower(trim(json_value(contributor, "$.name"))) as artist_name
+        from {{ ref("int_applicative__product") }} as product
+        inner join
+            {{ ref("snapshot_raw__titelive_products") }} as titelive
+            on product.ean = titelive.ean
+        cross join
+            unnest(
+                coalesce(
+                    json_query_array(titelive.json_raw, "$.contributor"),
+                    json_query_array(titelive.json_raw, "$.article[0].contributor")
+                )
+            ) as contributor
+        cross join
+            unnest(
+                coalesce(
+                    json_query_array(contributor, "$.role"),
+                    [json_query(contributor, "$.role")]
+                )
+            ) as role_item
+        inner join
+            titelive_role_mapping
+            on json_value(role_item, "$.id") = titelive_role_mapping.role_id
+        where
+            product.subcategoryid = "LIVRE_PAPIER"
+            and product.ean is not null
+            and titelive.dbt_valid_to is null
+            and titelive.json_raw is not null
+    ),
+
+    -- LIVRE_PAPIER products present in the current Titelive
+    -- snapshot. Only these use Titelive contributors as artist source.
+    titelive_book_products as (
+        select distinct product.id as offer_product_id
+        from {{ ref("int_applicative__product") }} as product
+        inner join
+            {{ ref("snapshot_raw__titelive_products") }} as titelive
+            on product.ean = titelive.ean
+        where
+            product.subcategoryid = "LIVRE_PAPIER"
+            and titelive.dbt_valid_to is null
+            and titelive.json_raw is not null
+    ),
+
+    -- Product authors:
+    -- - LIVRE_PAPIER in Titelive: all Titelive contributors, typed by their
+    -- Titelive role (a book can now be linked to several artists). A book in
+    -- Titelive without an author contributor gets no "author" row: its
+    -- existing author link is then removed on purpose.
+    -- - Other products (including LIVRE_PAPIER not in Titelive): legacy single
+    -- `author` field, typed as "author", so that their links are kept.
+    product_author as (
+        select
+            offer_author.offer_product_id,
+            offer_author.offer_category_id,
+            titelive_book_contributors.artist_type,
+            titelive_book_contributors.artist_name,
+            sum(offer_author.total_booking_count) as total_booking_count
+        from offer_author
+        inner join
+            titelive_book_contributors
+            on offer_author.offer_product_id
+            = titelive_book_contributors.offer_product_id
+        where offer_author.offer_subcategory_id = "LIVRE_PAPIER"
+        group by
+            offer_author.offer_product_id,
+            titelive_book_contributors.artist_name,
+            titelive_book_contributors.artist_type,
+            offer_author.offer_category_id
+        union all
+        select
+            offer_author.offer_product_id,
+            offer_author.offer_category_id,
+            "author" as artist_type,
+            offer_author.author as artist_name,
+            sum(offer_author.total_booking_count) as total_booking_count
+        from offer_author
+        left join
+            titelive_book_products
+            on offer_author.offer_product_id = titelive_book_products.offer_product_id
+        where
+            offer_author.offer_subcategory_id != "LIVRE_PAPIER"
+            or titelive_book_products.offer_product_id is null
+        group by
+            offer_author.offer_product_id,
+            offer_author.author,
+            offer_author.offer_category_id
     ),
 
     product_performer as (
@@ -60,6 +195,8 @@ with
             artist_type,
             total_booking_count
         from product_author
+        -- Titelive contributors may have an empty name.
+        where artist_name is not null and artist_name != ""
         union all
         select
             offer_product_id,

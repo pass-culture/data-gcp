@@ -123,6 +123,7 @@ GCS_TO_DELTA_TABLES = [
 INCREMENTAL_FLOW = "incremental_flow"
 REFRESH_METADATA_FLOW = "refresh_metadata_flow"
 DEDUPLICATION_FLOW = "deduplication_flow"
+REMEDIATION_FLOW = "remediation_flow"
 
 # DAG Documentation
 DAG_MD_DOC = """
@@ -130,9 +131,9 @@ DAG_MD_DOC = """
 
 This DAG links products to artists using clustering algorithms and enriches artist data with Wikidata metadata.
 
-## Three Execution Flows
+## Four Execution Flows
 
-The DAG supports 3 different execution modes, controlled by the `linkage_mode` parameter:
+The DAG supports 4 different execution modes, controlled by the `linkage_mode` parameter:
 
 ### 1. Incremental Flow (`incremental`)
 Updates the existing artist database with new products only.
@@ -166,9 +167,21 @@ Identifies and merges duplicate artist entries based on namesake analysis and pr
 
 **Use case:** Cleaning up the artist database by merging duplicate entries created by distinct providers or data errors.
 
+### 4. Remediation Flow (`remediation`)
+Re-evaluates every existing product-artist link against the current artist names of the products.
+
+**Steps:**
+- Removes links whose artist is no longer named on the product (name, order-insensitive name or Wikidata alias)
+- Links product artist names not covered by an existing link to existing or new artists
+- Drops no-op changes (links removed then re-added to the same artist, already existing links)
+- Temporarily keeps Wikidata artist links that would be replaced by a compatible non-Wikidata artist
+- Then follows the same enrichment / LLM summarization / loading steps as the incremental flow
+
+**Use case:** One-off correction of existing links after a change of product artist sources (e.g. Titelive contributors for books).
+
 ## LLM Summarization
 
-After the incremental or metadata refresh flow, the DAG always runs the LLM summarization pipeline:
+After the incremental, remediation or metadata refresh flow, the DAG always runs the LLM summarization pipeline:
 - Fetches Wikipedia page content for artists that don't yet have a biography (incremental skip logic).
 - Summarizes the content with an LLM to generate artist biographies.
 - Merges new biographies with existing ones, preserving previously generated biographies.
@@ -183,6 +196,8 @@ def _choose_linkage(**context):
         return REFRESH_METADATA_FLOW
     elif context["params"]["linkage_mode"] == "deduplication":
         return DEDUPLICATION_FLOW
+    elif context["params"]["linkage_mode"] == "remediation":
+        return REMEDIATION_FLOW
     return INCREMENTAL_FLOW
 
 
@@ -212,7 +227,7 @@ with DAG(
         ),
         "linkage_mode": Param(
             default="incremental",
-            enum=["incremental", "metadata_refresh", "deduplication"],
+            enum=["incremental", "metadata_refresh", "deduplication", "remediation"],
             type="string",
         ),
         "llm_summarization_from_scratch": Param(default=False, type="boolean"),
@@ -348,6 +363,28 @@ with DAG(
     )
 
     #####################################################################################################
+    #                                         Remediation Flow                                          #
+    #####################################################################################################
+    remediation_flow = EmptyOperator(task_id=REMEDIATION_FLOW)
+
+    remediate_product_artist_links = SSHGCEOperator(
+        task_id="remediate_product_artist_links",
+        instance_name=GCE_INSTANCE,
+        base_dir=BASE_DIR,
+        command=f"""
+             uv run python main.py linkage remediate-product-links \
+            --artist-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTISTS_GCS_FILENAME)} \
+            --artist-music-platform-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_ARTIST_MUSIC_PLATFORM_GCS_FILENAME)} \
+            --product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, APPLICATIVE_PRODUCT_ARTIST_LINK_GCS_FILENAME)} \
+            --product-filepath {os.path.join(STORAGE_BASE_PATH, PRODUCTS_TO_LINK_GCS_FILENAME)} \
+            --wiki-base-path {WIKIDATA_STORAGE_BASE_PATH} \
+            --wiki-file-name {WIKIDATA_EXTRACTION_GCS_FILENAME} \
+            --output-delta-artist-file-path {os.path.join(STORAGE_BASE_PATH, DELTA_ARTISTS_GCS_FILENAME_01)} \
+            --output-delta-product-artist-link-filepath {os.path.join(STORAGE_BASE_PATH, DELTA_PRODUCT_ARTIST_LINK_GCS_FILENAME)}
+            """,
+    )
+
+    #####################################################################################################
     #                                      Refresh Metadatas Flow                                       #
     #####################################################################################################
     refresh_metadata_flow = EmptyOperator(task_id=REFRESH_METADATA_FLOW)
@@ -451,7 +488,12 @@ with DAG(
         >> vm_init
         >> import_data
         >> choose_linkage
-        >> [incremental_flow, refresh_metadata_flow, deduplication_flow]
+        >> [
+            incremental_flow,
+            refresh_metadata_flow,
+            deduplication_flow,
+            remediation_flow,
+        ]
     )
 
     # Deduplication Flow
@@ -464,6 +506,13 @@ with DAG(
 
     # Incremental Update Flow
     (incremental_flow >> link_new_products_to_artists >> get_wikimedia_commons_license)
+
+    # Remediation Flow
+    (
+        remediation_flow
+        >> remediate_product_artist_links
+        >> get_wikimedia_commons_license
+    )
 
     # Refresh Metadata Flow
     (refresh_metadata_flow >> refresh_artist_metadatas >> get_wikimedia_commons_license)

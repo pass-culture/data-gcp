@@ -10,6 +10,7 @@ artists, and reconciles both against Wikidata.
 | Command | What it does |
 |---|---|
 | `link-new-products` | Incremental update: links newly-seen products to existing artists (raw + preprocessed offer-name matching), creates new artist clusters for unmatched products, and matches those clusters against Wikidata. |
+| `remediate-product-links` | Remediation (one-off, `linkage_mode=remediation` in the DAG): re-evaluates every existing product-artist link against the current product artist names (name, word-order-insensitive name, Wikidata aliases), removes links whose artist is no longer named, relinks uncovered names, drops no-op changes and temporarily preserves Wikidata links replaced by a compatible non-Wikidata artist. Same options as `link-new-products`. |
 | `refresh-metadata` | Refreshes metadata (description, image, aliases...) for artists already matched to Wikidata, and finds Wikidata matches for artists that don't have one yet. |
 | `embed-offer-names` | Encodes offer names for namesake artists' products (via `SentenceTransformer`) as input to `deduplicate`. |
 | `deduplicate` | Merges namesake artists whose product-offer-name embeddings are similar enough to be the same real-world artist. |
@@ -27,6 +28,8 @@ uv run python main.py linkage deduplicate --applicative-artist-filepath ... --ou
 | `constants.py` | Every flat linkage constant: product/artist/delta-table column keys, `ARTISTS_KEYS`/`PRODUCTS_KEYS`/`MUSIC_PLATFORM_IDS_KEYS`, the `Action`/`Comment`/`ProductToLinkStatus` enum-like classes, and the `artist_linkage_config.json`-derived artist-name filter list. |
 | `matching.py` | Wikidata category/namesake matching algorithms (`match_artists_with_wikidata`, `perform_wikidata_category_matching`, ...) and `create_artists_tables`/`match_artist_on_offer_names` — the only module here with dedicated unit tests. |
 | `product_linking.py` | Business logic behind `link-new-products`: which products to remove/link, building the artist-alias table, sanity checks. |
+| `remediation.py` | Business logic behind `remediate-product-links`: re-evaluating existing links by artist name / Wikidata alias (`get_links_to_remediate_df`) and dropping no-op link changes (`exclude_unchanged_links`). |
+| `wiki_link_preservation.py` | Temporary guard used by `remediate-product-links`: keeps a Wikidata artist link when it would be replaced by a compatible non-Wikidata artist (e.g. "Olivier Kempf" -> "Kempf"). |
 | `metadata_refresh.py` | Business logic behind `refresh-metadata`: retrieving Wikidata IDs, matching previously-unmatched artists, building the metadata-refresh delta, sanity checks. |
 | `deduplication.py` | Namesake detection (`get_namesakes`) and the dedup-matching logic behind `deduplicate`. |
 | `preprocessing_utils.py` | Artist-name cleaning/normalization shared across matching, dedup, and metadata refresh. |
@@ -40,6 +43,20 @@ don't install it) backs `evaluate`'s MLflow logging.
 ⚠️ **Known bug, not yet fixed** — see [`bug_alert.md`](../../bug_alert.md):
 `matching.py`'s `match_artists_with_wikidata` crashes instead of working when
 called with its documented default (`artist_with_wiki_ids_df=None`).
+
+## Order-insensitive name matching
+
+Titelive sends book contributors sometimes as "Firstname Lastname", sometimes
+as "Lastname Firstname", and we cannot know which order is used. We therefore
+decided to match artist names in an order-insensitive way: tokens are
+lowercased and sorted (`build_order_insensitive_name_key` in
+`preprocessing_utils.py`, `normalized_artist_name` in dbt
+`int_applicative__artist`), so "Verdon John" and "John Verdon" match.
+
+This is a deliberate trade-off. A few artists may be linked to the wrong
+product when their swapped name matches another artist (e.g. "Martin Paul"
+vs "Paul Martin"). We accept these edge cases to link many more artists that
+would otherwise be missed because of the name order.
 
 ## Dependencies
 

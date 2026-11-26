@@ -16,5 +16,7 @@ select
     user_has_enabled_marketing_push,
     user_subscribed_themes,
     is_theme_subscribed,
-    user_category
+    user_category,
+    user_suspension_reason,
+    user_suspension_date
 from {{ ref("int_global__user") }}

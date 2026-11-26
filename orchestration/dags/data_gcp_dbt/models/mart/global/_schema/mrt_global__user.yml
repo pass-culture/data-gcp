@@ -66,3 +66,9 @@ models:
       - name: user_category
         description: '{{ doc("column__user_category") }}'
         data_type: STRING
+      - name: user_suspension_reason
+        description: '{{ doc("column__user_suspension_reason") }}'
+        data_type: STRING
+      - name: user_suspension_date
+        description: '{{ doc("column__user_suspension_date") }}'
+        data_type: DATE

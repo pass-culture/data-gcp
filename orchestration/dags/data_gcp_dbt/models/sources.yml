@@ -37,6 +37,7 @@ sources:
       - name: adage_involved_student
       - name: allocine_movie
       - name: applicative_database_accessibility_provider
+      - name: applicative_database_activation_code
       - name: applicative_database_action_history
       - name: applicative_database_address
       - name: applicative_database_allocine_pivot

@@ -14,6 +14,7 @@ offerer_tag_mapping: id, offererId, tagId
 public.accessibility_provider: externalAccessibilityData, externalAccessibilityId, id, lastUpdateAtProvider, venueId
 public.achievement: bookingId, id, name, seenDate, unlockedDate, userId
 public.action_history: actionDate, actionType, authorUserId, comment, id, jsonData, offererId, userId, venueId
+public.activation_code: bookingId, expirationDate, id, stockId
 public.address: banId, city, departmentCode, id, inseeCode, latitude, longitude, postalCode, street
 public.allocine_pivot: id, internalId, theaterId, venueId
 public.allocine_venue_provider: id, isDuo, quantity
@@ -26,7 +27,7 @@ public.beneficiary_fraud_check: dateCreated, eligibilityType, id, reason, reason
 public.beneficiary_fraud_review: authorId, dateReviewed, eligibilityType, id, reason, review, userId
 public.beneficiary_import: applicationId, beneficiaryId, id, source, sourceId
 public.beneficiary_import_status: authorId, beneficiaryImportId, date, detail, id, status
-public.booking: amount, cancellationDate, cancellationReason, dateCreated, dateUsed, depositId, id, offererId, priceCategoryLabel, quantity, reimbursementDate, status, stockId, usedRecreditType, userId, venueId
+public.booking: amount, cancellationDate, cancellationReason, dateCreated, dateUsed, depositId, id, offererId, priceCategoryLabel, quantity, reimbursementDate, status, stockId, usedRecreditType, userId, validationAuthorType, venueId
 public.booking_finance_incident: beneficiaryId, bookingId, collectiveBookingId, id, incidentId, newTotalAmount
 public.boost_cinema_details: cinemaProviderPivotId, cinemaUrl, id
 public.cashflow: amount, batchId, creationDate, id, status

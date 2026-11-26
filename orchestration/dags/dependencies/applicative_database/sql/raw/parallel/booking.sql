@@ -18,4 +18,5 @@ SELECT
     ,"priceCategoryLabel" AS price_category_label
     , "reimbursementDate" AS booking_reimbursement_date
     , "usedRecreditType" AS booking_used_recredit_type
+    , CAST("validationAuthorType" AS varchar(255)) AS booking_validation_author_type
 FROM public.booking

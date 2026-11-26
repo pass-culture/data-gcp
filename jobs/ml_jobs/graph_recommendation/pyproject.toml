@@ -34,6 +34,8 @@ dependencies = [
 
 
 [tool.uv]
+# source-only on PyPI, built from the locked sdist (hash in uv.lock)
+no-binary-package = ["scikit-surprise"]
 environments = [
     "sys_platform == 'darwin'",
     "sys_platform == 'linux'",

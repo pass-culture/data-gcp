@@ -58,7 +58,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "${{ inputs.JOB_PATH }}/uv.lock"
       - name: "Install Python requirements"
-        run: uv sync --all-extras
+        run: uv sync --locked --no-build --all-extras
       - name: "Install passdirector"
         uses: pass-culture/common-workflows/actions/setup-passdirector@b470d76b19d7f3ebcda367f5e17484228021d388 # setup-passdirector/v1.0.0
         with:
@@ -66,7 +66,7 @@ jobs:
           github_app_id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
           github_app_private_key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
       - name: "Run tests"
-        run: uv run pytest tests
+        run: uv run --locked --no-build pytest tests
         env:
           PYTHONPATH: "."
       - name: "Post to a Slack channel"

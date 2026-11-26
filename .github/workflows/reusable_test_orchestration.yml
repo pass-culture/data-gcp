@@ -53,7 +53,7 @@ jobs:
       - name: "Install uv"
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: "Install Python requirements"
-        run: uv sync
+        run: uv sync --locked --no-build
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed" # v2
         with:
@@ -74,8 +74,8 @@ jobs:
           GCLOUD_PROJECT: "passculture-data-ehp"
         run: |
           export PYTHONPATH=$PYTHONPATH:./dags
-          uv run airflow db migrate
-          uv run pytest tests
+          uv run --locked --no-build airflow db migrate
+          uv run --locked --no-build pytest tests
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}
         env:

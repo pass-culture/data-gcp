@@ -65,7 +65,7 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Install Default Python requirements for root project
-        run: uv sync
+        run: uv sync --locked --no-build
 
       - name: "Authenticate with Google Cloud"
         uses: "google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed" # v2
@@ -96,7 +96,7 @@ jobs:
         env:
           DBT_TARGET_PATH: "target/"
           DBT_PROFILES_DIR: "."
-        run: uv run dbt deps
+        run: uv run --locked --no-build dbt deps
       # - name: "Sqlfluff format"
       #   working-directory: "./orchestration/dags/data_gcp_dbt/"
       #   env:
@@ -120,7 +120,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: uv run dbt compile --profile CI --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+        run: uv run --locked --no-build dbt compile --profile CI --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Build DBT seeds for unit tests"
         working-directory: ${{ env.DBT_FOLDER }}
         env:
@@ -130,7 +130,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
-          uv run dbt seed -s "tag:unit_test" \
+          uv run --locked --no-build dbt seed -s "tag:unit_test" \
           --profile CI --target "$ENV_SHORT_NAME" \
           --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run seed test for unit tests"
@@ -142,7 +142,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
-          uv run dbt test -s "tag:unit_test" \
+          uv run --locked --no-build dbt test -s "tag:unit_test" \
           --profile CI --target "$ENV_SHORT_NAME" \
           --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: "Run modified models & 1st order childrens"
@@ -155,7 +155,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           BASE_REF: ${{ github.base_ref }}
-        run: uv run .github/workflows/scripts/run_dbt_changed_models.sh "$BASE_REF" orchestration/dags/data_gcp_dbt
+        run: uv run --locked --no-build .github/workflows/scripts/run_dbt_changed_models.sh "$BASE_REF" orchestration/dags/data_gcp_dbt
       - name: "Run modified tests"
         if: steps.run-changed-models.outputs.should_run_tests == 'true'
         working-directory: ${{ env.DBT_FOLDER }}
@@ -167,7 +167,7 @@ jobs:
           CI_SEVERITY: "warn"
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
         run: |
-          uv run dbt test --store-failures -s "state:modified" \
+          uv run --locked --no-build dbt test --store-failures -s "state:modified" \
           --exclude "test_name:relationships" "tag:elementary" "config.materialized:incremental" \
           --profile CI --target "$ENV_SHORT_NAME" --defer \
           --state env-run-artifacts --favor-state \
@@ -180,7 +180,7 @@ jobs:
           DBT_PROFILES_DIR: "."
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
-        run: uv run dbt docs generate --profile CI --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+        run: uv run --locked --no-build dbt docs generate --profile CI --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
 
       - name: Get changed files
         id: files_changes
@@ -192,7 +192,7 @@ jobs:
           ALL_CHANGED_FILES: ${{ steps.files_changes.outputs.all_changed_files }}
         run: |
           echo "${ALL_CHANGED_FILES}"
-          uv run pre-commit run --files "${ALL_CHANGED_FILES}" --config .pre-commit-ci-dbt-config.yaml
+          uv run --locked --no-build pre-commit run --files "${ALL_CHANGED_FILES}" --config .pre-commit-ci-dbt-config.yaml
 
       - name: "Post to a Slack channel"
         if: ${{ inputs.NOTIF_CHANNEL_ID != '' && failure() }}

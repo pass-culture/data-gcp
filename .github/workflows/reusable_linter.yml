@@ -50,7 +50,7 @@ jobs:
           github_app_id: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_ID }}
           github_app_private_key: ${{ secrets.PASSCULTURE_GITHUB_ACTION_APP_PRIVATE_KEY }}
       - name : "Install linters (Ruff & sqlfmt)"
-        run: uv sync
+        run: uv sync --locked --no-build
       - name: "Run linter (Ruff)"
         run: make ruff_check
       - name: "Run sql linter (sqlfmt)"

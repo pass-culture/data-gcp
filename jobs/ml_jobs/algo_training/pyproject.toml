@@ -71,6 +71,8 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # see https://pypi.org/project/flake8-type-checking/ for flake8-type-checking documentation
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
 [tool.uv]
+# source-only on PyPI, built from the locked sdist (hash in uv.lock)
+no-binary-package = ["scikit-surprise"]
 environments = [
     "sys_platform == 'darwin' and python_full_version < '3.12'",
     "sys_platform == 'linux'",

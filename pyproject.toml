@@ -53,6 +53,8 @@ dev = [
 ]
 
 [tool.uv]
+# source-only on PyPI, built from the locked sdist (hash in uv.lock)
+no-binary-package = ["grapheme", "python-nvd3", "ratelimit"]
 default-groups = ["airflow", "dbt", 'dev', 'docs']
 constraint-dependencies = [
   "aiohttp >= 3.14.3", # GHSA-cq5v-8q36-5273, and related aiohttp advisories

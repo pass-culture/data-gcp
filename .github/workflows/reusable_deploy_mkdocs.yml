@@ -66,7 +66,7 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
       - name: Install Default Python requirements
-        run: uv sync
+        run: uv sync --locked --no-build
       - name: "parse dbt project"
         working-directory: "."
         env:
@@ -76,8 +76,8 @@ jobs:
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           IS_CI: "true"
         run: |
-          uv run dbt deps --project-dir "$DBT_FOLDER"
-          uv run dbt parse --project-dir "$DBT_FOLDER" --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
+          uv run --locked --no-build dbt deps --project-dir "$DBT_FOLDER"
+          uv run --locked --no-build dbt parse --project-dir "$DBT_FOLDER" --target "$ENV_SHORT_NAME" --vars "{'ENV_SHORT_NAME':'$ENV_SHORT_NAME'}"
       - name: Build MkDocs site
         working-directory: "."
         env:
@@ -86,7 +86,7 @@ jobs:
           ENV_SHORT_NAME: ${{ inputs.ENV_SHORT_NAME }}
           APPLICATIVE_EXTERNAL_CONNECTION_ID: ${{ inputs.APPLICATIVE_EXTERNAL_CONNECTION_ID }}
           IS_CI: "true"
-        run: uv run mkdocs build
+        run: uv run --locked --no-build mkdocs build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4

@@ -69,7 +69,7 @@ COPY uv.lock pyproject.toml ./
 ENV PATH="${AIRFLOW_USER_HOME}/.venv/bin:$PATH"
 
 # Force UV_CERT_BUNDLE again at the command level to ensure 'airflow' user sees it
-RUN uv sync --frozen --only-group airflow
+RUN uv sync --frozen --no-build --only-group airflow
 
 ################################
 ## Stage 3 Builder with proxy ##

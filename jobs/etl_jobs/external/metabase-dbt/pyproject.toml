@@ -57,6 +57,8 @@ runtime-evaluated-base-classes = ["pydantic.BaseModel"]
 # see https://beta.ruff.rs/docs/settings/#flake8-type-checking-runtime-evaluated-base-classes for ruff documentation
 
 [tool.uv]
+# pandas 2.2.2 has no Python 3.13 wheel on PyPI: built from the locked sdist (hash in uv.lock)
+no-binary-package = ["pandas"]
 constraint-dependencies = [
     "certifi >= 2026.10.18", # certifi advisory
     "cryptography >= 48.0.1", # GHSA-537c-gmf6-5ccf,

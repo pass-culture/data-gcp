@@ -14,6 +14,7 @@ select
     is_synchronised,
     offer_name,
     offer_description,
+    offer_withdrawal_details,
     offer_category_id,
     last_stock_price,
     offer_creation_date,

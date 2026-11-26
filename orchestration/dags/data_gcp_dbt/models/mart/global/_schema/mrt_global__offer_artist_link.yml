@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: mrt_global__offer_artist_link
+    description: '{{ doc("description__mrt_global__offer_artist_link") }}'
+    columns:
+      - name: offer_artist_link_id
+        description: '{{ doc("column__offer_artist_link_id") }}'
+        data_type: INT64
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - unique:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+      - name: offer_id
+        description: '{{ doc("column__offer_id") }}'
+        data_type: STRING
+      - name: artist_id
+        description: '{{ doc("column__offer_artist_link_artist_id") }}'
+        data_type: STRING
+      - name: artist_type
+        description: '{{ doc("column__artist_link_artist_type") }}'
+        data_type: STRING
+      - name: artist_name
+        description: '{{ doc("column__offer_artist_link_artist_name") }}'
+        data_type: STRING

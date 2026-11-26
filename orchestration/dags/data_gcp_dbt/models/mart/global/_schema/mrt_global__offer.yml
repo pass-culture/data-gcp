@@ -103,7 +103,7 @@ models:
         description: '{{ doc("column__offer_is_active") }}'
         data_type: BOOLEAN
       - name: offer_validation
-        description: '{{ doc("column__offer_validation") }}'
+        description: '{{ doc("column__global_offer_validation") }}'
         data_type: STRING
       - name: author
         description: '{{ doc("column__author") }}'

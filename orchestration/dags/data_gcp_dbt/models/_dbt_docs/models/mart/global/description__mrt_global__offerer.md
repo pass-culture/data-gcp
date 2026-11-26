@@ -15,7 +15,7 @@ The `mrt_global__offerer` table aims to list all the offerer (identifiable by a 
 \
 **Business Rules**
 - Only active offerer (is_active = TRUE)
-- Only offerer approved through certification (validation_status = 'VALIDATED')
+- Only offerer approved through certification (validation status VALIDATED): new, pending, rejected and closed offerers are excluded
 - All activation statuses (including offerer that have never published an offer)
 
 

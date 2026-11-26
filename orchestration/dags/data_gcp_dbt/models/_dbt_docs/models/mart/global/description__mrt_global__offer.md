@@ -8,6 +8,8 @@ description: Description of the `mrt_global__offer` table.
 
 The `mrt_global__offer` table is designed to store comprehensive information about offer nor product metadata.
 
+Business rules: only approved offers, attached to a venue, of validated offerers. Deactivated offers (`is_active` = FALSE) are kept.
+
 {% enddocs %}
 
 

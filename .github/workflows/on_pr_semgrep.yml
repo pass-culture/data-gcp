@@ -22,4 +22,4 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          semgrep scan --config=p/security-audit --baseline-commit "$BASE_SHA"
+          semgrep scan --config auto --config p/security-audit --baseline-commit "$BASE_SHA" --error

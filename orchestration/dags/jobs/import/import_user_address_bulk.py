@@ -7,10 +7,12 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from common import macros
 from common.alerts.task_fail import task_fail_slack_alert
 from common.config import (
+    BIGQUERY_LOCATION,
     BIGQUERY_RAW_DATASET,
     DAG_FOLDER,
     DAG_TAGS,
     ENV_SHORT_NAME,
+    ETL_IMPERSONATION_SA,
     GCP_PROJECT_ID,
 )
 from common.operators.kubernetes import (
@@ -80,7 +82,11 @@ with DAG(
 
     @task
     def check_source_count(**context):
-        bq_hook = BigQueryHook(location="europe-west1", use_legacy_sql=False)
+        bq_hook = BigQueryHook(
+            location=BIGQUERY_LOCATION,
+            use_legacy_sql=False,
+            impersonation_chain=ETL_IMPERSONATION_SA,
+        )
         bq_client = bq_hook.get_client()
         dataset_id = context["params"]["source_dataset_id"]
         table_name = context["params"]["source_table_name"]

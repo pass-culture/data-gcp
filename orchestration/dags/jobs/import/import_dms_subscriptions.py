@@ -16,6 +16,7 @@ from common.config import (
     DAG_TAGS,
     DE_BIGQUERY_DATA_IMPORT_BUCKET_NAME,
     ENV_SHORT_NAME,
+    ETL_IMPERSONATION_SA,
     GCP_PROJECT_ID,
 )
 from common.operators.kubernetes import (
@@ -165,6 +166,7 @@ with DAG(
             {"name": "update_date", "type": "INT64"},
         ],
         write_disposition="WRITE_APPEND",
+        impersonation_chain=ETL_IMPERSONATION_SA,
     )
 
     import_dms_pro_to_bq = GCSToBigQueryOperator(
@@ -204,6 +206,7 @@ with DAG(
             {"name": "update_date", "type": "INT64"},
         ],
         write_disposition="WRITE_APPEND",
+        impersonation_chain=ETL_IMPERSONATION_SA,
     )
 
     end = EmptyOperator(task_id="end")

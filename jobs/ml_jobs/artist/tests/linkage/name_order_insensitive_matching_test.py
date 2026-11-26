@@ -1,8 +1,8 @@
 """Tests for the word-order-insensitive artist name matching key.
 
-Titelive lists contributors as "Lastname Firstname" (e.g. "Verdon John",
-"Grafton Sue") while existing artists / Wikidata aliases are stored as
-"Firstname Lastname". These tests make sure both forms are matched together.
+Titelive sends contributors sometimes as "Firstname Lastname", sometimes as
+"Lastname Firstname" (e.g. "Verdon John", "Grafton Sue"), with no way to know
+which order is used. These tests make sure both forms are matched together.
 """
 
 import pandas as pd

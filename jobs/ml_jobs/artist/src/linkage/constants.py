@@ -20,7 +20,8 @@ ID_KEY = "id"  # apparently unused anywhere in the codebase currently
 PRODUCT_ID_KEY = "offer_product_id"
 ARTIST_NAME_TO_MATCH_KEY = "artist_name_to_match"
 # Word-order-insensitive matching key: tokens of artist_name_to_match sorted
-# alphabetically, so "Verdon John" (Titelive) matches "John Verdon".
+# alphabetically, so "Verdon John" matches "John Verdon" (Titelive sends names
+# in either order, without telling which one).
 ARTIST_NAME_SORTED_TO_MATCH_KEY = "artist_name_sorted_to_match"
 ARTIST_TYPE_KEY = "artist_type"
 RAW_ALIAS_KEY = "raw_alias"

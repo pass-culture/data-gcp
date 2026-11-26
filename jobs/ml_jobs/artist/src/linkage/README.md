@@ -44,6 +44,20 @@ don't install it) backs `evaluate`'s MLflow logging.
 `matching.py`'s `match_artists_with_wikidata` crashes instead of working when
 called with its documented default (`artist_with_wiki_ids_df=None`).
 
+## Order-insensitive name matching
+
+Titelive sends book contributors sometimes as "Firstname Lastname", sometimes
+as "Lastname Firstname", and we cannot know which order is used. We therefore
+decided to match artist names in an order-insensitive way: tokens are
+lowercased and sorted (`build_order_insensitive_name_key` in
+`preprocessing_utils.py`, `normalized_artist_name` in dbt
+`int_applicative__artist`), so "Verdon John" and "John Verdon" match.
+
+This is a deliberate trade-off. A few artists may be linked to the wrong
+product when their swapped name matches another artist (e.g. "Martin Paul"
+vs "Paul Martin"). We accept these edge cases to link many more artists that
+would otherwise be missed because of the name order.
+
 ## Dependencies
 
 Optional `linkage` extra: `matplotlib`, `mlflow`, `networkx`, `rapidfuzz`,

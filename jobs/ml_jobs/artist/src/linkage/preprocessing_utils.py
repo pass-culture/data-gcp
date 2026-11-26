@@ -434,12 +434,19 @@ def build_order_insensitive_name_key(name: str | None) -> str | None:
     """
     Build a word-order-insensitive key from an (already extracted) artist name.
 
-    Needed since Titelive lists contributors as "Lastname Firstname".
+    Needed since Titelive sends contributors sometimes as "Firstname Lastname",
+    sometimes as "Lastname Firstname", with no way to know which order is used.
 
     Tokens are split on whitespace, hyphens and dots, lowercased and sorted
     alphabetically, so that "Lastname Firstname" and "Firstname Lastname" share
     the same key (e.g. "verdon john" and "john verdon" -> "john verdon").
     Mirrors `normalized_artist_name` in dbt `int_applicative__artist`.
+
+    This is a deliberate trade-off: a few artists may be linked to the wrong
+    product when their swapped name matches another artist (e.g. "Martin Paul"
+    vs "Paul Martin"). We accept these edge cases to link the many artists
+    that would otherwise be missed because of the name order (see the linkage
+    README, "Order-insensitive name matching").
 
     Args:
         name: The artist name (typically the output of `extract_artist_name`).

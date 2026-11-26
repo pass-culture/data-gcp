@@ -47,7 +47,6 @@ dev = [
 
 ## uv
 [tool.uv]
-# source-only on PyPI, built from the locked sdist (hash in uv.lock)
 no-binary-package = ["flask-testing"]
 environments = [
     "sys_platform == 'darwin'",

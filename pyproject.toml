@@ -53,7 +53,6 @@ dev = [
 ]
 
 [tool.uv]
-# source-only on PyPI, built from the locked sdist (hash in uv.lock)
 no-binary-package = ["grapheme", "python-nvd3", "ratelimit"]
 default-groups = ["airflow", "dbt", 'dev', 'docs']
 constraint-dependencies = [

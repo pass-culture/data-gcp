@@ -75,7 +75,6 @@ follow_imports = "normal"
 ignore_missing_imports = true
 
 [tool.uv]
-# source-only on PyPI, built from the locked sdist (hash in uv.lock)
 no-binary-package = ["brevo-python"]
 constraint-dependencies = [
     "certifi >= 2026.10.18", # certifi advisory

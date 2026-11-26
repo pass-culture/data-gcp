@@ -84,12 +84,6 @@ GCE_SA = os.environ.get("GCE_SA", f"algo-training-{ENV_SHORT_NAME}")
 
 
 def _default_etl_impersonation_sa() -> str | None:
-    """GCP service account (email) impersonated by BigQuery operators running
-    directly on the Airflow worker (no pod -> no Kubernetes service_account_name).
-    New datacenter (pc-data-*): the ETL SA bound to the ETL Kubernetes SA.
-    Old datacenter: None -> no impersonation, the worker's own identity is used.
-    This function will be removed once all projects are migrated to the new datacenter.
-    """
     if GCP_PROJECT_ID.startswith("pc-data-"):
         return f"sa-airflow-dags-rcs-{ENV_SHORT_NAME}-etl@{GCP_PROJECT_ID}.iam.gserviceaccount.com"
     return None

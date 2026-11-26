@@ -2,6 +2,12 @@
 
 Shared agent skills: one folder per skill, with a `SKILL.md` and optional `scripts/` and `references/`.
 
+## Writing a skill
+
+Before creating or editing a `SKILL.md`, read Anthropic's
+[skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
+Keep this link here, not in a `SKILL.md`: invoking a skill must not load it.
+
 ## Scripts
 
 Scripts in `<skill>/scripts/` are read by humans in review. Keep them clear:

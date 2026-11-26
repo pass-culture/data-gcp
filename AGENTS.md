@@ -71,7 +71,7 @@ pre-commit run --files <changed files>
 
 ## Skills
 
-Shared skills live in `.agents/skills/`; read `.agents/skills/AGENTS.md` before writing or editing their scripts
+Shared skills live in `.agents/skills/`; read `.agents/skills/AGENTS.md` before writing or editing a skill or its scripts
 (Python, typed, documented, with doctests):
 
 - `data-pr-workflow`: branch, commit and PR conventions.

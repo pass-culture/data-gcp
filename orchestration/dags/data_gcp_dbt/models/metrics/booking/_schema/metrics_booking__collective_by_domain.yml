@@ -2,10 +2,28 @@ version: 2
 models:
   - name: metrics_booking__collective_by_domain
     description: '{{ doc("description__metrics_booking__collective_by_domain") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - scholar_year
+              - educational_domain_name
+              - institution_region_name
+              - institution_region_code
+              - institution_academy_name
+              - institution_department_name
+              - institution_department_code
+              - institution_epci_name
+              - institution_epci_code
+              - institution_city_code
+              - institution_municipality_code
     columns:
       - name: partition_month
         description: '{{ doc("column__partition_month") }}'
         data_type: DATE
+        data_tests:
+          - not_null
 
       - name: scholar_year
         description: '{{ doc("column__scholar_year") }}'

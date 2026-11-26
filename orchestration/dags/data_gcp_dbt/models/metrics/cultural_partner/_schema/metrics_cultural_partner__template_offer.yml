@@ -2,10 +2,25 @@ version: 2
 models:
   - name: metrics_cultural_partner__template_offer
     description: '{{ doc("description__metrics_cultural_partner__template_offer") }}'
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - partner_region_name
+              - partner_region_code
+              - partner_academy_name
+              - partner_department_name
+              - partner_department_code
+              - partner_epci_code
+              - partner_city_code
+              - partner_municipality_code
     columns:
       - name: partition_month
         description: '{{ doc("column__partition_month") }}'
         data_type: DATE
+        data_tests:
+          - not_null
 
       - name: partner_region_name
         description: '{{ doc("column__partner_region_name") }}'

@@ -3,9 +3,23 @@ version: 2
 models:
   - name: metrics_institution__activity
     description: "{{ doc('description__metrics_institution__activity') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - partition_month
+              - scholar_year
+              - institution_region_name
+              - institution_academy_name
+              - institution_department_name
+              - institution_epci_code
+              - institution_city_code
+              - institution_municipality_code
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
       - name: scholar_year
         description: "{{ doc('column__scholar_year') }}"
       - name: institution_region_name

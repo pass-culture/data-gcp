@@ -3,9 +3,30 @@ version: 2
 models:
   - name: metrics_diversity__by_category
     description: "{{ doc('description__metrics_diversity__by_category') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - deposit_expiration_month
+              - region_name
+              - region_code
+              - department_name
+              - department_code
+              - epci_name
+              - epci_code
+              - city_name
+              - city_code
+              - municipality_label
+              - municipality_code
+              - is_in_qpv
+              - macro_density_label
+              - micro_density_label
+              - offer_category_id
     columns:
       - name: deposit_expiration_month
         description: "{{ doc('column__deposit_expiration_month') }}"
+        data_tests:
+          - not_null
       - name: is_statistic_secret
         description: "{{ doc('column__is_statistic_secret') }}"
       - name: region_name

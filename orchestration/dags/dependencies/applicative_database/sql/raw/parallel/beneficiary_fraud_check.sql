@@ -1,6 +1,7 @@
 SELECT
     id
     , datecreated
+    , dateupdated
     , user_id
     , type
     , regexp_replace(reason, \'\\(.*?\\)\', \'(XXX)\') as reason
@@ -13,6 +14,7 @@ FROM (
     SELECT
         CAST("id" AS varchar(255)) AS id
         , "dateCreated" AS datecreated
+        , "updatedAt" AS dateupdated
         , CAST("userId" AS varchar(255)) AS user_id
         , type AS type
         , "reason" AS reason

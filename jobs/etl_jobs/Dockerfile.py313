@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # install gcloud
 RUN mkdir -p ${AIRFLOW_USER_HOME} \
-    && curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
+    && curl --proto '=https' --tlsv1.2 -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GCLOUD_VERSION} \
     && tar xf ${GCLOUD_VERSION} \
     && mv google-cloud-sdk ${AIRFLOW_USER_HOME}/ \
     && rm ${GCLOUD_VERSION}

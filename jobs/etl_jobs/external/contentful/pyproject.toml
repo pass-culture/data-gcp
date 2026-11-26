@@ -77,6 +77,7 @@ log_cli = true
 log_cli_level = "INFO"
 
 [tool.uv]
+no-binary-package = ["contentful"]
 constraint-dependencies = [
     "certifi >= 2026.10.18", # certifi advisory
     "cryptography >= 50.0.0", # GHSA-g6cj-pr64-35w5, GHSA-537c-gmf6-5ccf,

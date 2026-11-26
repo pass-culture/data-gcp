@@ -12,7 +12,7 @@ ENV UV_NO_CACHE=1
 # Copy dependency files then install dependencies in a virtual environment
 WORKDIR /base_app
 COPY ./pyproject.toml ./uv.lock /base_app/
-RUN uv venv && uv sync --locked
+RUN uv venv && uv sync --locked --no-build
 
 # Copy application code and metadata
 COPY ./app /base_app/app

@@ -53,6 +53,7 @@ dev = [
 ]
 
 [tool.uv]
+no-binary-package = ["grapheme", "python-nvd3", "ratelimit"]
 default-groups = ["airflow", "dbt", 'dev', 'docs']
 constraint-dependencies = [
   "aiohttp >= 3.14.3", # GHSA-cq5v-8q36-5273, and related aiohttp advisories

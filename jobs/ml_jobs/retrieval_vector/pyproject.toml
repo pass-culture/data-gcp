@@ -47,6 +47,7 @@ dev = [
 
 ## uv
 [tool.uv]
+no-binary-package = ["flask-testing"]
 environments = [
     "sys_platform == 'darwin'",
     "sys_platform == 'linux'",

@@ -3,77 +3,132 @@ version: 2
 models:
   - name: metrics_diversity
     description: "{{ doc('description__metrics_diversity') }}"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - deposit_expiration_month
+              - region_name
+              - region_code
+              - department_name
+              - department_code
+              - epci_name
+              - epci_code
+              - city_name
+              - city_code
+              - municipality_label
+              - municipality_code
+              - is_in_qpv
+              - macro_density_label
+              - micro_density_label
     columns:
       - name: deposit_expiration_month
         description: "{{ doc('column__deposit_expiration_month') }}"
+        data_type: DATE
+        data_tests:
+          - not_null
       - name: is_statistic_secret
         description: "{{ doc('column__is_statistic_secret') }}"
+        data_type: BOOLEAN
       - name: region_name
         description: "{{ doc('column__region_name') }}"
+        data_type: STRING
       - name: region_code
         description: "{{ doc('column__region_code') }}"
+        data_type: INT64
       - name: department_name
         description: "{{ doc('column__department_name') }}"
+        data_type: STRING
       - name: department_code
         description: "{{ doc('column__department_code') }}"
+        data_type: STRING
       - name: epci_name
         description: "{{ doc('column__user_epci') }}"
+        data_type: STRING
       - name: epci_code
         description: "{{ doc('column__user_epci_code') }}"
+        data_type: STRING
       - name: city_name
         description: "{{ doc('column__user_city') }}"
+        data_type: STRING
       - name: city_code
         description: "{{ doc('column__user_city_code') }}"
+        data_type: STRING
       - name: municipality_label
         description: "{{ doc('column__user_municipality_label') }}"
+        data_type: STRING
       - name: municipality_code
         description: "{{ doc('column__municipality_code') }}"
+        data_type: STRING
       - name: is_in_qpv
         description: "{{ doc('column__user_is_in_qpv') }}"
+        data_type: BOOLEAN
       - name: macro_density_label
         description: "{{ doc('column__user_macro_density_label') }}"
+        data_type: STRING
       - name: micro_density_label
         description: "{{ doc('column__user_density_label') }}"
+        data_type: STRING
       - name: total_expired_deposit_beneficiaries
         description: "{{ doc('column__metrics__total_expired_deposit_beneficiaries') }}"
+        data_type: INT64
       - name: total_1plus_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+        data_type: INT64
       - name: total_2plus_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+        data_type: INT64
       - name: total_3plus_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_3plus_category_booked_beneficiaries') }}"
+        data_type: INT64
       - name: total_4plus_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+        data_type: INT64
       - name: total_5plus_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_nplus_category_booked_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_0_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_0_10_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_10_20_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_20_30_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_30_40_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_40_50_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_50_60_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_60_70_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_70_80_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_80_90_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_spent_share_90_100_beneficiaries
         description: "{{ doc('column__metrics__total_spent_share_beneficiaries') }}"
+        data_type: INT64
       - name: total_deposit_amount_at_expiration
         description: "{{ doc('column__metrics__total_deposit_amount_at_expiration') }}"
+        data_type: NUMERIC
       - name: total_actual_amount_spent_at_expiration
         description: "{{ doc('column__metrics__total_actual_amount_spent_at_expiration') }}"
+        data_type: NUMERIC
       - name: total_distinct_venue_booked_at_expiration
         description: "{{ doc('column__metrics__total_distinct_venue_booked_at_expiration') }}"
+        data_type: INT64
       - name: cell_key_expired
         description: "{{ doc('column__cell_key') }}"
         data_type: INT64

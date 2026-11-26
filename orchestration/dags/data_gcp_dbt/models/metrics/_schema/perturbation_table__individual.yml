@@ -3,19 +3,37 @@ version: 2
 models:
   - name: perturbation_table__individual
     description: "Cell key perturbation table for individual (beneficiary) counts: maps each (count range, cell key range) pair to the noise added to the count on publication. See the statistical confidentiality reference."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - count_min
+              - count_max
+              - cell_key_min
+              - cell_key_max
     columns:
       - name: count_min
         description: "{{ doc('column__perturbation_table__count_min') }}"
         data_type: INT64
+        data_tests:
+          - not_null
       - name: count_max
         description: "{{ doc('column__perturbation_table__count_max') }}"
         data_type: INT64
+        data_tests:
+          - not_null
       - name: cell_key_min
         description: "{{ doc('column__perturbation_table__cell_key_min') }}"
         data_type: INT64
+        data_tests:
+          - not_null
       - name: cell_key_max
         description: "{{ doc('column__perturbation_table__cell_key_max') }}"
         data_type: INT64
+        data_tests:
+          - not_null
       - name: perturbation
         description: "{{ doc('column__perturbation_table__perturbation') }}"
         data_type: INT64
+        data_tests:
+          - not_null

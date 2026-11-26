@@ -19,115 +19,160 @@ models:
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
+        data_type: DATE
         data_tests:
           - not_null
 
       - name: region_name
         description: "{{ doc('column__region_name') }}"
+        data_type: STRING
 
       - name: region_code
         description: "{{ doc('column__region_code') }}"
+        data_type: INT64
 
       - name: department_name
         description: "{{ doc('column__department_name') }}"
+        data_type: STRING
 
       - name: department_code
         description: "{{ doc('column__department_code') }}"
+        data_type: STRING
 
       - name: epci_name
         description: "{{ doc('column__user_epci') }}"
+        data_type: STRING
 
       - name: epci_code
         description: "{{ doc('column__user_epci_code') }}"
+        data_type: STRING
 
       - name: city_name
         description: "{{ doc('column__user_city') }}"
+        data_type: STRING
 
       - name: city_code
         description: "{{ doc('column__user_city_code') }}"
+        data_type: STRING
 
       - name: municipality_label
         description: "{{ doc('column__user_municipality_label') }}"
+        data_type: STRING
 
       - name: municipality_code
         description: "{{ doc('column__municipality_code') }}"
+        data_type: STRING
         data_tests:
           - not_null
 
       - name: age_at_calculation
         description: "{{ doc('column__age_at_calculation') }}"
+        data_type: INT64
 
       - name: is_in_qpv
         description: "{{ doc('column__user_is_in_qpv') }}"
+        data_type: BOOLEAN
 
       - name: macro_density_label
         description: "{{ doc('column__user_macro_density_label') }}"
+        data_type: STRING
 
       - name: micro_density_label
         description: "{{ doc('column__user_density_label') }}"
+        data_type: STRING
 
       - name: total_actual_beneficiaries
         description: "{{ doc('column__metrics__total_actual_beneficiaries') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_beneficiaries
         description: "{{ doc('column__metrics__total_beneficiaries') }}"
+        data_type: INT64
         data_tests:
           - not_null
       - name: cell_key_beneficiaries
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_not_in_education
         description: "{{ doc('column__metrics__total_actual_beneficiaries_not_in_education') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_not_in_education
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_male
         description: "{{ doc('column__metrics__total_actual_beneficiaries_male') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_male
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_female
         description: "{{ doc('column__metrics__total_actual_beneficiaries_female') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_female
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_without_civility
         description: "{{ doc('column__metrics__total_actual_beneficiaries_without_civility') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_without_civility
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_apprenti
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_apprenti
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_chomeur
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_chomeur
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_volontaire
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_volontaire
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_alternant
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_alternant
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_employe
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_employe
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_etudiant
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_etudiant
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_lyceen
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_lyceen
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_collegien
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_collegien
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64
       - name: total_actual_beneficiaries_activity_inactif
         description: "{{ doc('column__metrics__total_actual_beneficiaries_activity') }}"
+        data_type: INT64
       - name: cell_key_actual_beneficiaries_activity_inactif
         description: "{{ doc('column__cell_key') }}"
+        data_type: INT64

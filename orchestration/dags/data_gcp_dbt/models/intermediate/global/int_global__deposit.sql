@@ -102,6 +102,7 @@ select
     d.total_recredit,
     d.first_recredit_17_date,
     d.first_recredit_18_date,
+    d.first_bonus_recredit_date,
     d.deposit_credit_17_date,
     d.deposit_credit_18_date,
     d.deposit_has_credit_before_18,
@@ -112,6 +113,8 @@ select
     bgd.first_paid_booking_type,
     bgd.first_paid_booking_date,
     coalesce(d.total_recredit_amount, 0) as total_recredit_amount,
+    coalesce(d.total_bonus_recredit_amount, 0) as total_bonus_recredit_amount,
+    coalesce(d.total_bonus_recredit, 0) as total_bonus_recredit,
     coalesce(bgd.total_actual_amount_spent, 0) as total_actual_amount_spent,
     coalesce(bgd.total_theoretical_amount_spent, 0) as total_theoretical_amount_spent,
     coalesce(

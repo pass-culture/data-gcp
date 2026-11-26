@@ -138,6 +138,25 @@ jobs:
           fi
           uvx --no-build --from "cassis-cli==3.3.0" cassis dbt push target
 
+      # The main Cassis project has no warehouse connection: data-ontology's nightly cassis-schema-refresh pushes its
+      # source schema (and with it the column descriptions the agent reads) from this DDL. Names, types and
+      # descriptions only, all already public in this repository. Never blocks the deploy.
+      - name: "Write the schema DDL for Cassis"
+        if: inputs.ENV_SHORT_NAME == 'prod'
+        continue-on-error: true
+        working-directory: "./orchestration/dags/data_gcp_dbt/"
+        run: python3 scripts/catalog_to_ddl.py target/catalog.json > target/cassis_schema.sql
+
+      - name: "Publish the schema DDL for Cassis"
+        if: inputs.ENV_SHORT_NAME == 'prod'
+        continue-on-error: true
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6
+        with:
+          name: cassis-schema-ddl
+          path: orchestration/dags/data_gcp_dbt/target/cassis_schema.sql
+          retention-days: 30
+          if-no-files-found: ignore
+
       - name: "Generate dbt colibri documentation"
         working-directory: "./orchestration/dags/data_gcp_dbt/"
         env:

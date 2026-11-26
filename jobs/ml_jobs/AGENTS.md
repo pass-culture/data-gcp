@@ -8,7 +8,6 @@ Owned by DS. Each folder is an independent ML microservice, run by an Airflow DA
 |---|---|---|
 | `algo_training` | Train the Two-Tower recommendation model (TensorFlow, GPU) and deploy it to Vertex AI | yes |
 | `artist` | Link products to artists, enrich them with Wikidata, build artist similarity | yes |
-| `edito_semantic_search` | Semantic search API and tooling for editorial content | yes |
 | `endpoint_monitoring` | Monitoring tests for the recommendation endpoints | yes |
 | `event_linkage` | Group offers into events by image, name and description similarity (GPU) | yes |
 | `finance` | Pricing forecast for the finance team (Prophet) | yes |
@@ -68,7 +67,6 @@ It auto-commits, so ask the user to run it.
 
 - GPU dependencies are platform-specific: TensorFlow CUDA on Linux only (`algo_training`), PyTorch `cu128` index
   (`event_linkage`). Do not change indexes or pins without asking.
-- `edito_semantic_search` needs a `.env`, copied from `.env.template`.
 
 ## Never
 

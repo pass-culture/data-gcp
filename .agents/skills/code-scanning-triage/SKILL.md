@@ -23,9 +23,11 @@ Order of preference for each alert: **fix the code**, otherwise **inline suppres
 Ask the user for what they have not given:
 
 1. **Scope**, one per run, so that each PR goes to one team. Never pick it yourself:
-   - `ci`: `.github/`, reviewed by `@pass-culture/data-gcp-ci-owners`;
-   - `ds`: `jobs/ml_jobs/`, `orchestration/dags/jobs/ml/`, reviewed by `@pass-culture/data-science`;
-   - `de`: everything else, reviewed by `@pass-culture/data-engineering`.
+   - `ci`: `.github/` (CI owners);
+   - `ds`: `jobs/ml_jobs/`, `orchestration/dags/jobs/ml/` (DS);
+   - `de`: everything else (DE).
+
+   Reviewers: the scope's team, see "Map and ownership" in the root `AGENTS.md`.
 2. **Ticket**: e.g. `DE-1234`, `DS-123`, or `DE` / `DS` / `BSR` without a number.
 3. Optional filter: a rule (`--rule`) or a path (`--path`), to keep the PR small.
 
@@ -144,12 +146,8 @@ Never run a job's `main.py`, deploy or image build scripts for real: they reach 
 
 ## 7. Commit and open the PR
 
-One commit per rule, so that the reviewer can follow:
-
-```bash
-git add <files>
-git commit -m "fix(<area>): <fix or suppress> <rule short name> alerts" -m "<one line per alert: #number path: verdict, reason>"
-```
+One commit per rule, so that the reviewer can follow: subject `fix(<area>): <fix or suppress> <rule short name> alerts`,
+body with one line per alert (`#number path: verdict, reason`).
 
 Ask before pushing. Then use the [`data-pr-workflow`](../data-pr-workflow/SKILL.md) skill, with:
 

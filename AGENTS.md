@@ -21,6 +21,8 @@ Each area has its own `AGENTS.md`. Read the one closest to the files you touch.
 | `.agents/skills/` | | Shared agent skills and their scripts | `.agents/skills/AGENTS.md` |
 
 Owners come from `.github/CODEOWNERS`. Outside the user's own area, keep changes minimal and ask before refactoring.
+GitHub teams to request reviews from: DS `@pass-culture/data-science`, DE `@pass-culture/data-engineering`,
+CI owners `@pass-culture/data-gcp-ci-owners`.
 
 ## Python environments
 

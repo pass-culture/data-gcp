@@ -28,11 +28,11 @@ Rules are sorted by number of alerts, alerts by path and line.
 
 With ``--json``, one JSON object per alert and per line, with the fields of ``Alert``.
 
-Scopes follow the directory rules of .github/CODEOWNERS:
+Scopes follow the directory rules of .github/CODEOWNERS (teams: root AGENTS.md):
 
-    ci  .github/                                     @pass-culture/data-gcp-ci-owners
-    ds  jobs/ml_jobs/, orchestration/dags/jobs/ml/   @pass-culture/data-science
-    de  everything else                              @pass-culture/data-engineering
+    ci  .github/
+    ds  jobs/ml_jobs/, orchestration/dags/jobs/ml/
+    de  everything else
 """
 
 import argparse
@@ -48,6 +48,7 @@ Scope = Literal["ci", "ds", "de"]
 RawAlert = dict[str, Any]  # one alert of the GitHub API, see fetch_open_alerts
 RuleKey = tuple[str, str, str | None]  # (tool, rule id, severity)
 
+# Mirrors .github/CODEOWNERS; keep both in sync.
 # Checked in order; a path that matches no prefix belongs to "de".
 SCOPE_PREFIXES: dict[Scope, tuple[str, ...]] = {
     "ci": (".github/",),

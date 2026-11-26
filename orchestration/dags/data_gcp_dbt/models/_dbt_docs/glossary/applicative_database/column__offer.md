@@ -28,23 +28,20 @@ An offer is considered bookable if it meets the following criteria:
 3. **Offerer Validation**: The offerer who created the offer must be officially validated.
 {% enddocs %}
 
-{% docs column__offer_is_digital_goods %} Indicates if the offer includes digital goods. {% enddocs %}
+{% docs column__offer_is_digital_goods %} Indicates if the offer's subcategory is a digital good: its bookings count toward the digital share of the beneficiary's credit (streaming, e-books, online subscriptions, livestreams...). Set by the subcategory, not by the offer. Not the same as an online offer: some online subcategories, such as online meetings (`RENCONTRE_EN_LIGNE`) or distance sales, are not digital goods (see `offer_url`). {% enddocs %}
 {% docs column__offer_is_physical_goods %} Indicates if the offer includes physical goods. {% enddocs %}
-{% docs column__offer_is_event %} Indicates if the offer is an event. {% enddocs %}
+{% docs column__offer_is_event %} Indicates if the offer's subcategory is an event: a dated occurrence (show, screening, visit, workshop, meeting...) whose stocks carry a date. Set by the subcategory, not by the offer. Online events (livestreams, online meetings) are events too; combine with `offer_url` to tell online events from events held in a venue. {% enddocs %}
 {% docs column__offer_humanized_id %} Human-readable identifier for the offer used in various platforms. {% enddocs %}
 {% docs column__passculture_pro_url %} URL to the offer on PassCulture Pro. {% enddocs %}
 {% docs column__webapp_url %} URL to the offer on the web application. {% enddocs %}
 {% docs column__offer_subcategory_id %} Identifier for the subcategory of the offer. Determined by the cultural partner via a list of pre-set options. Each subcategory belongs to exactly one offer category (offer_category_id). {% enddocs %}
-{% docs column__offer_url %} URL to the offer. {% enddocs %}
+{% docs column__offer_url %} URL where the beneficiary accesses an online offer (streaming, download, online meeting...). Filled for the offers of online subcategories, NULL for offers that take place in or are collected from a venue. {% enddocs %}
 {% docs column__offer_is_national %} Indicates if the offer is available nationally. This Information is originally filled by pass Culture teams but is no longer used. It will be decommissioned soon. {% enddocs %}
 {% docs column__offer_is_numerical %} Indicates if the offer is digital (based on an url). {% enddocs %}
 {% docs column__offer_is_geolocated %} Indicates if the offer is geolocated. {% enddocs %}
-{% docs column__offer_is_active %} Indicates if the offer is active (the offer has been deactivated and is no longer visible in app). {% enddocs %}
-{% docs column__offer_validation %} Current status of the offer validation by internal teams. The offer may be:
-- "DRAFT" (yet to be published by the cultural partner)
-- "PENDING" (published, yet to be reviewed by the pass Culture Fraud team)
-- "VALIDATED" (validated by pass Culture fraud team, ready to be made available to users)
-- "REJECTED" (rejected and not made available to users) {% enddocs %}
+{% docs column__offer_is_active %} Indicates if the offer is active. FALSE when the offer has been deactivated (by its partner or by pass Culture): it is no longer visible nor bookable in the app. TRUE does not mean bookable: a bookable offer also needs available stock (`offer_is_bookable`). {% enddocs %}
+{% docs column__offer_validation %} Current status of the offer in the pass Culture validation workflow: a draft not yet published by the partner, published and pending review by the fraud team, approved (can be made available to users), or rejected (never made available). {% enddocs %}
+{% docs column__global_offer_validation %} Current status of the offer in the pass Culture validation workflow. The table keeps only approved offers, so the column is constant. {% enddocs %}
 {% docs column__author %} The offer's author (a book's author, a music's singer, a movie's director).{% enddocs %}
 {% docs column__performer %} Performers involved in this offer.{% enddocs %}
 {% docs column__stage_director %} Stage director, if applicable. {% enddocs %}

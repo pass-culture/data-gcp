@@ -1,7 +1,7 @@
 {% docs column__offerer_id %} Unique identifier of the offerer. {% enddocs %}
 {% docs column__offerer_name %} Name of the offerer. {% enddocs %}
 {% docs column__offerer_creation_date %} Date when the offerer was created. Equals to the registration date of the offerer on the professional portal. {% enddocs %}
-{% docs column__offerer_validation_date %} Date when the offerer was validated (validation_status = ‘VALIDATED’). {% enddocs %}
+{% docs column__offerer_validation_date %} Date when pass Culture validated the offerer. {% enddocs %}
 {% docs column__offerer_siren %} SIREN number of the offerer. {% enddocs %}
 {% docs column__offerer_humanized_id %} Unique identifier of the offerer used on Flaskadmin and Matomo. {% enddocs %}
 {% docs column__offerer_legal_unit_business_activity_code %} Business activity code of the legal unit of the offerer. {% enddocs %}
@@ -17,8 +17,8 @@
 {% docs column__offerer_dms_submitted_at %} Date when the offerer sumitted his first DMS record. {% enddocs %}
 {% docs column__offerer_is_reference_adage %} Indicates if the offerer is referenced in ADAGE (referencing, distinct from synchronisation: see is_synchro_adage). {% enddocs %}
 {% docs column__offerer_is_synchro_adage %} Indicates if the offerer is synchronized with adage. {% enddocs %}
-{% docs column__offerer_validation_status %} Validation status of the offerer. {% enddocs %}
-{% docs column__venue_offerer_validation_status %} Validation status of the offerer. The table keeps only venues of validated offerers, so the column is constant. {% enddocs %}
+{% docs column__offerer_validation_status %} Status of the offerer in the pass Culture validation workflow: new or pending (registered, not yet validated), validated, rejected, or closed (the offerer has ceased its activity). {% enddocs %}
+{% docs column__venue_offerer_validation_status %} Validation status of the offerer. The table keeps only venues of validated offerers, so the column is constant: venues of new, pending, rejected or closed offerers are not in the table. {% enddocs %}
 {% docs column__offerer_is_active %} Indicates if the offerer is active. Returns 'true' if offerer is active. Returns 'false' if the offerer has been deactivated.{% enddocs %}
 {% docs column__offerer_rank_desc %} Offerer rank in descending order. {% enddocs %}
 {% docs column__offerer_rank_asc %} Offerer rank in ascending order. {% enddocs %}

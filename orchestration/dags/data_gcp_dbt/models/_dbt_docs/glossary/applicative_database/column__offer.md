@@ -6,6 +6,7 @@ enddocs %}
 {% docs column__offer_is_synchronised %} Indicates whether the offer is synchronized from a provider's API (Titelive, cinema software...) rather than created by hand. Synchronized offers on books, CDs and vinyls are almost all attached to a product (`offer_product_id`); manual ones mostly are not, even when they have an EAN. {% enddocs %}
 {% docs column__offer_description %} Offer description (synopsis, further details on the show) as provided by thecultural partner and displayed in app.{% enddocs %}
 
+{% docs column__offer_withdrawal_details %} Free text the partner adds in the « Informations complémentaires » field of the « Informations pratiques » step of the pro portal (withdrawal or access instructions shown to the beneficiary). NULL when left empty. {% enddocs %}
 {% docs column__offer_name %} Name of the offer as it appears in the application. {% enddocs %}
 {% docs column__offer_category_id %} Identifier of the offer category, which groups offer subcategories (offer_subcategory_id): the cultural partner picks the subcategory from a predefined list when creating the offer, and the category follows from it. Rows of retired subcategories can carry a retired category. {% enddocs %}
 {% docs column__offer_category %} Identifier for the category of the offer. Determined by the cultural partner via a list of pre-set options in a drop down menu. {% enddocs %}

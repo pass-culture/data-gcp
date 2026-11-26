@@ -32,3 +32,10 @@
 {% docs column__artist_total_offer_consultations_main_category_last_30d %}Offer-page consultations (ConsultOffer) on the artist's offers over the last 30 days, in their main_search_group_name only. Used for the "trending" score.{% enddocs %}
 {% docs column__artist_app_search_score %}Score of the artist computed by the DS team for app search.{% enddocs %}
 {% docs column__artist_pro_search_score %}Score of the artist computed by the DS team for pro search.{% enddocs %}
+{% docs column__offer_artist_link_id %}Unique identifier of the link between an offer and an artist.{% enddocs %}
+{% docs column__product_artist_link_id %}Unique identifier of the link between a product and an artist.{% enddocs %}
+{% docs column__offer_artist_link_artist_id %}Identifier of the artist (`mrt_global__artist.artist_id`) linked to the offer. NULL when the partner only typed a name that is not linked to an artist (see `artist_name`).{% enddocs %}
+{% docs column__offer_artist_link_artist_name %}Artist name as typed by the partner on the offer, when the link does not point to an artist of `mrt_global__artist`; NULL when `artist_id` is filled.{% enddocs %}
+{% docs column__artist_link_artist_type %}Role of the artist on the offer or product: author, performer, stage director (offers), film actor or film director (products).{% enddocs %}
+{% docs column__product_artist_link_creation_date %}Date when the link between the product and the artist was created.{% enddocs %}
+{% docs column__product_artist_link_modification_date %}Date when the link between the product and the artist was last modified.{% enddocs %}

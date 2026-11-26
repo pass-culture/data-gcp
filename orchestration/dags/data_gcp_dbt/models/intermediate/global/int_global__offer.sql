@@ -13,6 +13,7 @@ select
     o.is_synchronised,
     o.offer_name,
     o.offer_description,
+    o.offer_withdrawal_details,
     o.offer_category_id,
     o.search_group_name,
     o.last_stock_price,

@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: mrt_global__product_artist_link
+    description: '{{ doc("description__mrt_global__product_artist_link") }}'
+    columns:
+      - name: product_artist_link_id
+        description: '{{ doc("column__product_artist_link_id") }}'
+        data_type: INT64
+        data_tests:
+          - not_null:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+          - unique:
+              config:
+                severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
+                tags: ['critical']
+      - name: product_id
+        description: '{{ doc("column__product_id") }}'
+        data_type: STRING
+      - name: artist_id
+        description: '{{ doc("column__artist_id") }}'
+        data_type: STRING
+      - name: artist_type
+        description: '{{ doc("column__artist_link_artist_type") }}'
+        data_type: STRING
+      - name: product_artist_link_creation_date
+        description: '{{ doc("column__product_artist_link_creation_date") }}'
+        data_type: DATE
+      - name: product_artist_link_modification_date
+        description: '{{ doc("column__product_artist_link_modification_date") }}'
+        data_type: DATE

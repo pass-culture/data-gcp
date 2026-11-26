@@ -80,6 +80,18 @@ models:
       - name: venue_is_acessibility_synched
         description: '{{ doc("column__venue_is_acessibility_synched") }}'
         data_type: BOOLEAN
+      - name: venue_audio_disability_compliant
+        description: '{{ doc("column__venue_audio_disability_compliant") }}'
+        data_type: BOOLEAN
+      - name: venue_mental_disability_compliant
+        description: '{{ doc("column__venue_mental_disability_compliant") }}'
+        data_type: BOOLEAN
+      - name: venue_motor_disability_compliant
+        description: '{{ doc("column__venue_motor_disability_compliant") }}'
+        data_type: BOOLEAN
+      - name: venue_visual_disability_compliant
+        description: '{{ doc("column__venue_visual_disability_compliant") }}'
+        data_type: BOOLEAN
       - name: venue_type_label
         description: '{{ doc("column__venue_type_label") }}'
         data_type: STRING

@@ -33,6 +33,9 @@ models:
       - name: offer_description
         description: '{{ doc("column__offer_description") }}'
         data_type: STRING
+      - name: offer_withdrawal_details
+        description: '{{ doc("column__offer_withdrawal_details") }}'
+        data_type: STRING
       - name: offer_category_id
         description: '{{ doc("column__offer_category_id") }}'
         data_type: STRING

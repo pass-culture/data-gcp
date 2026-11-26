@@ -25,38 +25,54 @@ models:
     columns:
       - name: deposit_expiration_month
         description: "{{ doc('column__deposit_expiration_month') }}"
+        data_type: DATE
         data_tests:
           - not_null
       - name: is_statistic_secret
         description: "{{ doc('column__is_statistic_secret') }}"
+        data_type: BOOLEAN
       - name: region_name
         description: "{{ doc('column__region_name') }}"
+        data_type: STRING
       - name: region_code
         description: "{{ doc('column__region_code') }}"
+        data_type: INT64
       - name: department_name
         description: "{{ doc('column__department_name') }}"
+        data_type: STRING
       - name: department_code
         description: "{{ doc('column__department_code') }}"
+        data_type: STRING
       - name: epci_name
         description: "{{ doc('column__user_epci') }}"
+        data_type: STRING
       - name: epci_code
         description: "{{ doc('column__user_epci_code') }}"
+        data_type: STRING
       - name: city_name
         description: "{{ doc('column__user_city') }}"
+        data_type: STRING
       - name: city_code
         description: "{{ doc('column__user_city_code') }}"
+        data_type: STRING
       - name: municipality_label
         description: "{{ doc('column__user_municipality_label') }}"
+        data_type: STRING
       - name: municipality_code
         description: "{{ doc('column__municipality_code') }}"
+        data_type: STRING
       - name: is_in_qpv
         description: "{{ doc('column__user_is_in_qpv') }}"
+        data_type: BOOLEAN
       - name: macro_density_label
         description: "{{ doc('column__user_macro_density_label') }}"
+        data_type: STRING
       - name: micro_density_label
         description: "{{ doc('column__user_density_label') }}"
+        data_type: STRING
       - name: total_category_booked_beneficiaries
         description: "{{ doc('column__metrics__total_category_booked_beneficiaries') }}"
+        data_type: INT64
       - name: offer_category_id
         description: "{{ doc('column__offer_category_id') }}"
         data_type: STRING

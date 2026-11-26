@@ -16,115 +16,140 @@ models:
     columns:
       - name: partition_month
         description: "{{ doc('column__partition_month') }}"
+        data_type: DATE
         data_tests:
           - not_null
 
       - name: partner_region_name
         description: "{{ doc('column__partner_region_name') }}"
+        data_type: STRING
 
       - name: partner_region_code
         description: "{{ doc('column__partner_region_code') }}"
+        data_type: STRING
 
       - name: partner_department_name
         description: "{{ doc('column__partner_department_name') }}"
+        data_type: STRING
 
       - name: partner_department_code
         description: "{{ doc('column__partner_department_code') }}"
+        data_type: STRING
 
       - name: partner_epci_code
         description: "{{ doc('column__partner_epci_code') }}"
+        data_type: STRING
 
       - name: partner_city_code
         description: "{{ doc('column__partner_city_code') }}"
+        data_type: STRING
         data_tests:
           - not_null
 
       - name: partner_municipality_code
         description: "{{ doc('column__partner_municipality_code') }}"
+        data_type: STRING
         data_tests:
           - not_null
 
       - name: partner_type
         description: "{{ doc('column__partner_type') }}"
+        data_type: STRING
         data_tests:
           - not_null
 
       - name: total_active_partners_individual
         description: "{{ doc('column__metrics__total_active_partners_individual') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_active_partners_collective
         description: "{{ doc('column__metrics__total_active_partners_collective') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_active_partners_global
         description: "{{ doc('column__metrics__total_active_partners_global') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_active_partners_dual_part
         description: "{{ doc('column__metrics__total_active_partners_dual_part') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_cumulative_activated_partners_individual
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_cumulative_activated_partners_collective
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_cumulative_activated_partners_global
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_global') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_cumulative_activated_partners_individual_only
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual_only') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_cumulative_activated_partners_collective_only
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective_only') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_cumulative_activated_partners_dual_part
         description: "{{ doc('column__metrics__total_cumulative_activated_partners_dual_part') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_offerers_created_by_cohort
         description: "{{ doc('column__metrics__total_offerers_created_by_cohort') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_activated_offerer_consultation_or_adage_30d_by_cohort
         description: "{{ doc('column__metrics__total_activated_offerer_consultation_or_adage_30d_by_cohort') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_activated_offerer_offer_or_adage_30d_by_cohort
         description: "{{ doc('column__metrics__total_activated_offerer_offer_or_adage_30d_by_cohort') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_activated_offerer_global_30d_by_cohort
         description: "{{ doc('column__metrics__total_activated_offerer_global_30d_by_cohort') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_activated_offerer_individual_30d_by_cohort
         description: "{{ doc('column__metrics__total_activated_offerer_individual_30d_by_cohort') }}"
+        data_type: INT64
         data_tests:
           - not_null
 
       - name: total_activated_offerer_collective_30d_by_cohort
         description: "{{ doc('column__metrics__total_activated_offerer_collective_30d_by_cohort') }}"
+        data_type: INT64
         data_tests:
           - not_null

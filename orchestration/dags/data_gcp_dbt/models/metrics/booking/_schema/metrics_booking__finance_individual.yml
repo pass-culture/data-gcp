@@ -20,31 +20,46 @@ models:
         data_type: DATE
       - name: venue_department_code
         description: '{{ doc("column__venue_department_code") }}'
+        data_type: STRING
       - name: venue_department_name
         description: '{{ doc("column__venue_department_name") }}'
+        data_type: STRING
       - name: venue_region_name
         description: '{{ doc("column__venue_region_name") }}'
+        data_type: STRING
       - name: venue_region_code
         description: '{{ doc("column__venue_region_code") }}'
+        data_type: STRING
       - name: venue_epci_code
         description: '{{ doc("column__venue_epci_code") }}'
+        data_type: STRING
       - name: venue_city_code
         description: '{{ doc("column__venue_city_code") }}'
+        data_type: STRING
       - name: venue_municipality_code
         description: '{{ doc("column__venue_municipality_code") }}'
+        data_type: STRING
       - name: offerer_is_epn
         description: '{{ doc("column__offerer_is_epn") }}'
+        data_type: BOOLEAN
       - name: offer_category_id
         description: '{{ doc("column__offer_category_id") }}'
+        data_type: STRING
       - name: total_bookings
         description: '{{ doc("column__finance_individual__total_bookings") }}'
+        data_type: INT64
       - name: total_quantities
         description: '{{ doc("column__total_quantities") }}'
+        data_type: INT64
       - name: total_revenue_amount
         description: '{{ doc("column__total_revenue_amount") }}'
+        data_type: NUMERIC
       - name: total_reimbursed_amount
         description: '{{ doc("column__total_reimbursed_amount") }}'
+        data_type: FLOAT64
       - name: total_contribution_amount
         description: '{{ doc("column__total_contribution_amount") }}'
+        data_type: FLOAT64
       - name: is_statistic_secret
         description: "{{ doc('column__is_statistic_secret') }}"
+        data_type: BOOLEAN

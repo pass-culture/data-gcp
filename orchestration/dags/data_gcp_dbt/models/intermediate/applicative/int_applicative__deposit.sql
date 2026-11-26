@@ -8,7 +8,7 @@ with
             sum(recredit_amount) as total_recredit_amount,
             sum(
                 case when recredit_type = 'BONUS_CREDIT' then recredit_amount else 0 end
-            ) as total_recredit_bonus_amount,
+            ) as total_bonus_recredit_amount,
             count(
                 distinct case when recredit_type = 'BONUS_CREDIT' then recredit_id end
             ) as total_bonus_recredit,
@@ -52,7 +52,7 @@ select
     rd.last_recredit_date,
     rd.total_recredit,
     rd.total_recredit_amount,
-    rd.total_recredit_bonus_amount,
+    rd.total_bonus_recredit_amount,
     rd.total_bonus_recredit,
     rd.first_bonus_recredit_date,
     rd.first_recredit_17_date,

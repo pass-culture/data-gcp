@@ -31,7 +31,7 @@ select
     d.last_recredit_date,
     d.total_recredit,
     d.total_recredit_amount,
-    d.total_recredit_bonus_amount,
+    d.total_bonus_recredit_amount,
     d.total_bonus_recredit,
     d.first_bonus_recredit_date,
     d.first_recredit_17_date,

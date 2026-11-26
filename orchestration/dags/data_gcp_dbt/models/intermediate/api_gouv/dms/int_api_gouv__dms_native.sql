@@ -16,21 +16,19 @@ with
                 nullif(applicant_postal_code, 'nan'), '-', ''
             ) as dms_application_postal_code,
 
+            -- raw timestamps are epoch integers whose unit varies (micro- or
+            -- nanoseconds): parse_timestamp_dms picks it from their length
             datetime(
-                timestamp_micros(safe_cast((application_submitted_at / 1000) as int64)),
-                'Europe/Paris'
+                {{ parse_timestamp_dms("application_submitted_at") }}, 'Europe/Paris'
             ) as dms_application_submitted_date,
             datetime(
-                timestamp_micros(safe_cast((processed_at / 1000) as int64)),
-                'Europe/Paris'
+                {{ parse_timestamp_dms("processed_at") }}, 'Europe/Paris'
             ) as dms_application_processed_date,
             datetime(
-                timestamp_micros(safe_cast((passed_in_instruction_at / 1000) as int64)),
-                'Europe/Paris'
+                {{ parse_timestamp_dms("passed_in_instruction_at") }}, 'Europe/Paris'
             ) as dms_application_instruction_passed_date,
             datetime(
-                timestamp_micros(safe_cast((last_update_at / 1000) as int64)),
-                'Europe/Paris'
+                {{ parse_timestamp_dms("last_update_at") }}, 'Europe/Paris'
             ) as dms_application_last_updated_at
 
         from {{ source("raw", "raw_dms_jeunes") }}

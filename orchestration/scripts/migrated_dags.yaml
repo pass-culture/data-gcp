@@ -72,6 +72,10 @@ dags_in_paris:
   import_notion:
     source_dataset: raw
     tables_to_copy: [notion_dashboard_docs] # partitioned daily raw loads -> copy history
+  import_qpi_answers_v1:
+    source_dataset: raw
+    file: dags/jobs/import/import_qpi.py # dag_id differs from file name -> deploy it explicitly
+    tables_to_copy: [qpi_answers_v4] # WRITE_APPEND to raw table -> copy history (qpi_answers_historical is WRITE_TRUNCATE from parquet)
   import_qualtrics:
     source_dataset: raw
     tables_to_copy: [qualtrics_answers] # append/range-partitioned survey answers -> copy history

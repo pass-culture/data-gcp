@@ -117,6 +117,33 @@ models:
               config:
                 severity: "{{ var('test_severity', {}).get(target.name, 'error') }}"
                 tags: ['critical']
+      - name: offerer_address_id
+        description: '{{ doc("column__offerer_address_id") }}'
+        data_type: STRING
+      - name: offer_address_id
+        description: '{{ doc("column__offer_address_id") }}'
+        data_type: STRING
+      - name: offer_address_label
+        description: '{{ doc("column__offer_address_label") }}'
+        data_type: STRING
+      - name: offer_address_street
+        description: '{{ doc("column__offer_address_street") }}'
+        data_type: STRING
+      - name: offer_address_postal_code
+        description: '{{ doc("column__offer_address_postal_code") }}'
+        data_type: STRING
+      - name: offer_address_city
+        description: '{{ doc("column__offer_address_city") }}'
+        data_type: STRING
+      - name: offer_address_department_code
+        description: '{{ doc("column__offer_address_department_code") }}'
+        data_type: STRING
+      - name: offer_address_latitude
+        description: '{{ doc("column__offer_address_latitude") }}'
+        data_type: NUMERIC
+      - name: offer_address_longitude
+        description: '{{ doc("column__offer_address_longitude") }}'
+        data_type: NUMERIC
       - name: offer_name
         description: '{{ doc("column__offer_name") }}'
         data_type: STRING

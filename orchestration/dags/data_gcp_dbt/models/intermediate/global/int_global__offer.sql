@@ -89,6 +89,14 @@ select
     v.is_local_authority,
     v.offerer_is_epn,
     o.offerer_address_id,
+    oa.address_id as offer_address_id,
+    oa.offerer_address_label as offer_address_label,
+    oa.address_street as offer_address_street,
+    oa.address_postal_code as offer_address_postal_code,
+    oa.address_city as offer_address_city,
+    oa.address_department_code as offer_address_department_code,
+    oa.address_latitude as offer_address_latitude,
+    oa.address_longitude as offer_address_longitude,
     o.offer_publication_date,
     o.is_future_scheduled,
     o.is_coming_soon,
@@ -104,3 +112,6 @@ select
     v.offerer_validation_status
 from {{ ref("int_applicative__offer") }} as o
 left join {{ ref("int_global__venue") }} as v on o.venue_id = v.venue_id
+left join
+    {{ ref("int_applicative__offer_address") }} as oa
+    on o.offerer_address_id = oa.offerer_address_id

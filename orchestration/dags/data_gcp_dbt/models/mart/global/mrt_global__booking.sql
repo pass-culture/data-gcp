@@ -24,6 +24,15 @@ select
     b.stock_beginning_date,
     b.stock_id,
     b.offer_id,
+    b.offerer_address_id,
+    b.offer_address_id,
+    b.offer_address_label,
+    b.offer_address_street,
+    b.offer_address_postal_code,
+    b.offer_address_city,
+    b.offer_address_department_code,
+    b.offer_address_latitude,
+    b.offer_address_longitude,
     b.offer_name,
     b.venue_name,
     b.venue_label,
@@ -88,5 +97,5 @@ select
     b.offerer_is_epn,
     b.offer_has_mediation
 from {{ ref("int_global__booking") }} as b
-left join {{ ref("mrt_global__user_beneficiary") }} as u on u.user_id = b.user_id
+left join {{ ref("mrt_global__user_beneficiary") }} as u on b.user_id = u.user_id
 where b.deposit_type is not null and b.user_id is not null

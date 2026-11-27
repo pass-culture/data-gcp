@@ -25,7 +25,12 @@ with
     -- when it is different from the initial venue of the offer
     add_representation_venue as (
         select
-            o.*,
+            o.offerer_id,
+            o.venue_id,
+            o.venue_latitude,
+            o.venue_longitude,
+            o.collective_offer_id,
+            o.collective_offer_creation_date,
             oa.offerer_address_id,
             oa.address_latitude as offerer_address_latitude,
             oa.address_longitude as offerer_address_longitude
@@ -35,7 +40,7 @@ with
             on o.collective_offer_id = a.collective_offer_id
             and a.offerer_address_id is not null
         left join
-            {{ ref("int_applicative__offerer_address") }} as oa
+            {{ ref("int_applicative__all_offerer_address") }} as oa
             on a.offerer_address_id = oa.offerer_address_id
     ),
 
@@ -83,4 +88,12 @@ select
     safe_divide(distance_v2, 1000) as distance_v2_in_km
 from calculate_distance
 where distance < 300000
-group by 1, 2, 3, 4, 5, 6, 7, 8
+group by
+    institution_id,
+    institution_rural_level,
+    offerer_id,
+    venue_id,
+    collective_offer_id,
+    collective_offer_creation_date,
+    distance_in_km,
+    distance_v2_in_km

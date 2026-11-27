@@ -28,7 +28,7 @@ Split by channel:
 
 **VIDOC** (ministry dashboard):
 
-[exp_vidoc_cultural_partner](../../models/export/vidoc/description__exp_vidoc_cultural_partner.md). Same KPIs as `external_reporting__cultural_partner` (`nombre_total_de_partenaire_actif_*`).
+[exp_vidoc_cultural_partner](../../models/export/vidoc/description__exp_vidoc_cultural_partner.md). Same KPIs as `external_reporting__cultural_partner` (`nombre_total_de_partenaire_actif_*`). The list of the partners active in the current month is [exp_vidoc_cultural_partner_list](../../models/export/vidoc/description__exp_vidoc_cultural_partner_list.md).
 
 ### Calculation
 

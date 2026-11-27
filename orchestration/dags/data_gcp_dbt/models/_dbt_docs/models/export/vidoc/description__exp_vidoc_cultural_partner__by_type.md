@@ -5,7 +5,7 @@ description: Key indicators from the `exp_vidoc_cultural_partner_by_type` model.
 
 {% docs description__exp_vidoc_cultural_partner__by_type %}
 
-The `exp_vidoc_cultural_partner_by_type` model provides the monthly number of active and cumulatively activated cultural partners (venues), by partner type.
+The `exp_vidoc_cultural_partner_by_type` model provides the monthly number of active cultural partners (venues), by partner type. The cumulative activated partners are not exported to vidoc: they stay in [exp_base__cultural_partner_by_type](../export_base/description__exp_base__cultural_partner_by_type.md).
 It is designed to be exported to the ministry for vidoc visualisation. It sums the cells of [exp_base__cultural_partner_by_type](../export_base/description__exp_base__cultural_partner_by_type.md) to the department; `total_active_partners_individual` is the same KPI as `external_reporting__cultural_partner` (`nombre_de_partenaire_actif_individuel_<type>`).
 
 {% enddocs %}

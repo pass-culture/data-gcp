@@ -74,6 +74,113 @@ VIDOC_MODELS = {
         "milestone_age",
         "total_beneficiaries_last_12_months",
     ],
+    # lot 2.2: FI3.3 (masked rows < 5 young people, < 20 for the categories)
+    "booking_beneficiary": [
+        "partition_month",
+        "region_name",
+        "region_code",
+        "department_name",
+        "department_code",
+        "offer_category_id",
+        "is_low_count",
+        "total_used_bookings",
+        "total_used_amount",
+    ],
+    # lot 2.2: FI4.2, FI4.3 (active partners only, no cumulative activated)
+    "cultural_partner": [
+        "partition_month",
+        "partner_region_name",
+        "partner_region_code",
+        "partner_department_name",
+        "partner_department_code",
+        *[
+            f"total_active_partners_{channel}"
+            for channel in (
+                "global",
+                "individual",
+                "collective",
+                "dual_part",
+                "individual_only",
+                "collective_only",
+            )
+        ],
+    ],
+    "cultural_partner_by_type": [
+        "partition_month",
+        "partner_region_name",
+        "partner_region_code",
+        "partner_department_name",
+        "partner_department_code",
+        "partner_type",
+        *[
+            f"total_active_partners_{channel}"
+            for channel in ("global", "individual", "collective", "dual_part")
+        ],
+    ],
+    "cultural_partner_by_label": [
+        "partition_month",
+        "partner_region_name",
+        "partner_region_code",
+        "partner_department_name",
+        "partner_department_code",
+        "partner_label",
+        *[
+            f"total_active_partners_{channel}"
+            for channel in ("global", "individual", "collective", "dual_part")
+        ],
+    ],
+    # detail of the partners active in the current month (public lists, no
+    # amounts, no SIRET); one is_<type> flag per type of get_partner_types
+    "cultural_partner_list": [
+        "partition_month",
+        "venue_id",
+        "venue_name",
+        "offerer_id",
+        "offerer_name",
+        "venue_type_label",
+        "venue_labels",
+        "is_active_individual",
+        "is_active_collective",
+        "is_active_dual_part",
+        "last_individual_bookable_date",
+        "last_collective_bookable_date",
+        "partner_region_name",
+        "partner_region_code",
+        "partner_department_name",
+        "partner_department_code",
+        "partner_epci_code",
+        "partner_municipality_code",
+        "partner_municipality_label",
+        "partner_postal_code",
+        "partner_is_in_qpv",
+        *[
+            f"is_{partner_type}"
+            for partner_type in (
+                "cinemas",
+                "tag_cinemas_art_et_essai",
+                "librairies",
+                "tag_librairies_lir",
+                "spectacle_vivant",
+                "tag_spectacle_vivant_labels",
+                "musique_live",
+                "musee",
+                "tag_musee_labels",
+                "arts_visuels_plastiques_galeries",
+                "autre",
+                "bibliotheques_ou_mediatheques",
+                "centre_culturel",
+                "pratique_art",
+                "culture_scientifique",
+                "festival",
+                "jeux_videos",
+                "magasins_arts_creatifs",
+                "musique_disquaire",
+                "musique_instrument",
+                "offre_numerique",
+                "patrimoine_tourisme",
+            )
+        ],
+    ],
 }
 
 

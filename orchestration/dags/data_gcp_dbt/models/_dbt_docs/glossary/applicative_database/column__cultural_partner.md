@@ -10,6 +10,7 @@
 {% docs column__partner_department_name %}Name of the department where the cultural partner is located.{% enddocs %}
 {% docs column__partner_postal_code %}Postal code of the cultural partner's location.{% enddocs %}
 {% docs column__partner_type %}Type of the cultural partner, derived from venue type or venue/offerer tags.{% enddocs %}
+{% docs column__partner_label %}Ministry of Culture label of the cultural partner (venue tag of category 1, e.g. LIR, Cinéma d'art et d'essai, SMAC, SCIN, MdF), or 'ALL' for the partners holding at least one label, counted once.{% enddocs %}
 {% docs column__partner_type_origin %}Origin of the partner type, indicating whether it is derived from venue types, venue tags or offerer tags. {% enddocs %}
 {% docs column__partner_status %}Status of the cultural partner, indicating whether it is a (permanent) venue or an offerer (without permanent venue).{% enddocs %}
 {% docs column__partner_cultural_sector %}Cultural sector associated with the partner type.{% enddocs %}

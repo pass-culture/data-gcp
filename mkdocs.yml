@@ -119,6 +119,8 @@ nav:
           - booking_beneficiary: dbt/models/export/vidoc/description__exp_vidoc_booking_beneficiary.md
           - cultural_partner: dbt/models/export/vidoc/description__exp_vidoc_cultural_partner.md
           - cultural_partner_by_type: dbt/models/export/vidoc/description__exp_vidoc_cultural_partner__by_type.md
+          - cultural_partner_by_label: dbt/models/export/vidoc/description__exp_vidoc_cultural_partner__by_label.md
+          - cultural_partner_list: dbt/models/export/vidoc/description__exp_vidoc_cultural_partner_list.md
           - booking_partner_finance_individual: dbt/models/export/vidoc/description__exp_vidoc_booking_partner_finance__individual.md
           - student_coverage: dbt/models/export/vidoc/description__exp_vidoc_student__coverage.md
           - institution_activity: dbt/models/export/vidoc/description__exp_vidoc_institution__activity.md

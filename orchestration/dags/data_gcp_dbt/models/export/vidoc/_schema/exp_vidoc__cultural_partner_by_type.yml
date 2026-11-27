@@ -45,21 +45,3 @@ models:
       - name: total_active_partners_dual_part
         data_type: INT64
         description: "{{ doc('column__metrics__total_active_partners_dual_part') }}"
-      - name: total_cumulative_activated_partners_individual
-        data_type: INT64
-        description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual') }}"
-      - name: total_cumulative_activated_partners_collective
-        data_type: INT64
-        description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective') }}"
-      - name: total_cumulative_activated_partners_global
-        data_type: INT64
-        description: "{{ doc('column__metrics__total_cumulative_activated_partners_global') }}"
-      - name: total_cumulative_activated_partners_individual_only
-        data_type: INT64
-        description: "{{ doc('column__metrics__total_cumulative_activated_partners_individual_only') }}"
-      - name: total_cumulative_activated_partners_collective_only
-        data_type: INT64
-        description: "{{ doc('column__metrics__total_cumulative_activated_partners_collective_only') }}"
-      - name: total_cumulative_activated_partners_dual_part
-        data_type: INT64
-        description: "{{ doc('column__metrics__total_cumulative_activated_partners_dual_part') }}"

@@ -9,7 +9,7 @@ description: How to calculate the number of active and cumulatively activated cu
 
 Same definitions as [active cultural partners](active_cultural_partners.md) and [activated cultural partners](activated_cultural_partners.md), restricted to the partners of one **partner type** (cinemas, bookshops, live shows, museums, festivals, ...).
 
-Available columns: active partners `total_active_partners_{global, individual, collective, dual_part}` and cumulative activated partners `total_cumulative_activated_partners_{global, individual, collective, dual_part, individual_only, collective_only}`. The individual only / collective only split of active partners is not available by type.
+Available columns: active partners `total_active_partners_{global, individual, collective, dual_part}`. Cumulative activated partners `total_cumulative_activated_partners_{global, individual, collective, dual_part, individual_only, collective_only}` are only in [exp_base__cultural_partner_by_type](../../models/export/export_base/description__exp_base__cultural_partner_by_type.md), not in VIDOC. The individual only / collective only split of active partners is not available by type.
 
 Types and labels are defined in the `get_partner_types` macro, from the venue type and venue tags. Label rows (`tag_*`: art et essai cinemas, LIR bookshops, labelled live shows, labelled museums) are subsets of a type.
 
@@ -27,8 +27,7 @@ Filter on **one** type, then sum over the geography.
 SELECT
     partition_month,
     partner_type,
-    SUM(total_active_partners_global) AS active_partners,
-    SUM(total_cumulative_activated_partners_global) AS activated_partners
+    SUM(total_active_partners_global) AS active_partners
 FROM `cultural_partner_by_type`
 GROUP BY partition_month, partner_type
 ORDER BY partition_month, partner_type

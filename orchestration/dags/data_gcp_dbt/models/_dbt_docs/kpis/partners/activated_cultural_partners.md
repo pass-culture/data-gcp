@@ -26,9 +26,9 @@ The count is cumulative: once activated, a partner stays counted in every follow
 
 ### Published in
 
-**VIDOC** (ministry dashboard):
+Not published in **VIDOC** for now (only active partners are). Available in the export base:
 
-[exp_vidoc_cultural_partner](../../models/export/vidoc/description__exp_vidoc_cultural_partner.md). Same definitions as `external_reporting__cultural_partner` (`nombre_total_cumule_de_partenaires_actives_*`), which does not publish the global column.
+[exp_base__cultural_partner](../../models/export/export_base/description__exp_base__cultural_partner.md) and, by type, [exp_base__cultural_partner_by_type](../../models/export/export_base/description__exp_base__cultural_partner_by_type.md). Same definitions as `external_reporting__cultural_partner` (`nombre_total_cumule_de_partenaires_actives_*`), which does not publish the global column.
 
 ### Calculation
 

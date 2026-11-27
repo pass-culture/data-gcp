@@ -1,0 +1,190 @@
+version: 2
+
+models:
+  - name: exp_vidoc__cultural_partner_list
+    description: "{{ doc('description__exp_vidoc_cultural_partner_list') }}"
+    columns:
+      - name: partition_month
+        data_type: DATE
+        description: "{{ doc('column__partition_month') }}"
+        data_tests:
+          - not_null
+      - name: venue_id
+        data_type: STRING
+        description: "{{ doc('column__venue_id') }}"
+        data_tests:
+          - not_null
+          - unique
+      - name: venue_name
+        data_type: STRING
+        description: "{{ doc('column__venue_name') }}"
+      - name: offerer_id
+        data_type: STRING
+        description: "{{ doc('column__offerer_id') }}"
+      - name: offerer_name
+        data_type: STRING
+        description: "{{ doc('column__offerer_name') }}"
+      - name: venue_type_label
+        data_type: STRING
+        description: "{{ doc('column__venue_type_label') }}"
+      - name: venue_labels
+        data_type: STRING
+        description: "Ministry of Culture labels of the venue (venue tags of category 1, e.g. LIR, Cinéma d'art et d'essai, CDN), comma-separated. Null when the venue has no label."
+      - name: is_active_individual
+        data_type: BOOLEAN
+        description: "True if the venue had a bookable individual offer in the last 365 days."
+        data_tests:
+          - not_null
+      - name: is_active_collective
+        data_type: BOOLEAN
+        description: "True if the venue had a bookable collective offer in the last 365 days."
+        data_tests:
+          - not_null
+      - name: is_active_dual_part
+        data_type: BOOLEAN
+        description: "True if the venue is active both in individual and in collective."
+        data_tests:
+          - not_null
+      - name: last_individual_bookable_date
+        data_type: DATE
+        description: "Last day the venue had a bookable individual offer."
+      - name: last_collective_bookable_date
+        data_type: DATE
+        description: "Last day the venue had a bookable collective offer."
+      - name: partner_region_name
+        data_type: STRING
+        description: "{{ doc('column__partner_region_name') }}"
+      - name: partner_region_code
+        data_type: STRING
+        description: "{{ doc('column__partner_region_code') }}"
+      - name: partner_department_name
+        data_type: STRING
+        description: "{{ doc('column__partner_department_name') }}"
+      - name: partner_department_code
+        data_type: STRING
+        description: "{{ doc('column__partner_department_code') }}"
+      - name: partner_epci_code
+        data_type: STRING
+        description: "{{ doc('column__partner_epci_code') }}"
+      - name: partner_municipality_code
+        data_type: STRING
+        description: "{{ doc('column__partner_municipality_code') }}"
+      - name: partner_municipality_label
+        data_type: STRING
+        description: "{{ doc('column__partner_municipality_label') }}"
+      - name: partner_postal_code
+        data_type: STRING
+        description: "{{ doc('column__partner_postal_code') }}"
+      - name: partner_is_in_qpv
+        data_type: BOOLEAN
+        description: "{{ doc('column__cultural_partner_is_in_qpv') }}"
+      - name: is_cinemas
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Cinémas\" (`cinemas` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_tag_cinemas_art_et_essai
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Cinémas Art et Essai\" (`tag_cinemas_art_et_essai` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_librairies
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Librairies\" (`librairies` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_tag_librairies_lir
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Librairies avec le label LIR\" (`tag_librairies_lir` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_spectacle_vivant
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Spectacle Vivant\" (`spectacle_vivant` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_tag_spectacle_vivant_labels
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Spectacle Vivant avec Labels\" (`tag_spectacle_vivant_labels` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_musique_live
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Musique Live\" (`musique_live` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_musee
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Musées\" (`musee` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_tag_musee_labels
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Musées avec Labels\" (`tag_musee_labels` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_arts_visuels_plastiques_galeries
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Arts visuels, arts plastiques et galeries\" (`arts_visuels_plastiques_galeries` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_autre
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Autres partenaires culturels\" (`autre` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_bibliotheques_ou_mediatheques
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Bibliothèques ou médiathèques\" (`bibliotheques_ou_mediatheques` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_centre_culturel
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Centres culturels\" (`centre_culturel` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_pratique_art
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Pratique artistique\" (`pratique_art` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_culture_scientifique
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Culture scientifique\" (`culture_scientifique` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_festival
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Festivals\" (`festival` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_jeux_videos
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Jeux vidéo\" (`jeux_videos` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_magasins_arts_creatifs
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Magasin arts créatifs\" (`magasins_arts_creatifs` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_musique_disquaire
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Musique - Disquaires\" (`musique_disquaire` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_musique_instrument
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Musique - Magasins d'instruments\" (`musique_instrument` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_offre_numerique
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Offre numérique\" (`offre_numerique` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
+      - name: is_patrimoine_tourisme
+        data_type: BOOLEAN
+        description: "True if the venue is in the partner type \"Patrimoine et tourisme\" (`patrimoine_tourisme` in get_partner_types and in exp_vidoc__cultural_partner_by_type)."
+        data_tests:
+          - not_null
